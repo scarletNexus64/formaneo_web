@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* SF Pro Font */
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('./assets/SF-Pro.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Text';
+  src: url('./assets/SF-Pro.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'SF Pro Display', 'SF Pro Text', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-formaneo-navy hover:bg-primary-700 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 hover:shadow-lg;
+  }
+  
+  .btn-secondary {
+    @apply bg-formaneo-gold hover:bg-secondary-600 text-formaneo-navy-dark font-medium px-6 py-3 rounded-lg transition-all duration-200 hover:shadow-lg;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-formaneo-gray-200;
+  }
+  
+  .text-brand-primary {
+    @apply text-formaneo-navy;
+  }
+  
+  .text-brand-secondary {
+    @apply text-formaneo-gold;
+  }
+  
+  .bg-brand-primary {
+    @apply bg-formaneo-navy;
+  }
+  
+  .bg-brand-secondary {
+    @apply bg-formaneo-gold;
+  }
+}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Activation Status</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Test Vérification Statut Activation</h1>
+    
+    <div id="result"></div>
+    
+    <script>
+        // Sauvegarder l'ID de transaction dans localStorage pour test
+        localStorage.setItem('activation_transaction_id', 'ACTIVATION17616200833253');
+        
+        // Simuler la page de retour d'activation
+        const transactionId = 'ACTIVATION17616200833253';
+        
+        async function checkStatus() {
+            try {
+                const response = await axios.post('http://192.168.1.149:8001/api/v1/cinetpay/check-status', {
+                    transaction_id: transactionId
+                }, {
+                    headers: {
+                        'Authorization': 'Bearer 40|NBfjvFr5a6NGZ2tlaTxkBF4uxHcVZC4dVvuE8mcKcb630dae',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Status check response:', response.data);
+                
+                if (response.data.success && response.data.status === 'completed') {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: green;">✅ Activation Réussie!</h2>
+                        <p>Transaction: ${transactionId}</p>
+                        <p>Statut: ${response.data.status}</p>
+                        <p>Montant: ${response.data.amount} FCFA</p>
+                        <p>Méthode: ${response.data.debug.payment_method}</p>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h2 style="color: orange;">⏳ En attente...</h2>
+                        <p>Transaction: ${transactionId}</p>
+                        <p>Statut: ${response.data.status || 'pending'}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2 style="color: red;">❌ Erreur</h2>
+                    <p>Erreur: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Test immédiat
+        checkStatus();
+        
+        // Test toutes les 3 secondes
+        setInterval(checkStatus, 3000);
+    </script>
+</body>
+</html>
