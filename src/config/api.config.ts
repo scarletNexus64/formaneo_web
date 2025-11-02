@@ -1,5 +1,10 @@
+// export const API_CONFIG = {
+//   BASE_URL: process.env.REACT_APP_API_URL || 'http://192.168.1.149:8000/api/v1',
+//   TIMEOUT: 30000,
+// };
+
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://192.168.1.149:8000/api/v1',
+  BASE_URL: process.env.REACT_APP_API_URL || 'http://admin.cleanestuaire.com/api/v1',
   TIMEOUT: 30000,
 };
 
