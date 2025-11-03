@@ -88,7 +88,7 @@ class AffiliateService {
           active_affiliates: 15,
           total_commissions: 28500,
         },
-        affiliate_link: 'http://192.168.1.149:3000/invite/ABC123',
+        affiliate_link: 'https://formaneo.site/invite/ABC123',
         promo_code: 'ABC123',
       };
     }
