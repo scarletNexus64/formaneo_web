@@ -75,27 +75,27 @@ const QuizPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement des quiz...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des quiz...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <Navigation />
       <ActivationGuard action="accéder aux quiz">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <PuzzlePieceIcon className="h-12 w-12 text-indigo-600 mr-3" />
-            <h1 className="text-4xl font-bold text-gray-900">Quiz Éducatifs</h1>
+            <PuzzlePieceIcon className="h-12 w-12 text-primary-600 dark:text-primary-400 mr-3" />
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Quiz Éducatifs</h1>
           </div>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
             Testez vos connaissances business et e-commerce, et gagnez des FCFA avec nos quiz spécialisés !
           </p>
         </div>
@@ -126,8 +126,8 @@ const QuizPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Sélection des sujets */}
           <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Choisissez votre domaine</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Choisissez votre domaine</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               Nos quiz couvrent tous les aspects du business en ligne : dropshipping, marketing, e-commerce, affiliation et plus encore !
             </p>
             
@@ -136,9 +136,9 @@ const QuizPage = () => {
                 <div
                   key={subject.key}
                   onClick={() => startQuiz(subject.key)}
-                  className={`bg-white rounded-lg border-2 border-gray-200 p-6 cursor-pointer transition-all duration-200 ${
+                  className={`bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 p-6 cursor-pointer transition-all duration-200 ${
                     freeQuizzesLeft > 0
-                      ? 'hover:border-indigo-300 hover:shadow-lg'
+                      ? 'hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-lg'
                       : 'opacity-50 cursor-not-allowed'
                   }`}
                 >
@@ -147,8 +147,8 @@ const QuizPage = () => {
                       {subject.icon}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">{subject.name}</h3>
-                      <p className="text-sm text-gray-500">Questions de niveau baccalauréat</p>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{subject.name}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Questions de niveau baccalauréat</p>
                     </div>
                     {freeQuizzesLeft === 0 && (
                       <div className="text-gray-400">
@@ -165,32 +165,32 @@ const QuizPage = () => {
 
           {/* Statistiques */}
           <div className="space-y-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <ChartBarIcon className="h-5 w-5 mr-2 text-indigo-600" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <ChartBarIcon className="h-5 w-5 mr-2 text-primary-600 dark:text-primary-400" />
                 Vos Statistiques
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Quiz complétés</span>
-                  <span className="font-semibold text-gray-900">{stats.total_quizzes}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Quiz complétés</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{stats.total_quizzes}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Quiz réussis</span>
+                  <span className="text-gray-600 dark:text-gray-400">Quiz réussis</span>
                   <span className="font-semibold text-green-600 flex items-center">
                     <CheckIcon className="h-4 w-4 mr-1" />
                     {stats.passed_quizzes}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Score moyen</span>
+                  <span className="text-gray-600 dark:text-gray-400">Score moyen</span>
                   <span className="font-semibold text-blue-600 flex items-center">
                     <StarIcon className="h-4 w-4 mr-1" />
                     {stats.average_score}%
                   </span>
                 </div>
                 <div className="flex items-center justify-between border-t pt-3">
-                  <span className="text-gray-600">FCFA gagnés</span>
+                  <span className="text-gray-600 dark:text-gray-400">FCFA gagnés</span>
                   <span className="font-bold text-yellow-600 flex items-center">
                     <CurrencyDollarIcon className="h-4 w-4 mr-1" />
                     {formatPrice(stats.total_rewards)}
@@ -200,25 +200,25 @@ const QuizPage = () => {
             </div>
 
             {/* Historique */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <ClockIcon className="h-5 w-5 mr-2 text-indigo-600" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <ClockIcon className="h-5 w-5 mr-2 text-primary-600 dark:text-primary-400" />
                 Actions rapides
               </h3>
               <div className="space-y-3">
-                <button 
+                <button
                   onClick={() => navigate('/quizz/history')}
-                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="w-full text-left px-4 py-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
                 >
-                  <span className="text-sm font-medium text-gray-900">Voir l'historique</span>
-                  <p className="text-xs text-gray-600">Consultez vos résultats passés</p>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Voir l'historique</span>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Consultez vos résultats passés</p>
                 </button>
-                <button 
+                <button
                   onClick={() => navigate('/quizz/leaderboard')}
-                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="w-full text-left px-4 py-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
                 >
-                  <span className="text-sm font-medium text-gray-900">Classement</span>
-                  <p className="text-xs text-gray-600">Comparez vos scores</p>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">Classement</span>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Comparez vos scores</p>
                 </button>
               </div>
             </div>

@@ -72,20 +72,20 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
     if (amount >= 0) {
       switch (type) {
         case 'deposit':
-          return 'text-green-600 bg-green-50';
+          return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900';
         case 'bonus':
-          return 'text-purple-600 bg-purple-50';
+          return 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900';
         case 'commission':
-          return 'text-blue-600 bg-blue-50';
+          return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900';
         case 'quiz_reward':
-          return 'text-indigo-600 bg-indigo-50';
+          return 'text-primary-600 dark:text-primary-400 bg-indigo-50 dark:bg-indigo-900';
         case 'transfer_in':
-          return 'text-green-600 bg-green-50';
+          return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900';
         default:
-          return 'text-green-600 bg-green-50';
+          return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900';
       }
     } else {
-      return 'text-red-600 bg-red-50';
+      return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900';
     }
   };
 
@@ -94,19 +94,19 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
     
     switch (status) {
       case 'completed':
-        return `${baseClasses} bg-green-100 text-green-800`;
+        return `${baseClasses} bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200`;
       case 'pending':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+        return `${baseClasses} bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200`;
       case 'processing':
-        return `${baseClasses} bg-blue-100 text-blue-800`;
+        return `${baseClasses} bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200`;
       case 'queued':
-        return `${baseClasses} bg-purple-100 text-purple-800`;
+        return `${baseClasses} bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200`;
       case 'failed':
-        return `${baseClasses} bg-red-100 text-red-800`;
+        return `${baseClasses} bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200`;
       case 'cancelled':
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+        return `${baseClasses} bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200`;
       default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+        return `${baseClasses} bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200`;
     }
   };
 
@@ -131,21 +131,21 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Historique des transactions</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Historique des transactions</h3>
         </div>
         <div className="p-6 space-y-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center space-x-4 animate-pulse">
-              <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
               <div className="flex-1">
-                <div className="w-1/2 h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="w-1/3 h-3 bg-gray-200 rounded"></div>
+                <div className="w-1/2 h-4 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
+                <div className="w-1/3 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
               </div>
               <div className="text-right">
-                <div className="w-20 h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="w-16 h-3 bg-gray-200 rounded"></div>
+                <div className="w-20 h-4 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
+                <div className="w-16 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
               </div>
             </div>
           ))}
@@ -155,21 +155,21 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <div className="p-6 border-b border-gray-200">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Historique des transactions</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Historique des transactions</h3>
           {transactions.length > 0 && (
-            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium">
               Voir tout
             </button>
           )}
         </div>
       </div>
-      
-      <div className="divide-y divide-gray-200">
+
+      <div className="divide-y divide-gray-200 dark:divide-gray-700">
         {transactions.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
             <div className="w-12 h-12 mx-auto mb-4 text-gray-300">
               <ArrowsRightLeftIcon />
             </div>
@@ -181,24 +181,24 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
             const colorClasses = getTransactionColor(transaction.type, transaction.amount);
             
             return (
-              <div key={transaction.id} className="p-4 hover:bg-gray-50 transition-colors">
+              <div key={transaction.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <div className="flex items-center space-x-4">
                   <div className={`p-2 rounded-lg ${colorClasses}`}>
                     {getTransactionIcon(transaction.type)}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {transaction.description}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {formatDate(transaction.created_at)}
                     </p>
                   </div>
                   
                   <div className="text-right">
                     <p className={`text-sm font-semibold ${
-                      isCredit ? 'text-green-600' : 'text-red-600'
+                      isCredit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                     }`}>
                       {isCredit ? '+' : '-'}{formatAmount(transaction.amount)}
                     </p>
@@ -215,8 +215,8 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
       
       {/* Pagination */}
       {pagination && pagination.last_page > 1 && (
-        <div className="p-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
             Page {pagination.current_page} sur {pagination.last_page} ({pagination.total} transactions)
           </div>
           
@@ -224,7 +224,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
             <button
               onClick={() => onPageChange?.(pagination.current_page - 1)}
               disabled={pagination.current_page <= 1}
-              className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Précédent
             </button>
@@ -240,8 +240,8 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
                     onClick={() => onPageChange?.(pageNumber)}
                     className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
                       pageNumber === pagination.current_page
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                        ? 'bg-primary-600 dark:bg-primary-700 text-white shadow-sm'
+                        : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                     }`}
                   >
                     {pageNumber}
@@ -253,7 +253,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
             <button
               onClick={() => onPageChange?.(pagination.current_page + 1)}
               disabled={pagination.current_page >= pagination.last_page}
-              className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Suivant
             </button>

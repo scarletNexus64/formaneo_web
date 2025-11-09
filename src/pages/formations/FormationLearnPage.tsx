@@ -263,11 +263,11 @@ const FormationLearnPage = () => {
         </div>
       </div>
 
-      <div className="flex h-screen">
+      <div className="flex flex-col lg:flex-row h-screen overflow-hidden">
         {/* Main Video Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Video Player - Taille réduite */}
-          <div className="relative bg-black" style={{ height: '60vh' }}>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Video Player - Responsive */}
+          <div className="relative bg-black h-[40vh] sm:h-[50vh] lg:h-[60vh]">
             {currentVideo.video_url ? (
               <HybridVideoPlayer
                 src={currentVideo.video_url}
@@ -286,44 +286,44 @@ const FormationLearnPage = () => {
               </div>
             )}
             
-            {/* Video Controls Overlay */}
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+            {/* Video Controls Overlay - Wrapper sans pointer events */}
+            <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 flex items-center justify-between pointer-events-none z-50 gap-2">
               <button
                 onClick={playPreviousVideo}
                 disabled={currentVideoIndex === 0}
-                className="bg-black/70 hover:bg-black/90 text-white p-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="bg-black/70 hover:bg-black/90 text-white p-2 sm:p-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all pointer-events-auto shadow-lg"
               >
-                <ChevronLeftIcon className="w-5 h-5" />
+                <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
-              
-              <div className="bg-black/70 text-white px-4 py-2 rounded-lg text-sm max-w-md truncate">
+
+              <div className="bg-black/70 text-white px-2 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm max-w-[150px] sm:max-w-md truncate pointer-events-none">
                 {currentVideo.title}
               </div>
-              
+
               <button
                 onClick={playNextVideo}
                 disabled={!formation.videos || currentVideoIndex >= formation.videos.length - 1}
-                className="bg-black/70 hover:bg-black/90 text-white p-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="bg-black/70 hover:bg-black/90 text-white p-2 sm:p-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all pointer-events-auto shadow-lg"
               >
-                <ChevronRightIcon className="w-5 h-5" />
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
           </div>
 
           {/* Video Info - Plus compact */}
-          <div className="bg-gray-800 p-4 text-white flex-1 overflow-y-auto">
-            <div className="flex items-center space-x-3 mb-2">
-              <h2 className="text-lg font-semibold">{currentVideo.title}</h2>
-              <span className={`text-xs px-2 py-1 rounded-full ${
-                currentVideo.type === 'module' 
-                  ? 'bg-blue-500/20 text-blue-300' 
+          <div className="bg-gray-800 p-3 sm:p-4 text-white flex-1 overflow-y-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+              <h2 className="text-base sm:text-lg font-semibold">{currentVideo.title}</h2>
+              <span className={`text-xs px-2 py-1 rounded-full w-fit ${
+                currentVideo.type === 'module'
+                  ? 'bg-blue-500/20 text-blue-300'
                   : 'bg-purple-500/20 text-purple-300'
               }`}>
                 {currentVideo.type === 'module' ? 'Module' : 'Vidéo'}
               </span>
             </div>
-            
-            <div className="flex items-center space-x-6 text-sm text-gray-400 mb-3">
+
+            <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm text-gray-400 mb-3">
               <div className="flex items-center">
                 <ClockIcon className="w-4 h-4 mr-1" />
                 {formatDuration(currentVideo.duration_minutes)}
@@ -360,16 +360,16 @@ const FormationLearnPage = () => {
           </div>
         </div>
 
-        {/* Playlist Sidebar - Toujours visible */}
-        <div className="w-96 bg-gray-800 border-l border-gray-700 flex flex-col">
+        {/* Playlist - En dessous sur mobile, sidebar sur desktop */}
+        <div className="w-full lg:w-96 bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-700 flex flex-col max-h-[40vh] lg:max-h-none">
           {/* Header de la playlist */}
-          <div className="p-4 border-b border-gray-700">
-            <h3 className="text-white font-semibold flex items-center">
-              <ListBulletIcon className="w-5 h-5 mr-2" />
+          <div className="p-3 sm:p-4 border-b border-gray-700">
+            <h3 className="text-white font-semibold flex items-center text-sm sm:text-base">
+              <ListBulletIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Playlist ({formation.videos?.length || 1})
             </h3>
           </div>
-          
+
           {/* Liste des vidéos/modules */}
           <div className="flex-1 overflow-y-auto p-2">
             {formation.videos && formation.videos.length > 0 ? (
@@ -377,49 +377,49 @@ const FormationLearnPage = () => {
                 <button
                   key={`${item.type}-${item.id}`}
                   onClick={() => playVideo(item, index)}
-                  className={`w-full p-3 rounded-lg mb-2 text-left transition-all duration-200 ${
+                  className={`w-full p-2 sm:p-3 rounded-lg mb-2 text-left transition-all duration-200 ${
                     currentVideo?.id === item.id && currentVideo?.type === item.type
                       ? 'bg-indigo-600 text-white shadow-lg scale-[1.02]'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:scale-[1.01]'
                   }`}
                 >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 mt-1">
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <div className="flex-shrink-0 mt-0.5 sm:mt-1">
                       {item.user_progress >= 100 ? (
-                        <CheckCircleIconSolid className="w-5 h-5 text-green-400" />
+                        <CheckCircleIconSolid className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
                       ) : currentVideo?.id === item.id && currentVideo?.type === item.type ? (
-                        <PlayIcon className="w-5 h-5" />
+                        <PlayIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                       ) : item.type === 'module' ? (
-                        <DocumentTextIcon className="w-5 h-5 text-blue-400" />
+                        <DocumentTextIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
                       ) : (
-                        <VideoCameraIcon className="w-5 h-5 text-purple-400" />
+                        <VideoCameraIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                       )}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-medium truncate text-sm">{item.title}</h4>
-                        <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                          item.type === 'module' 
-                            ? 'bg-blue-500/20 text-blue-300' 
+                      <div className="flex items-center gap-1 sm:gap-2 mb-1">
+                        <h4 className="font-medium truncate text-xs sm:text-sm">{item.title}</h4>
+                        <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full flex-shrink-0 ${
+                          item.type === 'module'
+                            ? 'bg-blue-500/20 text-blue-300'
                             : 'bg-purple-500/20 text-purple-300'
                         }`}>
                           {item.type === 'module' ? 'Module' : 'Vidéo'}
                         </span>
                       </div>
-                      
-                      <div className="flex items-center justify-between text-xs opacity-75 mb-2">
+
+                      <div className="flex items-center justify-between text-[10px] sm:text-xs opacity-75 mb-1.5 sm:mb-2">
                         <span className="flex items-center">
                           <ClockIcon className="w-3 h-3 mr-1" />
                           {formatDuration(item.duration_minutes)}
                         </span>
                         <span className="font-medium">{Math.round(item.user_progress)}%</span>
                       </div>
-                      
+
                       {/* Barre de progression */}
-                      <div className="w-full bg-gray-600 rounded-full h-1.5">
-                        <div 
-                          className={`h-1.5 rounded-full transition-all duration-300 ${
+                      <div className="w-full bg-gray-600 rounded-full h-1 sm:h-1.5">
+                        <div
+                          className={`h-1 sm:h-1.5 rounded-full transition-all duration-300 ${
                             item.type === 'module' ? 'bg-blue-400' : 'bg-indigo-400'
                           }`}
                           style={{ width: `${item.user_progress}%` }}
@@ -432,23 +432,23 @@ const FormationLearnPage = () => {
             ) : (
               // Afficher la vidéo principale s'il n'y a pas de vidéos séparées
               currentVideo && (
-                <button className="w-full p-3 rounded-lg mb-2 text-left bg-indigo-600 text-white">
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 mt-1">
-                      <PlayIcon className="w-5 h-5" />
+                <button className="w-full p-2 sm:p-3 rounded-lg mb-2 text-left bg-indigo-600 text-white">
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <div className="flex-shrink-0 mt-0.5 sm:mt-1">
+                      <PlayIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate text-sm">{currentVideo.title}</h4>
-                      <div className="flex items-center justify-between mt-1 text-xs opacity-75">
+                      <h4 className="font-medium truncate text-xs sm:text-sm">{currentVideo.title}</h4>
+                      <div className="flex items-center justify-between mt-1 text-[10px] sm:text-xs opacity-75">
                         <span>{formatDuration(currentVideo.duration_minutes)}</span>
                         <span>{Math.round(currentVideo.user_progress)}%</span>
                       </div>
-                      
+
                       {currentVideo.user_progress > 0 && (
-                        <div className="mt-2 w-full bg-indigo-400/30 rounded-full h-1.5">
-                          <div 
-                            className="bg-indigo-400 h-1.5 rounded-full" 
+                        <div className="mt-1.5 sm:mt-2 w-full bg-indigo-400/30 rounded-full h-1 sm:h-1.5">
+                          <div
+                            className="bg-indigo-400 h-1 sm:h-1.5 rounded-full"
                             style={{ width: `${currentVideo.user_progress}%` }}
                           />
                         </div>

@@ -92,7 +92,7 @@ npm start
 
 ### Variables d'environnement
 ```bash
-REACT_APP_API_URL=http://192.168.1.136:8001/api/v1
+REACT_APP_API_URL=https://192.168.1.136:8001/api/v1
 REACT_APP_CINETPAY_API_KEY=your_api_key
 REACT_APP_CINETPAY_SITE_ID=your_site_id
 ```

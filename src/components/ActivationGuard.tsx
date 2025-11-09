@@ -59,12 +59,12 @@ const ActivationGuard: React.FC<ActivationGuardProps> = ({
       
       {/* Overlay avec lock */}
       {showLockIcon && (
-        <div 
-          className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-20 rounded cursor-pointer"
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-gray-900 dark:bg-gray-950 bg-opacity-20 dark:bg-opacity-40 rounded cursor-pointer"
           onClick={() => checkActivationAndBlock(action)}
         >
-          <div className="bg-white rounded-full p-2 shadow-lg">
-            <LockClosedIcon className="w-5 h-5 text-orange-500" />
+          <div className="bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg border-2 border-gray-200 dark:border-gray-600">
+            <LockClosedIcon className="w-5 h-5 text-orange-500 dark:text-orange-400" />
           </div>
         </div>
       )}

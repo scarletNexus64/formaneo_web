@@ -195,7 +195,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
                 setIsWaitingForPayment(false);
                 setPendingTransactionId(null);
               }}
-              className="w-full bg-gray-300 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-400 transition-colors"
+              className="w-full bg-gray-300 text-gray-700 dark:text-gray-300 rounded-lg px-4 py-2 hover:bg-gray-400 transition-colors"
             >
               Annuler
             </button>
@@ -205,7 +205,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
         <form onSubmit={handleSubmit} className="mt-4">
           <div className="space-y-4">
             <div>
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Montant à déposer
               </label>
               <div className="relative">
@@ -218,20 +218,20 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
                     amount && !validation.valid 
                       ? 'border-red-300 focus:ring-red-500' 
-                      : 'border-gray-300'
+                      : 'border-gray-300 dark:border-gray-600'
                   }`}
                   required
                 />
-                <span className="absolute right-3 top-2 text-gray-500 text-sm">FCFA</span>
+                <span className="absolute right-3 top-2 text-gray-500 dark:text-gray-400 text-sm">FCFA</span>
               </div>
               {amount && !validation.valid && (
                 <p className="text-red-500 text-sm mt-1">{validation.message}</p>
               )}
-              <p className="text-gray-500 text-xs mt-1">Montant minimum: 100 FCFA</p>
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">Montant minimum: 100 FCFA</p>
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Numéro de téléphone (optionnel)
               </label>
               <input
@@ -240,9 +240,9 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="Ex: 6XXXXXXXX"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               />
-              <p className="text-gray-500 text-xs mt-1">Pour le paiement par Mobile Money</p>
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">Pour le paiement par Mobile Money</p>
             </div>
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
@@ -256,7 +256,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 bg-gray-300 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-400 transition-colors"
+              className="flex-1 bg-gray-300 text-gray-700 dark:text-gray-300 rounded-lg px-4 py-2 hover:bg-gray-400 transition-colors"
             >
               Annuler
             </button>

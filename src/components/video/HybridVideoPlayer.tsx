@@ -25,15 +25,22 @@ const HybridVideoPlayer: React.FC<HybridVideoPlayerProps> = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerRef = useRef<any>(null);
   const [isYouTube, setIsYouTube] = useState(false);
+  const [isMega, setIsMega] = useState(false);
   const [youtubeId, setYoutubeId] = useState('');
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fonction pour extraire l'ID YouTube
   const extractYouTubeId = (url: string): string | null => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  // Fonction pour détecter si c'est un lien Mega
+  const isMegaLink = (url: string): boolean => {
+    return url.includes('mega.nz') || url.includes('mega.co.nz');
   };
 
   // Fonction pour convertir l'URL YouTube en URL d'embed
@@ -46,23 +53,40 @@ const HybridVideoPlayer: React.FC<HybridVideoPlayerProps> = ({
       enablejsapi: '1',
       origin: window.location.origin
     });
-    
+
     if (startTime > 0) {
       params.set('start', Math.floor(startTime).toString());
     }
-    
+
     return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
   };
 
+  // Fonction pour convertir un lien Mega en URL d'embed
+  const getMegaEmbedUrl = (url: string): string => {
+    // Mega supporte les liens d'embed en ajoutant /embed/ avant file
+    if (url.includes('/file/')) {
+      return url.replace('/file/', '/embed/');
+    }
+    return url;
+  };
+
   useEffect(() => {
+    setIsLoading(true);
     const ytId = extractYouTubeId(src);
+    const isMegaUrl = isMegaLink(src);
+
     if (ytId) {
       setIsYouTube(true);
+      setIsMega(false);
       setYoutubeId(ytId);
-      // Simuler une durée pour YouTube (on ne peut pas la récupérer facilement)
+      setDuration(600); // 10 minutes par défaut
+    } else if (isMegaUrl) {
+      setIsMega(true);
+      setIsYouTube(false);
       setDuration(600); // 10 minutes par défaut
     } else {
       setIsYouTube(false);
+      setIsMega(false);
       initializeVideoJS();
     }
 
@@ -75,7 +99,7 @@ const HybridVideoPlayer: React.FC<HybridVideoPlayerProps> = ({
   }, [src]);
 
   const initializeVideoJS = () => {
-    if (!playerRef.current && videoRef.current && !isYouTube) {
+    if (!playerRef.current && videoRef.current && !isYouTube && !isMega) {
       const videoElement = document.createElement('video-js');
       videoElement.classList.add('vjs-big-play-centered');
       videoRef.current.appendChild(videoElement);
@@ -102,6 +126,7 @@ const HybridVideoPlayer: React.FC<HybridVideoPlayerProps> = ({
         if (startTime > 0) {
           player.currentTime(startTime);
         }
+        setIsLoading(false);
       });
 
       // Événements de progression
@@ -130,33 +155,55 @@ const HybridVideoPlayer: React.FC<HybridVideoPlayerProps> = ({
     return 'video/mp4'; // défaut
   };
 
-  // Simuler la progression pour YouTube
-  useEffect(() => {
-    if (isYouTube) {
-      const interval = setInterval(() => {
-        // Simulation simple de progression
-        const newTime = currentTime + 1;
-        setCurrentTime(newTime);
-        
-        if (duration > 0) {
-          const percent = (newTime / duration) * 100;
-          onTimeUpdate?.(newTime, duration);
-          onProgress?.(percent);
-          
-          if (percent >= 100) {
-            onEnded?.();
-            clearInterval(interval);
-          }
-        }
-      }, 1000);
+  // Gérer le chargement de l'iframe
+  const handleIframeLoad = () => {
+    setIsLoading(false);
+  };
 
-      return () => clearInterval(interval);
-    }
-  }, [isYouTube, currentTime, duration, onTimeUpdate, onProgress, onEnded]);
+  if (isMega) {
+    return (
+      <div className={`mega-player-wrapper relative ${className}`}>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-black flex items-center justify-center z-10">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mb-4 mx-auto"></div>
+              <p className="text-white text-sm">Chargement de la vidéo...</p>
+            </div>
+          </div>
+        )}
+
+        <iframe
+          ref={iframeRef}
+          src={getMegaEmbedUrl(src)}
+          title="Formation Video - Mega"
+          frameBorder="0"
+          allow="fullscreen"
+          allowFullScreen
+          onLoad={handleIframeLoad}
+          style={{
+            width: '100%',
+            height: '100%',
+            minHeight: '400px'
+          }}
+        />
+      </div>
+    );
+  }
 
   if (isYouTube) {
     return (
-      <div className={`youtube-player-wrapper ${className}`}>
+      <div className={`youtube-player-wrapper relative ${className}`}>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-black flex items-center justify-center z-10">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mb-4 mx-auto"></div>
+              <p className="text-white text-sm">Chargement de la vidéo...</p>
+            </div>
+          </div>
+        )}
+
         <iframe
           ref={iframeRef}
           src={getYouTubeEmbedUrl(youtubeId, startTime)}
@@ -164,32 +211,29 @@ const HybridVideoPlayer: React.FC<HybridVideoPlayerProps> = ({
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
-          style={{ 
-            width: '100%', 
+          onLoad={handleIframeLoad}
+          style={{
+            width: '100%',
             height: '100%',
             minHeight: '400px'
           }}
         />
-        
-        {/* Contrôles personnalisés pour YouTube */}
-        <div className="youtube-custom-controls absolute bottom-4 left-4 right-4 bg-black/50 text-white p-2 rounded-lg">
-          <div className="flex items-center justify-between text-sm">
-            <span>Vidéo YouTube</span>
-            <span>{Math.round((currentTime / duration) * 100)}% terminé</span>
-          </div>
-          <div className="w-full bg-gray-600 rounded-full h-2 mt-2">
-            <div 
-              className="bg-red-500 h-2 rounded-full transition-all duration-300" 
-              style={{ width: `${(currentTime / duration) * 100}%` }}
-            />
-          </div>
-        </div>
       </div>
     );
   }
 
   return (
-    <div className={`video-player-wrapper ${className}`}>
+    <div className={`video-player-wrapper relative ${className}`}>
+      {/* Loading State */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-black flex items-center justify-center z-10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mb-4 mx-auto"></div>
+            <p className="text-white text-sm">Chargement de la vidéo...</p>
+          </div>
+        </div>
+      )}
+
       <div
         ref={videoRef}
         className="video-js-wrapper"

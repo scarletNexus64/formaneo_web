@@ -140,15 +140,15 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
       <form onSubmit={handleSubmit} className="mt-4">
         <div className="space-y-4">
           {/* Solde disponible */}
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-            <p className="text-orange-800 text-sm">
+          <div className="bg-orange-50 dark:bg-orange-900 border border-orange-200 dark:border-orange-700 rounded-lg p-3">
+            <p className="text-orange-800 dark:text-orange-200 text-sm">
               💰 Solde disponible pour retrait: <strong>{formatCurrency(availableBalance)}</strong>
             </p>
           </div>
 
           {/* Montant */}
           <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Montant à retirer
             </label>
             <div className="relative">
@@ -158,35 +158,35 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
                 value={amount}
                 onChange={handleAmountChange}
                 placeholder="Ex: 1 000"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                  amount && !validation.valid 
-                    ? 'border-red-300 focus:ring-red-500' 
-                    : 'border-gray-300 focus:ring-orange-500'
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                  amount && !validation.valid
+                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500'
+                    : 'border-gray-300 dark:border-gray-600 focus:ring-orange-500'
                 }`}
                 required
               />
-              <span className="absolute right-3 top-2 text-gray-500 text-sm">FCFA</span>
+              <span className="absolute right-3 top-2 text-gray-500 dark:text-gray-400 text-sm">FCFA</span>
             </div>
             {amount && numericAmount > availableBalance && (
               <p className="text-red-500 text-sm mt-1">
                 Montant supérieur au solde disponible
               </p>
             )}
-            <p className="text-gray-500 text-xs mt-1">
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
               Montant minimum: 500 FCFA (multiple de 5) - Cameroun uniquement
             </p>
           </div>
 
           {/* Opérateur */}
           <div>
-            <label htmlFor="operator" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="operator" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Opérateur Mobile Money (Cameroun)
             </label>
             <select
               id="operator"
               value={operator}
               onChange={(e) => setOperator(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             >
               <option value="">Sélectionner un opérateur</option>
@@ -200,7 +200,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
 
           {/* Numéro de téléphone */}
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Numéro de téléphone
             </label>
             <input
@@ -209,35 +209,35 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="Ex: 6XXXXXXXX (Cameroun)"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
-            <p className="text-gray-500 text-xs mt-1">
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
               Numéro camerounais pour recevoir l'argent
             </p>
           </div>
 
           {/* Information sur le traitement */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-blue-800 text-sm">
-              ⏰ <strong>Traitement en arrière-plan:</strong> Votre retrait sera traité automatiquement. 
+          <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+            <p className="text-blue-800 dark:text-blue-200 text-sm">
+              ⏰ <strong>Traitement en arrière-plan:</strong> Votre retrait sera traité automatiquement.
               Vous recevrez une notification une fois terminé.
             </p>
           </div>
 
           {/* Frais (si applicable) */}
           {numericAmount > 0 && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+            <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Montant à retirer:</span>
-                <span className="font-medium">{formatCurrency(numericAmount)}</span>
+                <span className="text-gray-600 dark:text-gray-400">Montant à retirer:</span>
+                <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(numericAmount)}</span>
               </div>
               <div className="flex justify-between text-sm mt-1">
-                <span className="text-gray-600">Frais:</span>
-                <span className="font-medium text-green-600">Gratuit</span>
+                <span className="text-gray-600 dark:text-gray-400">Frais:</span>
+                <span className="font-medium text-green-600 dark:text-green-400">Gratuit</span>
               </div>
-              <hr className="my-2" />
-              <div className="flex justify-between text-sm font-semibold">
+              <hr className="my-2 border-gray-300 dark:border-gray-600" />
+              <div className="flex justify-between text-sm font-semibold text-gray-900 dark:text-white">
                 <span>Vous recevrez:</span>
                 <span>{formatCurrency(numericAmount)}</span>
               </div>
@@ -249,7 +249,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
           <button
             type="button"
             onClick={handleClose}
-            className="flex-1 bg-gray-300 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-400 transition-colors"
+            className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg px-4 py-2 hover:bg-gray-400 dark:hover:bg-gray-700 transition-colors"
           >
             Annuler
           </button>

@@ -156,10 +156,10 @@ const QuizPlayPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement du quiz...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement du quiz...</p>
         </div>
       </div>
     );
@@ -178,12 +178,12 @@ const QuizPlayPage = () => {
 
   if (!quiz) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Quiz non trouvé</p>
-          <button 
+          <p className="text-gray-600 dark:text-gray-400">Quiz non trouvé</p>
+          <button
             onClick={() => navigate('/quizz')}
-            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg"
+            className="mt-4 px-4 py-2 bg-primary-600 dark:bg-primary-700 text-white rounded-lg"
           >
             Retour aux quiz
           </button>
@@ -196,29 +196,29 @@ const QuizPlayPage = () => {
   const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <Navigation />
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Question {currentQuestionIndex + 1} sur {quiz.questions.length}
               </h1>
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center text-sm text-gray-600">
+              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                 <ClockIcon className="h-4 w-4 mr-1" />
                 {formatTime(timeRemaining)}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
                 Score: {score}/{currentQuestionIndex}
               </div>
               <button
                 onClick={handleExitQuiz}
-                className="p-2 text-gray-500 hover:text-gray-700 rounded-lg"
+                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
@@ -227,9 +227,9 @@ const QuizPlayPage = () => {
           
           {/* Progress Bar */}
           <div className="pb-2">
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
               <div 
-                className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                className="bg-primary-600 dark:bg-primary-700 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -239,10 +239,10 @@ const QuizPlayPage = () => {
 
       {/* Quiz Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
           {/* Question */}
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4 leading-relaxed">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4 leading-relaxed">
               {currentQuestion.question}
             </h2>
           </div>
@@ -255,15 +255,15 @@ const QuizPlayPage = () => {
                 onClick={() => handleAnswerSelect(index)}
                 className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${
                   selectedAnswer === index
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-900'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-100'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
                 }`}
               >
                 <div className="flex items-center">
                   <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
                     selectedAnswer === index
-                      ? 'border-indigo-600 bg-indigo-600'
-                      : 'border-gray-300'
+                      ? 'border-indigo-600 bg-primary-600 dark:bg-primary-700'
+                      : 'border-gray-300 dark:border-gray-600'
                   }`}>
                     {selectedAnswer === index && (
                       <CheckCircleIcon className="h-4 w-4 text-white" />
@@ -282,8 +282,8 @@ const QuizPlayPage = () => {
               disabled={selectedAnswer === null}
               className={`px-8 py-3 rounded-lg font-medium transition-colors ${
                 selectedAnswer !== null
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  ? 'bg-primary-600 dark:bg-primary-700 text-white hover:bg-primary-700 dark:hover:bg-primary-600'
+                  : 'bg-gray-300 text-gray-500 dark:text-gray-400 cursor-not-allowed'
               }`}
             >
               {currentQuestionIndex === quiz.questions.length - 1 ? 'Terminer le Quiz' : 'Question Suivante'}
@@ -312,11 +312,11 @@ const QuizResultScreen: React.FC<{
   const isSuccess = result.passed;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
         {/* Icon */}
         <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${
-          isSuccess ? 'bg-green-100' : 'bg-orange-100'
+          isSuccess ? 'bg-green-100 dark:bg-green-900' : 'bg-orange-100 dark:bg-orange-900'
         }`}>
           <div className={`text-4xl ${isSuccess ? 'text-green-600' : 'text-orange-600'}`}>
             {isSuccess ? '🎉' : '👍'}
@@ -324,29 +324,29 @@ const QuizResultScreen: React.FC<{
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           {isSuccess ? 'Félicitations !' : 'Bien joué !'}
         </h1>
 
         {/* Score */}
-        <p className="text-xl text-gray-600 mb-6">
+        <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
           Votre score : {finalScore}/{totalQuestions} ({percentage}%)
         </p>
 
         {/* Reward */}
         {isSuccess && result.reward > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <p className="text-lg font-semibold text-yellow-800 flex items-center justify-center">
+          <div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6">
+            <p className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 flex items-center justify-center">
               💰 Vous avez gagné {formatPrice(result.reward)} FCFA !
             </p>
-            <p className="text-sm text-yellow-600 mt-1">
+            <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
               Nouveau solde : {formatPrice(result.new_balance)} FCFA
             </p>
           </div>
         )}
 
         {/* Quiz info */}
-        <div className="text-sm text-gray-500 mb-6">
+        <div className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           Quiz gratuits restants : {result.free_quizzes_left}
         </div>
 
@@ -354,13 +354,13 @@ const QuizResultScreen: React.FC<{
         <div className="space-y-3">
           <button
             onClick={onRestart}
-            className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+            className="w-full bg-primary-600 dark:bg-primary-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
           >
             Nouveau Quiz
           </button>
           <button
             onClick={() => navigate('/quizz/history')}
-            className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             Voir l'historique
           </button>

@@ -95,6 +95,9 @@ export const ENDPOINTS = {
     CLAIM_REWARD: (id: string) => `/challenges/${id}/claim`,
     UPDATE_PROGRESS: (id: string) => `/challenges/${id}/progress`,
   },
+  SETTINGS: {
+    GET: '/settings',
+  },
 };
 
 export const CINETPAY_CONFIG = {

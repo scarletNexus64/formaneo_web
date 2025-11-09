@@ -33,8 +33,8 @@ const WalletActions: React.FC<WalletActionsProps> = ({
 
   return (
     <>
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Actions rapides</h3>
         
         <div className="grid grid-cols-1 gap-4">
           {/* Bouton Déposer - Commenté car non utilisé en web */}
@@ -55,8 +55,8 @@ const WalletActions: React.FC<WalletActionsProps> = ({
             disabled={!canWithdraw}
             className={`flex flex-col items-center p-4 rounded-lg border transition-colors group ${
               canWithdraw
-                ? 'bg-orange-50 hover:bg-orange-100 border-orange-200'
-                : 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-50'
+                ? 'bg-orange-50 dark:bg-orange-900 hover:bg-orange-100 dark:hover:bg-orange-800 border-orange-200 dark:border-orange-700'
+                : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700 cursor-not-allowed opacity-50'
             }`}
           >
             <div className={`p-2 rounded-lg mb-2 transition-colors ${
@@ -66,10 +66,10 @@ const WalletActions: React.FC<WalletActionsProps> = ({
             }`}>
               <MinusIcon className="w-6 h-6 text-white" />
             </div>
-            <span className={`font-medium ${canWithdraw ? 'text-orange-700' : 'text-gray-500'}`}>
+            <span className={`font-medium ${canWithdraw ? 'text-orange-700 dark:text-orange-300' : 'text-gray-500 dark:text-gray-400'}`}>
               Retirer
             </span>
-            <span className={`text-sm ${canWithdraw ? 'text-orange-600' : 'text-gray-400'}`}>
+            <span className={`text-sm ${canWithdraw ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400 dark:text-gray-500'}`}>
               {canWithdraw ? 'Vers Mobile Money' : 'Solde insuffisant'}
             </span>
           </button>
@@ -77,8 +77,8 @@ const WalletActions: React.FC<WalletActionsProps> = ({
         </div>
 
         {!canWithdraw && (
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-amber-800 text-sm">
+          <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-lg">
+            <p className="text-amber-800 dark:text-amber-200 text-sm">
               💡 Montant minimum pour retrait: 500 FCFA
             </p>
           </div>
