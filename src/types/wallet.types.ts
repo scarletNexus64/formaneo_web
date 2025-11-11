@@ -45,3 +45,8 @@ export interface TransactionStatusResponse {
   created_at?: string;
   message?: string;
 }
+
+export interface WithdrawalSettings {
+  min_amount: number;
+  max_amount: number;
+}

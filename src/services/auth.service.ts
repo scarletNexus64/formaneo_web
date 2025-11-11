@@ -57,10 +57,15 @@ class AuthService {
   }
 
   /**
-   * Mot de passe oublié
+   * Mot de passe oublié - Vérifier email et téléphone
    */
-  async forgotPassword(email: string): Promise<{ message: string }> {
-    const response = await apiService.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
+  async forgotPassword(email: string, phone: string): Promise<{
+    success: boolean;
+    message: string;
+    user_id?: number;
+    reset_token?: string
+  }> {
+    const response = await apiService.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email, phone });
     return response.data;
   }
 
@@ -68,11 +73,11 @@ class AuthService {
    * Réinitialiser le mot de passe
    */
   async resetPassword(data: {
-    token: string;
-    email: string;
+    user_id: number;
+    reset_token: string;
     password: string;
     password_confirmation: string;
-  }): Promise<{ message: string }> {
+  }): Promise<{ success: boolean; message: string }> {
     const response = await apiService.post(ENDPOINTS.AUTH.RESET_PASSWORD, data);
     return response.data;
   }

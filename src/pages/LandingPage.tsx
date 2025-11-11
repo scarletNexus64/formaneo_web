@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence, useInView } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
+import apiService from '../services/api.service';
+import { ENDPOINTS } from '../config/api.config';
 import {
   AcademicCapIcon,
   BookOpenIcon,
@@ -67,23 +69,26 @@ const AnimatedCounter = ({ value, duration = 2000 }: { value: string; duration?:
 
   // Parser la valeur pour extraire le nombre
   const parseValue = (val: string): { number: number; prefix: string; suffix: string } => {
-    // Pour "8.5M" -> 8.5, "", "M"
+    // Pour "8.5M+" -> 8.5, "", "M+"
     // Pour "98%" -> 98, "", "%"
-    // Pour "12,547" -> 12547, "", ""
+    // Pour "12,547+" -> 12547, "", "+"
 
-    if (val.includes('M')) {
-      const num = parseFloat(val.replace('M', '').replace(',', '.'));
-      return { number: num, prefix: '', suffix: 'M' };
+    const hasPlus = val.includes('+');
+    const cleanVal = val.replace('+', '');
+
+    if (cleanVal.includes('M')) {
+      const num = parseFloat(cleanVal.replace('M', '').replace(',', '.'));
+      return { number: num, prefix: '', suffix: hasPlus ? 'M+' : 'M' };
     }
 
-    if (val.includes('%')) {
-      const num = parseFloat(val.replace('%', ''));
-      return { number: num, prefix: '', suffix: '%' };
+    if (cleanVal.includes('%')) {
+      const num = parseFloat(cleanVal.replace('%', ''));
+      return { number: num, prefix: '', suffix: hasPlus ? '%+' : '%' };
     }
 
     // Pour les nombres avec virgules
-    const num = parseFloat(val.replace(/,/g, ''));
-    return { number: num, prefix: '', suffix: '' };
+    const num = parseFloat(cleanVal.replace(/,/g, ''));
+    return { number: num, prefix: '', suffix: hasPlus ? '+' : '' };
   };
 
   const parsed = parseValue(value);
@@ -351,6 +356,233 @@ const CircularProgress = ({ percentage, label, color = "primary" }: { percentage
   );
 };
 
+// Composant de slider de bannières
+const BannerSlider = () => {
+  // Import des bannières
+  const banners = [
+    require('../assets/banners/ban0.JPG'),
+    require('../assets/banners/ban1.JPG'),
+    require('../assets/banners/ban2.JPG'),
+    require('../assets/banners/ban3.JPG'),
+    require('../assets/banners/ban4.JPG'),
+    require('../assets/banners/ban5.JPG'),
+    require('../assets/banners/ban6.JPG'),
+    require('../assets/banners/ban7.JPG'),
+    require('../assets/banners/ban8.JPG'),
+    require('../assets/banners/ban9.JPG'),
+    require('../assets/banners/ban10.JPG'),
+    require('../assets/banners/ban11.JPG'),
+    require('../assets/banners/ban13.JPG'),
+  ];
+
+  // État pour mélanger les bannières de façon aléatoire au chargement
+  const [shuffledBanners] = useState(() => {
+    const shuffled = [...banners];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  });
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [imagesCache] = useState(() => new Map<string, HTMLImageElement>());
+
+  // Précharger toutes les images au montage
+  useEffect(() => {
+    const preloadImages = async () => {
+      const imagePromises = shuffledBanners.map((src, index) => {
+        return new Promise<void>((resolve, reject) => {
+          // Vérifier si l'image est déjà en cache
+          if (imagesCache.has(src)) {
+            setLoadedImages(prev => new Set(prev).add(index));
+            resolve();
+            return;
+          }
+
+          const img = new Image();
+          img.src = src;
+
+          img.onload = () => {
+            imagesCache.set(src, img);
+            setLoadedImages(prev => new Set(prev).add(index));
+            resolve();
+          };
+
+          img.onerror = () => {
+            console.error(`Failed to load image: ${src}`);
+            reject();
+          };
+        });
+      });
+
+      try {
+        await Promise.all(imagePromises);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error preloading images:', error);
+        setIsLoading(false);
+      }
+    };
+
+    preloadImages();
+  }, [shuffledBanners, imagesCache]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const interval = setInterval(() => {
+      setDirection(1);
+      setCurrentIndex((prev) => (prev + 1) % shuffledBanners.length);
+    }, 5000); // Change toutes les 5 secondes
+
+    return () => clearInterval(interval);
+  }, [shuffledBanners.length, isLoading]);
+
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? '100%' : '-100%',
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      x: direction > 0 ? '-100%' : '100%',
+      opacity: 0
+    })
+  };
+
+  const goToSlide = (index: number) => {
+    setDirection(index > currentIndex ? 1 : -1);
+    setCurrentIndex(index);
+  };
+
+  return (
+    <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800/50">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] rounded-2xl overflow-hidden shadow-2xl bg-gray-200 dark:bg-gray-700"
+        >
+          {isLoading ? (
+            // Loader
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
+              <motion.div
+                animate={{
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 180, 360]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="w-16 h-16 border-4 border-primary-600 dark:border-primary-400 border-t-transparent rounded-full"
+              />
+              <motion.p
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="mt-4 text-gray-600 dark:text-gray-300 font-medium"
+              >
+                Chargement des bannières... {loadedImages.size}/{shuffledBanners.length}
+              </motion.p>
+            </div>
+          ) : (
+            <>
+              <AnimatePresence initial={false} custom={direction} mode="wait">
+                <motion.div
+                  key={currentIndex}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.5 }
+                  }}
+                  className="absolute inset-0"
+                >
+                  <img
+                    src={shuffledBanners[currentIndex]}
+                    alt={`Banner ${currentIndex + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                </motion.div>
+              </AnimatePresence>
+
+          {/* Navigation dots */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+            {shuffledBanners.map((_, index) => (
+              <motion.button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`transition-all ${
+                  index === currentIndex
+                    ? 'w-8 sm:w-10 h-2 sm:h-2.5 bg-white'
+                    : 'w-2 sm:w-2.5 h-2 sm:h-2.5 bg-white/50 hover:bg-white/75'
+                } rounded-full`}
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+              />
+            ))}
+          </div>
+
+          {/* Navigation arrows for desktop */}
+          <div className="hidden md:block">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                setDirection(-1);
+                setCurrentIndex((prev) => (prev - 1 + shuffledBanners.length) % shuffledBanners.length);
+              }}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition z-10"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                setDirection(1);
+                setCurrentIndex((prev) => (prev + 1) % shuffledBanners.length);
+              }}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition z-10"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </motion.button>
+          </div>
+
+              {/* Counter badge */}
+              <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
+                {currentIndex + 1} / {shuffledBanners.length}
+              </div>
+            </>
+          )}
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -359,6 +591,39 @@ const LandingPage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollY } = useScroll();
   const navOpacity = useTransform(scrollY, [0, 100], [0.95, 1]);
+
+  // State pour les informations de contact
+  const [contactInfo, setContactInfo] = useState({
+    email: 'formaneosarl@gmail.com',
+    phone: '+237 678 613 653',
+    whatsapp: '+237 678 613 653',
+  });
+
+  // Récupérer les informations de contact depuis l'API
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const response = await apiService.get(ENDPOINTS.SUPPORT.INFO);
+        if (response.data && response.data.support_info) {
+          const supportInfo = response.data.support_info;
+
+          // Transformer le tableau en objet
+          const contactData = {
+            email: supportInfo.find((item: any) => item.type === 'email')?.value || 'formaneosarl@gmail.com',
+            phone: supportInfo.find((item: any) => item.type === 'phone')?.value || '+237 678 613 653',
+            whatsapp: supportInfo.find((item: any) => item.type === 'whatsapp')?.value || '+237 678 613 653',
+          };
+
+          setContactInfo(contactData);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des informations de contact:', error);
+        // Garder les valeurs par défaut en cas d'erreur
+      }
+    };
+
+    fetchContactInfo();
+  }, []);
 
   // Fermer le menu mobile quand on clique sur un lien
   const handleNavClick = () => {
@@ -398,7 +663,7 @@ const LandingPage = () => {
     },
     {
       icon: <ShieldCheckIcon className="w-7 h-7" />,
-      title: "Certifications Reconnues",
+      title: "Certificat professionnel",
       description: "Certificats valides internationalement",
       color: "from-indigo-500 to-blue-500"
     }
@@ -429,10 +694,10 @@ const LandingPage = () => {
   ];
 
   const stats = [
-    { value: "12,547", label: "Étudiants actifs", icon: <UserGroupIcon className="w-5 h-5 md:w-6 md:h-6" /> },
-    { value: "523", label: "Formations", icon: <BookOpenIcon className="w-5 h-5 md:w-6 md:h-6" /> },
+    { value: "12,547+", label: "Étudiants actifs", icon: <UserGroupIcon className="w-5 h-5 md:w-6 md:h-6" /> },
+    { value: "523+", label: "Formations", icon: <BookOpenIcon className="w-5 h-5 md:w-6 md:h-6" /> },
     { value: "98%", label: "Satisfaction", icon: <StarIcon className="w-5 h-5 md:w-6 md:h-6" /> },
-    { value: "8.5M", label: "FCFA distribués", icon: <CurrencyDollarIcon className="w-5 h-5 md:w-6 md:h-6" /> }
+    { value: "8.5M+", label: "FCFA distribués", icon: <CurrencyDollarIcon className="w-5 h-5 md:w-6 md:h-6" /> }
   ];
 
   const faqs = [
@@ -568,7 +833,7 @@ const LandingPage = () => {
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-100 to-blue-100 dark:from-primary-900/30 dark:to-blue-900/30 text-primary-700 dark:text-primary-300 px-3 sm:px-4 py-2 rounded-full mb-4 border border-primary-200 dark:border-primary-800"
               >
                 <FireIcon className="w-4 h-4" />
-                <span className="text-xs sm:text-sm font-semibold">Plateforme accessible mondialement</span>
+                <span className="text-xs sm:text-sm font-semibold">La plateforme e-learning N°1 pour apprendre et booster votre carrière</span>
               </motion.div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
@@ -618,7 +883,7 @@ const LandingPage = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-1">
-                    <span className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">12,547</span>
+                    <span className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">+12,547</span>
                     <span className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">étudiants actifs</span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -657,7 +922,7 @@ const LandingPage = () => {
                     <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">Certificat vérifié</p>
+                    <p className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">Certificat professionnel</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">Reconnu internationalement</p>
                   </div>
                 </div>
@@ -709,6 +974,9 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Banner Slider Section - Responsive */}
+      <BannerSlider />
 
       {/* Features Section - Responsive */}
       <section id="features" className="py-12 px-4 sm:px-6 lg:px-8">
@@ -1000,7 +1268,7 @@ const LandingPage = () => {
                 <EnvelopeIcon className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
               <h3 className="font-bold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">Email</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">formaneosarl@gmail.com</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">{contactInfo.email}</p>
             </motion.div>
 
             <motion.div
@@ -1014,7 +1282,7 @@ const LandingPage = () => {
                 <PhoneIcon className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
               <h3 className="font-bold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">Téléphone</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">+237 678 613 653</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">{contactInfo.phone}</p>
             </motion.div>
 
             <motion.div
@@ -1057,7 +1325,7 @@ const LandingPage = () => {
             Prêt à transformer votre carrière ?
           </motion.h2>
           <p className="text-base sm:text-xl text-white/90 mb-6">
-            Rejoignez 12,547 étudiants qui développent leurs compétences avec Formaneo
+            Rejoignez +12,547 étudiants qui développent leurs compétences avec Formaneo
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">

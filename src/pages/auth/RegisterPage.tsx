@@ -147,18 +147,25 @@ const RegisterPage = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Téléphone
                   </label>
-                  <input
-                    type="tel"
-                    {...register('phone', {
-                      required: 'Téléphone requis',
-                      pattern: {
-                        value: /^[0-9+\-\s]+$/,
-                        message: 'Numéro de téléphone invalide'
-                      }
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
-                    placeholder="+237 678 613 653"
-                  />
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                      <span className="text-xl">🇨🇲</span>
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">+237</span>
+                      <span className="text-gray-300 dark:text-gray-600">|</span>
+                    </div>
+                    <input
+                      type="tel"
+                      {...register('phone', {
+                        required: 'Téléphone requis',
+                        pattern: {
+                          value: /^[0-9+\-\s]+$/,
+                          message: 'Numéro de téléphone invalide'
+                        }
+                      })}
+                      className="w-full pl-28 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                      placeholder="678 613 653"
+                    />
+                  </div>
                   {errors.phone && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone.message}</p>
                   )}

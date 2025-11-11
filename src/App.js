@@ -8,6 +8,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 // Import des vraies pages avec la logique API
 import LoginPageAuth from './pages/auth/LoginPage';
 import RegisterPageAuth from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPageAuth from './pages/dashboard/DashboardPage';
 import FormationsPageAuth from './pages/formations/FormationsPage';
 import FormationDetailPageAuth from './pages/formations/FormationDetailPage';
@@ -408,6 +410,8 @@ const AppContent = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPageAuth />} />
       <Route path="/register" element={<RegisterPageAuth />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <DashboardPageAuth />

@@ -15,6 +15,7 @@ import { Challenge } from '../../types';
 import toast from 'react-hot-toast';
 import Navigation from '../../components/Navigation';
 import ActivationGuard from '../../components/ActivationGuard';
+import ChallengeImage from '../../components/ChallengeImage';
 
 const ChallengesPage = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -205,19 +206,12 @@ const ChallengesPage = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            {challenge.image_url ? (
-                              <img
-                                src={challengesService.getImageUrl(challenge.image_url) || ''}
-                                alt={challenge.title}
-                                className="h-12 w-12 rounded-lg object-cover"
-                              />
-                            ) : (
-                              <div className="h-12 w-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                                <TrophyIcon className="h-6 w-6 text-white" />
-                              </div>
-                            )}
-                          </div>
+                          <ChallengeImage
+                            src={challengesService.getImageUrl(challenge.image_url)}
+                            alt={challenge.title}
+                            className="h-12 w-12 rounded-lg"
+                            fallbackIcon={<TrophyIcon className="h-6 w-6 text-white" />}
+                          />
                           <div className="ml-4 flex-1">
                             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                               {challenge.title}

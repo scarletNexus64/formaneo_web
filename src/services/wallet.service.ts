@@ -1,11 +1,12 @@
 import apiService from './api.service';
 import { ENDPOINTS } from '../config/api.config';
-import { 
-  Transaction, 
-  WalletInfo, 
-  DepositResponse, 
-  WithdrawalResponse, 
-  TransactionStatusResponse 
+import {
+  Transaction,
+  WalletInfo,
+  DepositResponse,
+  WithdrawalResponse,
+  TransactionStatusResponse,
+  WithdrawalSettings
 } from '../types/wallet.types';
 
 class WalletService {
@@ -21,6 +22,24 @@ class WalletService {
     } catch (error) {
       console.error('Erreur lors de la récupération des informations du wallet:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Récupère les paramètres de retrait (montant min et max)
+   */
+  async getWithdrawalSettings(): Promise<WithdrawalSettings> {
+    try {
+      const response = await apiService.get(ENDPOINTS.SETTINGS.WITHDRAWAL_SETTINGS);
+      console.log('⚙️ Paramètres de retrait reçus:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des paramètres de retrait:', error);
+      // Retourner des valeurs par défaut en cas d'erreur
+      return {
+        min_amount: 1000,
+        max_amount: 1000000
+      };
     }
   }
 
@@ -163,27 +182,32 @@ class WalletService {
   /**
    * Valide un montant de dépôt/retrait
    */
-  validateAmount(amount: number, isDeposit: boolean = true): { valid: boolean; message?: string } {
-    const minAmount = isDeposit ? 100 : 500;
-    
+  validateAmount(amount: number, minAmount: number, maxAmount: number): { valid: boolean; message?: string } {
     if (!amount || amount <= 0) {
       return { valid: false, message: 'Veuillez entrer un montant valide' };
     }
-    
+
     if (amount < minAmount) {
-      return { 
-        valid: false, 
-        message: `Le montant minimum est de ${minAmount} FCFA` 
+      return {
+        valid: false,
+        message: `Le montant minimum est de ${minAmount.toLocaleString('fr-FR')} FCFA`
       };
     }
-    
+
+    if (amount > maxAmount) {
+      return {
+        valid: false,
+        message: `Le montant maximum est de ${maxAmount.toLocaleString('fr-FR')} FCFA`
+      };
+    }
+
     if (amount % 5 !== 0) {
-      return { 
-        valid: false, 
-        message: 'Le montant doit être un multiple de 5' 
+      return {
+        valid: false,
+        message: 'Le montant doit être un multiple de 5'
       };
     }
-    
+
     return { valid: true };
   }
 

@@ -32,7 +32,8 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
 
   const validateAmount = () => {
     const numericAmount = getNumericAmount();
-    return walletService.validateAmount(numericAmount, true);
+    // Pour les dépôts : min = 100 FCFA, max = 10 000 000 FCFA
+    return walletService.validateAmount(numericAmount, 100, 10000000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

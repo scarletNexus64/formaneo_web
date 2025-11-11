@@ -434,7 +434,7 @@ const AffiliatePage = () => {
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-brand-primary text-sm sm:text-base">Niveau 1 - Commission directe</h4>
                     <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mt-1">
-                      Recevez <strong>2000 FCFA</strong> quand quelqu'un s'inscrit avec votre code et fait un achat
+                      Recevez <strong>2000 FCFA</strong> quand quelqu'un s'inscrit avec votre code et active son compte.
                     </p>
                   </div>
                 </div>
@@ -445,7 +445,7 @@ const AffiliatePage = () => {
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-brand-primary text-sm sm:text-base">Niveau 2 - Commission indirecte</h4>
                     <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mt-1">
-                      Recevez <strong>1000 FCFA</strong> quand un de vos affiliés parraine quelqu'un qui fait un achat
+                      Recevez <strong>1000 FCFA</strong> quand un de vos affiliés parraine quelqu'un qui a activé son compte.
                     </p>
                   </div>
                 </div>

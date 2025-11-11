@@ -282,21 +282,21 @@ const FormationsPage = () => {
           <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
             {Array.from({ length: 6 }).map((_, index) => (
               <div key={index} className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden ${
-                viewMode === 'list' ? 'flex' : ''
+                viewMode === 'list' ? 'flex flex-col sm:flex-row' : ''
               }`}>
-                <div className={`bg-gray-200 dark:bg-gray-600 ${viewMode === 'list' ? 'w-48 h-32' : 'h-48'}`}></div>
+                <div className={`bg-gray-200 dark:bg-gray-600 animate-pulse ${viewMode === 'list' ? 'w-full sm:w-48 h-48 sm:h-32' : 'h-48'}`}></div>
                 {viewMode === 'list' && (
-                  <div className="flex-1 p-6">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded mb-3 w-3/4"></div>
-                    <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+                  <div className="flex-1 p-4 sm:p-6">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded mb-3 w-3/4 animate-pulse"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded mb-2 animate-pulse"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2 animate-pulse"></div>
                   </div>
                 )}
                 {viewMode === 'grid' && (
                   <div className="p-6">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded mb-3"></div>
-                    <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded mb-3 animate-pulse"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded mb-2 animate-pulse"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-3/4 animate-pulse"></div>
                   </div>
                 )}
               </div>
@@ -322,10 +322,10 @@ const FormationsPage = () => {
                   >
                     <Link
                       to={`/formations/${formation.id}`}
-                      className="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-md transition-all p-6 flex gap-6"
+                      className="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-md transition-all p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6"
                     >
                     {/* Thumbnail */}
-                    <div className="relative w-48 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="relative w-full sm:w-48 h-48 sm:h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                       <img
                         src={getFullImageUrl(formation.thumbnail_url) || defaultThumbnail}
                         alt=""
@@ -337,13 +337,13 @@ const FormationsPage = () => {
                       
                       {/* Badges */}
                       {hasPromotion && (
-                        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">
+                        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-red-500 text-white px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold shadow-md">
                           Promo
                         </div>
                       )}
                       {formation.is_purchased && (
-                        <div className="absolute top-2 right-2 bg-green-500 text-white p-1.5 rounded-lg">
-                          <CheckCircleIcon className="w-3 h-3" />
+                        <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-green-500 text-white p-1.5 sm:p-2 rounded-lg shadow-md">
+                          <CheckCircleIcon className="w-4 h-4" />
                         </div>
                       )}
                     </div>
@@ -351,33 +351,33 @@ const FormationsPage = () => {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       {/* Header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg whitespace-nowrap">
                             {typeof formation.category === 'object' ? formation.category.name : formation.category}
                           </span>
-                          <span className={`text-xs font-medium px-2 py-1 rounded-lg ${levelBadge.class}`}>
+                          <span className={`text-xs font-medium px-2 py-1 rounded-lg whitespace-nowrap ${levelBadge.class}`}>
                             {levelBadge.label}
                           </span>
                         </div>
-                        
+
                         {formation.is_purchased ? (
-                          <span className="text-sm font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded-lg">
+                          <span className="text-sm font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded-lg whitespace-nowrap self-start">
                             Acheté
                           </span>
                         ) : (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             {hasPromotion ? (
                               <>
-                                <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
+                                <span className="text-lg sm:text-xl font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
                                   {formatPrice(displayPrice)} FCFA
                                 </span>
-                                <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-through whitespace-nowrap">
                                   {formatPrice(formation.price)} FCFA
                                 </span>
                               </>
                             ) : (
-                              <span className="text-xl font-bold text-primary-600 dark:text-primary-400">
+                              <span className="text-lg sm:text-xl font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
                                 {formatPrice(formation.price)} FCFA
                               </span>
                             )}
@@ -386,29 +386,29 @@ const FormationsPage = () => {
                       </div>
 
                       {/* Title and Description */}
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:text-primary-400">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 line-clamp-2">
                         {formation.title}
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
                         {formation.description}
                       </p>
 
                       {/* Meta Info */}
-                      <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
-                        <div className="flex items-center">
-                          <UserIcon className="w-4 h-4 mr-1" />
-                          {formation.instructor_name}
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center whitespace-nowrap">
+                          <UserIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+                          <span className="truncate max-w-[120px] sm:max-w-none">{formation.instructor_name}</span>
                         </div>
-                        <div className="flex items-center">
-                          <ClockIcon className="w-4 h-4 mr-1" />
+                        <div className="flex items-center whitespace-nowrap">
+                          <ClockIcon className="w-4 h-4 mr-1 flex-shrink-0" />
                           {formatDuration(formation.total_duration_minutes)}
                         </div>
-                        <div className="flex items-center">
-                          <AcademicCapIcon className="w-4 h-4 mr-1" />
+                        <div className="flex items-center whitespace-nowrap">
+                          <AcademicCapIcon className="w-4 h-4 mr-1 flex-shrink-0" />
                           {formation.formations_count} cours
                         </div>
-                        <div className="flex items-center">
-                          <StarIcon className="w-4 h-4 mr-1 text-yellow-400" />
+                        <div className="flex items-center whitespace-nowrap">
+                          <StarIcon className="w-4 h-4 mr-1 text-yellow-400 flex-shrink-0" />
                           {formation.rating}
                         </div>
                       </div>
@@ -466,58 +466,58 @@ const FormationsPage = () => {
                     </div>
 
                     {/* Title and Description */}
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:text-primary-400">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 line-clamp-2">
                       {formation.title}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
                       {formation.description}
                     </p>
 
                     {/* Meta Info */}
                     <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-400 mb-4">
-                      <div className="flex items-center">
-                        <UserIcon className="w-3 h-3 mr-1" />
-                        {formation.instructor_name}
+                      <div className="flex items-center min-w-0">
+                        <UserIcon className="w-3 h-3 mr-1 flex-shrink-0" />
+                        <span className="truncate">{formation.instructor_name}</span>
                       </div>
-                      <div className="flex items-center">
-                        <ClockIcon className="w-3 h-3 mr-1" />
+                      <div className="flex items-center whitespace-nowrap">
+                        <ClockIcon className="w-3 h-3 mr-1 flex-shrink-0" />
                         {formatDuration(formation.total_duration_minutes)}
                       </div>
-                      <div className="flex items-center">
-                        <AcademicCapIcon className="w-3 h-3 mr-1" />
+                      <div className="flex items-center whitespace-nowrap">
+                        <AcademicCapIcon className="w-3 h-3 mr-1 flex-shrink-0" />
                         {formation.formations_count} cours
                       </div>
-                      <div className="flex items-center">
-                        <StarIcon className="w-3 h-3 mr-1 text-yellow-400" />
+                      <div className="flex items-center whitespace-nowrap">
+                        <StarIcon className="w-3 h-3 mr-1 text-yellow-400 flex-shrink-0" />
                         {formation.rating}
                       </div>
                     </div>
 
                     {/* Price and Action */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-wrap min-w-0">
                         {hasPromotion ? (
                           <>
-                            <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
+                            <span className="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
                               {formatPrice(displayPrice)} FCFA
                             </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 line-through">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 line-through whitespace-nowrap">
                               {formatPrice(formation.price)} FCFA
                             </span>
                           </>
                         ) : (
-                          <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
+                          <span className="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
                             {formatPrice(formation.price)} FCFA
                           </span>
                         )}
                       </div>
 
                       {formation.is_purchased ? (
-                        <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-lg">
+                        <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-lg whitespace-nowrap flex-shrink-0">
                           Acheté
                         </span>
                       ) : (
-                        <span className="text-xs font-medium text-primary-600 dark:text-primary-400">
+                        <span className="text-xs font-medium text-primary-600 dark:text-primary-400 whitespace-nowrap flex-shrink-0">
                           Voir détails →
                         </span>
                       )}

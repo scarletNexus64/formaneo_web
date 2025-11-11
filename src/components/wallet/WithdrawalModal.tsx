@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SimpleModal from './SimpleModal';
 import walletService from '../../services/wallet.service';
 import toast from 'react-hot-toast';
+import { WithdrawalSettings } from '../../types/wallet.types';
 
 interface WithdrawalModalProps {
   isOpen: boolean;
@@ -10,18 +11,43 @@ interface WithdrawalModalProps {
   availableBalance: number;
 }
 
-const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
-  availableBalance 
+const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  availableBalance
 }) => {
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [operator, setOperator] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [withdrawalSettings, setWithdrawalSettings] = useState<WithdrawalSettings>({
+    min_amount: 1000,
+    max_amount: 1000000
+  });
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   const operators = walletService.getSupportedOperators();
+
+  // Récupérer les paramètres de retrait au chargement du composant
+  useEffect(() => {
+    const fetchWithdrawalSettings = async () => {
+      try {
+        setSettingsLoading(true);
+        const settings = await walletService.getWithdrawalSettings();
+        setWithdrawalSettings(settings);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des paramètres de retrait:', error);
+        // Les valeurs par défaut sont déjà définies dans le state
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchWithdrawalSettings();
+    }
+  }, [isOpen]);
 
   const formatAmount = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
@@ -39,31 +65,41 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
 
   const validateForm = () => {
     const numericAmount = getNumericAmount();
-    
+
     if (!numericAmount || numericAmount <= 0) {
       return { valid: false, message: 'Veuillez entrer un montant valide' };
     }
-    
-    if (numericAmount < 500) {
-      return { valid: false, message: 'Le montant minimum est de 500 FCFA' };
+
+    if (numericAmount < withdrawalSettings.min_amount) {
+      return {
+        valid: false,
+        message: `Le montant minimum est de ${withdrawalSettings.min_amount.toLocaleString('fr-FR')} FCFA`
+      };
     }
-    
+
+    if (numericAmount > withdrawalSettings.max_amount) {
+      return {
+        valid: false,
+        message: `Le montant maximum est de ${withdrawalSettings.max_amount.toLocaleString('fr-FR')} FCFA`
+      };
+    }
+
     if (numericAmount % 5 !== 0) {
       return { valid: false, message: 'Le montant doit être un multiple de 5' };
     }
-    
+
     if (numericAmount > availableBalance) {
       return { valid: false, message: 'Montant supérieur au solde disponible' };
     }
-    
+
     if (!phoneNumber.trim()) {
       return { valid: false, message: 'Veuillez entrer un numéro de téléphone' };
     }
-    
+
     if (!operator) {
       return { valid: false, message: 'Veuillez sélectionner un opérateur' };
     }
-    
+
     return { valid: true };
   };
 
@@ -173,7 +209,10 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
               </p>
             )}
             <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-              Montant minimum: 500 FCFA (multiple de 5) - Cameroun uniquement
+              {settingsLoading
+                ? 'Chargement des limites...'
+                : `Min: ${withdrawalSettings.min_amount.toLocaleString('fr-FR')} FCFA - Max: ${withdrawalSettings.max_amount.toLocaleString('fr-FR')} FCFA (multiple de 5) - Cameroun uniquement`
+              }
             </p>
           </div>
 

@@ -1,12 +1,12 @@
-// export const API_CONFIG = {
-//   BASE_URL: process.env.REACT_APP_API_URL || 'http://192.168.1.149:8000/api/v1',
-//   TIMEOUT: 30000,
-// };
-
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'https://admin.cleanestuaire.com/api/v1',
+  BASE_URL: process.env.REACT_APP_API_URL || 'http://10.152.216.52:8000/api/v1',
   TIMEOUT: 30000,
 };
+
+// export const API_CONFIG = {
+//   BASE_URL: process.env.REACT_APP_API_URL || 'https://admin.cleanestuaire.com/api/v1',
+//   TIMEOUT: 30000,
+// };
 
 console.log('🌐 API Configuration:', {
   BASE_URL: API_CONFIG.BASE_URL,
@@ -97,6 +97,10 @@ export const ENDPOINTS = {
   },
   SETTINGS: {
     GET: '/settings',
+    WITHDRAWAL_SETTINGS: '/withdrawal-settings',
+  },
+  SUPPORT: {
+    INFO: '/support/info',
   },
 };
 

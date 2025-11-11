@@ -95,14 +95,21 @@ class ChallengesService {
   // Obtenir l'URL complète de l'image d'un défi
   getImageUrl(imageUrl?: string): string | null {
     if (!imageUrl) return null;
-    
+
     // Si l'URL est déjà absolue
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl;
     }
-    
-    // Sinon, ajouter le domaine de base
-    return `${window.location.protocol}//${window.location.hostname}:8000${imageUrl}`;
+
+    // Si l'URL commence par un slash, c'est un chemin absolu
+    const baseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
+
+    if (imageUrl.startsWith('/')) {
+      return `${baseUrl}${imageUrl}`;
+    }
+
+    // Sinon, ajouter le slash et le domaine de base
+    return `${baseUrl}/${imageUrl}`;
   }
 }
 
