@@ -28,6 +28,7 @@ import defaultCover from '../../assets/thumbnai.png';
 import PaymentModal from '../../components/payment/PaymentModal';
 import paymentService from '../../services/payment.service';
 import { challengeTracker } from '../../services/challengeTracker.service';
+import EbookReader from '../../components/ebooks/EbookReader';
 
 const EbooksPage = () => {
   const { user } = useAuthStore();
@@ -42,6 +43,9 @@ const EbooksPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedEbook, setSelectedEbook] = useState<Ebook | null>(null);
+  const [showReader, setShowReader] = useState(false);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState('');
+  const [currentEbookTitle, setCurrentEbookTitle] = useState('');
 
   const priceFilters = [
     { value: '', label: 'Tous les prix' },
@@ -169,11 +173,17 @@ const EbooksPage = () => {
   const handleView = async (ebookId: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     try {
       const response = await ebooksService.viewEbook(ebookId);
       if (response.success && response.view_url) {
-        window.open(response.view_url, '_blank');
+        // Trouver l'ebook pour obtenir son titre
+        const ebook = ebooks.find(e => e.id === ebookId);
+        setCurrentEbookTitle(ebook?.title || 'E-book');
+
+        // Utiliser l'URL directe avec Google PDF Viewer (contourne CORS)
+        setCurrentPdfUrl(response.view_url);
+        setShowReader(true);
       }
     } catch (error) {
       console.error('Error viewing ebook:', error);
@@ -653,6 +663,17 @@ const EbooksPage = () => {
             onSuccess={handlePaymentSuccess}
           />
         )}
+
+        {/* Ebook Reader */}
+        <EbookReader
+          isOpen={showReader}
+          onClose={() => {
+            setShowReader(false);
+            setCurrentPdfUrl('');
+          }}
+          pdfUrl={currentPdfUrl}
+          title={currentEbookTitle}
+        />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import apiService from './api.service';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export interface Ebook {
   id: number;
@@ -137,6 +138,55 @@ class EbooksService {
       console.error('❌ Error viewing ebook:', error);
       const errorMessage = error.response?.data?.message || 'Erreur lors de l\'ouverture de l\'e-book';
       toast.error(errorMessage);
+      throw error;
+    }
+  }
+
+  // Télécharger le PDF comme blob via l'API backend
+  async getPdfBlob(ebookId: number): Promise<string> {
+    console.log('📥 EbooksService.getPdfBlob called with ebook ID:', ebookId);
+    try {
+      // D'abord, récupérer l'URL de téléchargement
+      const viewResponse = await apiService.get(`/ebooks/${ebookId}/view`);
+
+      if (!viewResponse.data.success || !viewResponse.data.view_url) {
+        throw new Error('Impossible de récupérer l\'URL du PDF');
+      }
+
+      const pdfUrl = viewResponse.data.view_url;
+      console.log('📥 Downloading PDF from:', pdfUrl);
+
+      // Récupérer le token pour l'authentification
+      let token = localStorage.getItem('authToken');
+      if (!token) {
+        const authStorage = localStorage.getItem('auth-storage');
+        if (authStorage) {
+          try {
+            const parsed = JSON.parse(authStorage);
+            token = parsed.state?.token;
+          } catch (e) {
+            console.warn('Could not parse auth storage');
+          }
+        }
+      }
+
+      // Télécharger le PDF avec axios et le token
+      const pdfResponse = await axios.get(pdfUrl, {
+        responseType: 'arraybuffer',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+      });
+
+      // Créer une URL blob à partir des données du PDF
+      const blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      console.log('✅ PDF blob created:', blobUrl);
+      return blobUrl;
+    } catch (error: any) {
+      console.error('❌ Error downloading PDF blob:', error);
+      toast.error('Impossible de charger le PDF. Vérifiez votre connexion.');
       throw error;
     }
   }

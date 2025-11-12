@@ -489,10 +489,15 @@ const FormationDetailPage = () => {
               
               {formations.length > 0 ? (
                 <div className="space-y-2 sm:space-y-3">
-                  {formations.map((course, index) => (
+                  {formations.map((course, index) => {
+                    const isClickable = hasAccess || course.is_free_preview;
+                    return (
                     <div
                       key={course.id}
-                      className="border border-gray-200 dark:border-gray-700 rounded-xl p-3 sm:p-6 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 transition-all"
+                      onClick={() => isClickable && navigate(`/formations/${course.id}/learn`)}
+                      className={`border border-gray-200 dark:border-gray-700 rounded-xl p-3 sm:p-6 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 transition-all ${
+                        isClickable ? 'cursor-pointer' : 'cursor-default'
+                      }`}
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex-shrink-0">
@@ -568,7 +573,8 @@ const FormationDetailPage = () => {
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12">

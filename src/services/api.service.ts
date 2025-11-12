@@ -87,8 +87,21 @@ class ApiService {
               toast.error('Session expirée, veuillez vous reconnecter');
               break;
             case 403:
-              // toast.error('Accès refusé');
-              console.error('❌ 403 Forbidden:', error.response.config.url);
+              // Check if account was deactivated
+              if (error.response.data?.activation_required || error.response.data?.account_status === 'inactive' || error.response.data?.account_status === 'expired') {
+                console.error('❌ Account deactivated, logging out');
+                // Clear authentication
+                this.clearAuthToken();
+                // Clear Zustand store by removing from localStorage
+                localStorage.removeItem('auth-storage');
+                // Redirect to login with message
+                toast.error('Votre compte a été désactivé. Veuillez contacter le support.');
+                setTimeout(() => {
+                  window.location.href = '/login';
+                }, 1500);
+              } else {
+                console.error('❌ 403 Forbidden:', error.response.config.url);
+              }
               break;
             case 404:
               // toast.error('Ressource non trouvée');
