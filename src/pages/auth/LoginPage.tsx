@@ -165,6 +165,16 @@ const LoginPage = () => {
               ← Retour à l'accueil
             </Link>
           </div>
+
+          <div className="mt-4 text-center text-xs text-gray-500 dark:text-gray-500 space-x-3">
+            <Link to="/legal/terms-of-service" className="hover:text-blue-600 dark:hover:text-blue-400 underline">
+              CGU
+            </Link>
+            <span>•</span>
+            <Link to="/legal/privacy-policy" className="hover:text-blue-600 dark:hover:text-blue-400 underline">
+              Politique de confidentialité
+            </Link>
+          </div>
         </motion.div>
       </div>
     </div>

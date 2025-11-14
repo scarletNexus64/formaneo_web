@@ -16,7 +16,8 @@ export interface User {
   created_at: string;
   updated_at: string;
   // Account activation fields
-  account_status: 'inactive' | 'active' | 'expired';
+  account_status: 'pending_payment' | 'active' | 'expired' | 'suspended';
+  deactivation_reason?: 'none' | 'requires_payment' | 'admin_action' | 'violation' | 'expired' | 'other';
   account_activated_at?: string;
   account_expires_at?: string;
   welcome_bonus_claimed: boolean;
@@ -234,7 +235,8 @@ export interface AuthResponse {
 
 // Account Activation Types
 export interface AccountActivationInfo {
-  account_status: 'inactive' | 'active' | 'expired';
+  account_status: 'pending_payment' | 'active' | 'expired' | 'suspended';
+  deactivation_reason?: 'none' | 'requires_payment' | 'admin_action' | 'violation' | 'expired' | 'other';
   account_activated_at?: string;
   account_expires_at?: string;
   welcome_bonus_claimed: boolean;

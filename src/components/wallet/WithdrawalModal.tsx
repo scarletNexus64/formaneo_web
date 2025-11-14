@@ -19,15 +19,12 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
 }) => {
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [operator, setOperator] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [withdrawalSettings, setWithdrawalSettings] = useState<WithdrawalSettings>({
     min_amount: 1000,
     max_amount: 1000000
   });
   const [settingsLoading, setSettingsLoading] = useState(true);
-
-  const operators = walletService.getSupportedOperators();
 
   // Récupérer les paramètres de retrait au chargement du composant
   useEffect(() => {
@@ -96,10 +93,6 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
       return { valid: false, message: 'Veuillez entrer un numéro de téléphone' };
     }
 
-    if (!operator) {
-      return { valid: false, message: 'Veuillez sélectionner un opérateur' };
-    }
-
     return { valid: true };
   };
 
@@ -121,7 +114,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
       const result = await walletService.initiateWithdrawal(
         numericAmount,
         formattedPhone,
-        operator
+        null // Pas d'opérateur - CinetPay détecte automatiquement
       );
       
       if (result.success) {
@@ -150,7 +143,6 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
   const handleClose = () => {
     setAmount('');
     setPhoneNumber('');
-    setOperator('');
     setIsLoading(false);
     onClose();
   };
@@ -216,27 +208,6 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
             </p>
           </div>
 
-          {/* Opérateur */}
-          <div>
-            <label htmlFor="operator" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Opérateur Mobile Money (Cameroun)
-            </label>
-            <select
-              id="operator"
-              value={operator}
-              onChange={(e) => setOperator(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              required
-            >
-              <option value="">Sélectionner un opérateur</option>
-              {operators.map((op) => (
-                <option key={op.code} value={op.code}>
-                  {op.name} {op.description && `- ${op.description}`}
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* Numéro de téléphone */}
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -252,15 +223,15 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
               required
             />
             <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-              Numéro camerounais pour recevoir l'argent
+              Numéro camerounais MTN, Orange ou Moov pour recevoir l'argent (détection automatique de l'opérateur)
             </p>
           </div>
 
           {/* Information sur le traitement */}
           <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
             <p className="text-blue-800 dark:text-blue-200 text-sm">
-              ⏰ <strong>Traitement en arrière-plan:</strong> Votre retrait sera traité automatiquement.
-              Vous recevrez une notification une fois terminé.
+              ⏰ <strong>Validation manuelle:</strong> Votre demande de retrait sera validée par un administrateur avant traitement.
+              Consultez l'historique pour suivre l'avancement.
             </p>
           </div>
 

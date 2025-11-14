@@ -79,17 +79,48 @@ const ProfilePage = () => {
   };
 
   const getAccountStatus = () => {
-    if (!user) return { text: 'Inconnu', color: 'gray' };
+    if (!user) return { text: 'Inconnu', color: 'gray', description: '' };
 
-    switch (user.account_status) {
+    // Type assertion for backward compatibility with old 'inactive' status
+    const status = user.account_status as 'pending_payment' | 'active' | 'expired' | 'suspended' | 'inactive';
+
+    switch (status) {
       case 'active':
-        return { text: 'Actif', color: 'green' };
-      case 'inactive':
-        return { text: 'Inactif', color: 'yellow' };
+        return {
+          text: 'Actif',
+          color: 'green',
+          description: user.account_expires_at
+            ? `Expire le ${new Date(user.account_expires_at).toLocaleDateString('fr-FR')}`
+            : ''
+        };
+      case 'pending_payment':
+        return {
+          text: 'En attente d\'activation',
+          color: 'yellow',
+          description: 'Activez votre compte pour débloquer toutes les fonctionnalités'
+        };
       case 'expired':
-        return { text: 'Expiré', color: 'red' };
+        return {
+          text: 'Expiré',
+          color: 'red',
+          description: 'Renouvelez votre abonnement pour continuer'
+        };
+      case 'suspended':
+        return {
+          text: 'Suspendu',
+          color: 'red',
+          description: user.deactivation_reason === 'admin_action'
+            ? 'Compte suspendu par l\'administrateur - Contactez le support'
+            : 'Compte suspendu - Contactez le support'
+        };
+      case 'inactive': // Legacy status for backward compatibility
+        return {
+          text: 'Inactif',
+          color: 'yellow',
+          description: 'Activez votre compte pour accéder aux fonctionnalités'
+        };
       default:
-        return { text: 'Inconnu', color: 'gray' };
+        return { text: 'Inconnu', color: 'gray', description: '' };
     }
   };
 
@@ -279,9 +310,16 @@ const ProfilePage = () => {
             <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
               <div className="flex-1">
                 <p className="text-sm text-gray-600 dark:text-gray-400">Statut du compte</p>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${accountStatus.color}-100 dark:bg-${accountStatus.color}-900/20 text-${accountStatus.color}-700 dark:text-${accountStatus.color}-400`}>
-                  {accountStatus.text}
-                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${accountStatus.color}-100 dark:bg-${accountStatus.color}-900/20 text-${accountStatus.color}-700 dark:text-${accountStatus.color}-400`}>
+                    {accountStatus.text}
+                  </span>
+                </div>
+                {accountStatus.description && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    {accountStatus.description}
+                  </p>
+                )}
               </div>
             </div>
 

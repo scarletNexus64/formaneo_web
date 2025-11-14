@@ -87,19 +87,34 @@ class ApiService {
               toast.error('Session expirée, veuillez vous reconnecter');
               break;
             case 403:
-              // Check if account was deactivated
-              if (error.response.data?.activation_required || error.response.data?.account_status === 'inactive' || error.response.data?.account_status === 'expired') {
-                console.error('❌ Account deactivated, logging out');
-                // Clear authentication
+              const accountStatus = error.response.data?.account_status;
+
+              // Handle suspended accounts (admin action)
+              if (accountStatus === 'suspended') {
+                console.error('❌ Account suspended by admin, forcing logout');
                 this.clearAuthToken();
-                // Clear Zustand store by removing from localStorage
                 localStorage.removeItem('auth-storage');
-                // Redirect to login with message
-                toast.error('Votre compte a été désactivé. Veuillez contacter le support.');
+                toast.error('Votre compte a été suspendu. Veuillez contacter le support.');
                 setTimeout(() => {
                   window.location.href = '/login';
                 }, 1500);
-              } else {
+              }
+              // Handle pending_payment or expired - show activation prompt but don't logout
+              else if (accountStatus === 'pending_payment' || accountStatus === 'expired') {
+                console.warn('⚠️ Account requires activation:', accountStatus);
+                // Don't logout - let the UI show activation prompts
+                if (accountStatus === 'expired') {
+                  toast('Votre abonnement a expiré. Renouvelez pour continuer.', { icon: '⚠️' });
+                } else {
+                  toast('Activez votre compte pour accéder à toutes les fonctionnalités.', { icon: '⚠️' });
+                }
+              }
+              // Handle old 'inactive' status for backward compatibility
+              else if (accountStatus === 'inactive') {
+                console.warn('⚠️ Account inactive (legacy)');
+                toast('Activez votre compte pour accéder à toutes les fonctionnalités.', { icon: '⚠️' });
+              }
+              else {
                 console.error('❌ 403 Forbidden:', error.response.config.url);
               }
               break;

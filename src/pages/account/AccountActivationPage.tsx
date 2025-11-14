@@ -29,15 +29,28 @@ const AccountActivationPage: React.FC = () => {
     try {
       const info = await activationService.getActivationInfo();
       setActivationInfo(info);
-      
+
       // If account is already active, redirect to dashboard
       if (info.account_status === 'active') {
         toast.success('Votre compte est déjà activé !');
         navigate('/dashboard');
       }
-    } catch (error) {
+
+      // If account is suspended, show error and redirect
+      if (info.account_status === 'suspended') {
+        toast.error('Votre compte a été suspendu. Veuillez contacter le support.');
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
       console.error('Erreur lors du chargement des informations d\'activation:', error);
-      toast.error('Erreur lors du chargement des informations');
+
+      // Check if error is due to suspended account
+      if (error.response?.data?.account_status === 'suspended') {
+        toast.error('Votre compte a été suspendu. Veuillez contacter le support.');
+        navigate('/dashboard');
+      } else {
+        toast.error('Erreur lors du chargement des informations');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -117,6 +130,7 @@ const AccountActivationPage: React.FC = () => {
   }
 
   const isExpired = activationInfo.account_status === 'expired';
+  const isPendingPayment = activationInfo.account_status === 'pending_payment';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 dark:from-gray-900 dark:to-gray-800">
@@ -134,9 +148,11 @@ const AccountActivationPage: React.FC = () => {
             {isExpired ? 'Renouvelez votre compte' : 'Activez votre compte'}
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
-            {isExpired 
+            {isExpired
               ? 'Votre abonnement a expiré. Renouvelez-le pour continuer à profiter de Formaneo.'
-              : 'Débloquez toutes les fonctionnalités et recevez votre bonus de bienvenue'
+              : isPendingPayment
+                ? 'Débloquez toutes les fonctionnalités et recevez votre bonus de bienvenue'
+                : 'Activez votre compte pour accéder à toutes les fonctionnalités'
             }
           </p>
           
@@ -189,12 +205,14 @@ const AccountActivationPage: React.FC = () => {
           <div className="flex items-center space-x-4">
             <div className={`w-3 h-3 rounded-full ${
               activationInfo.account_status === 'active' ? 'bg-green-500' :
-              activationInfo.account_status === 'expired' ? 'bg-yellow-500' : 'bg-red-500'
+              activationInfo.account_status === 'expired' ? 'bg-yellow-500' :
+              activationInfo.account_status === 'suspended' ? 'bg-red-600' : 'bg-orange-500'
             }`}></div>
             <span className="font-medium">
               {activationInfo.account_status === 'active' && 'Actif'}
               {activationInfo.account_status === 'expired' && 'Expiré'}
-              {activationInfo.account_status === 'inactive' && 'Inactif'}
+              {activationInfo.account_status === 'pending_payment' && 'En attente'}
+              {activationInfo.account_status === 'suspended' && 'Suspendu'}
             </span>
             {activationInfo.account_expires_at && (
               <span className="text-gray-600 dark:text-gray-400">

@@ -27,6 +27,8 @@ import NotificationsPage from './pages/notifications/NotificationsPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
+import TermsOfService from './pages/legal/TermsOfService';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 
 // Simple Login Page component
 const LoginPage = () => {
@@ -487,6 +489,8 @@ const AppContent = () => {
           <ActivationReturnPage />
         </ProtectedRoute>
       } />
+      <Route path="/legal/terms-of-service" element={<TermsOfService />} />
+      <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="*" element={<LandingPage />} />
     </Routes>
   );

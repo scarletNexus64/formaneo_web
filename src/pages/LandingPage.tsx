@@ -358,89 +358,40 @@ const CircularProgress = ({ percentage, label, color = "primary" }: { percentage
 
 // Composant de slider de bannières
 const BannerSlider = () => {
-  // Import des bannières
-  const banners = [
-    require('../assets/banners/ban0.JPG'),
-    require('../assets/banners/ban1.JPG'),
-    require('../assets/banners/ban2.JPG'),
-    require('../assets/banners/ban3.JPG'),
-    require('../assets/banners/ban4.JPG'),
-    require('../assets/banners/ban5.JPG'),
-    require('../assets/banners/ban6.JPG'),
-    require('../assets/banners/ban7.JPG'),
-    require('../assets/banners/ban8.JPG'),
-    require('../assets/banners/ban9.JPG'),
-    require('../assets/banners/ban10.JPG'),
-    require('../assets/banners/ban11.JPG'),
-    require('../assets/banners/ban13.JPG'),
-  ];
-
-  // État pour mélanger les bannières de façon aléatoire au chargement
-  const [shuffledBanners] = useState(() => {
-    const shuffled = [...banners];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  });
-
+  const [banners, setBanners] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
-  const [imagesCache] = useState(() => new Map<string, HTMLImageElement>());
 
-  // Précharger toutes les images au montage
+  // Récupérer les bannières depuis l'API
   useEffect(() => {
-    const preloadImages = async () => {
-      const imagePromises = shuffledBanners.map((src, index) => {
-        return new Promise<void>((resolve, reject) => {
-          // Vérifier si l'image est déjà en cache
-          if (imagesCache.has(src)) {
-            setLoadedImages(prev => new Set(prev).add(index));
-            resolve();
-            return;
-          }
-
-          const img = new Image();
-          img.src = src;
-
-          img.onload = () => {
-            imagesCache.set(src, img);
-            setLoadedImages(prev => new Set(prev).add(index));
-            resolve();
-          };
-
-          img.onerror = () => {
-            console.error(`Failed to load image: ${src}`);
-            reject();
-          };
-        });
-      });
-
+    const fetchBanners = async () => {
       try {
-        await Promise.all(imagePromises);
+        const response = await apiService.get(ENDPOINTS.BANNERS);
+        if (response.data.success && response.data.data && response.data.data.length > 0) {
+          setBanners(response.data.data);
+        }
         setIsLoading(false);
       } catch (error) {
-        console.error('Error preloading images:', error);
+        console.error('Erreur lors du chargement des bannières:', error);
         setIsLoading(false);
       }
     };
 
-    preloadImages();
-  }, [shuffledBanners, imagesCache]);
+    fetchBanners();
+  }, []);
 
+  // Auto-rotation des bannières
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || banners.length === 0) return;
 
     const interval = setInterval(() => {
       setDirection(1);
-      setCurrentIndex((prev) => (prev + 1) % shuffledBanners.length);
-    }, 5000); // Change toutes les 5 secondes
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [shuffledBanners.length, isLoading]);
+  }, [banners.length, isLoading]);
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -461,6 +412,11 @@ const BannerSlider = () => {
     setDirection(index > currentIndex ? 1 : -1);
     setCurrentIndex(index);
   };
+
+  // Ne rien afficher s'il n'y a pas de bannières
+  if (!isLoading && banners.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800/50">
@@ -495,7 +451,7 @@ const BannerSlider = () => {
                 }}
                 className="mt-4 text-gray-600 dark:text-gray-300 font-medium"
               >
-                Chargement des bannières... {loadedImages.size}/{shuffledBanners.length}
+                Chargement des bannières...
               </motion.p>
             </div>
           ) : (
@@ -515,8 +471,8 @@ const BannerSlider = () => {
                   className="absolute inset-0"
                 >
                   <img
-                    src={shuffledBanners[currentIndex]}
-                    alt={`Banner ${currentIndex + 1}`}
+                    src={banners[currentIndex].image_url}
+                    alt={banners[currentIndex].title || `Banner ${currentIndex + 1}`}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -525,7 +481,7 @@ const BannerSlider = () => {
 
           {/* Navigation dots */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
-            {shuffledBanners.map((_, index) => (
+            {banners.map((_, index) => (
               <motion.button
                 key={index}
                 onClick={() => goToSlide(index)}
@@ -547,7 +503,7 @@ const BannerSlider = () => {
               whileTap={{ scale: 0.9 }}
               onClick={() => {
                 setDirection(-1);
-                setCurrentIndex((prev) => (prev - 1 + shuffledBanners.length) % shuffledBanners.length);
+                setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
               }}
               className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition z-10"
             >
@@ -561,7 +517,7 @@ const BannerSlider = () => {
               whileTap={{ scale: 0.9 }}
               onClick={() => {
                 setDirection(1);
-                setCurrentIndex((prev) => (prev + 1) % shuffledBanners.length);
+                setCurrentIndex((prev) => (prev + 1) % banners.length);
               }}
               className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition z-10"
             >
@@ -573,7 +529,7 @@ const BannerSlider = () => {
 
               {/* Counter badge */}
               <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
-                {currentIndex + 1} / {shuffledBanners.length}
+                {currentIndex + 1} / {banners.length}
               </div>
             </>
           )}
@@ -664,7 +620,7 @@ const LandingPage = () => {
     {
       icon: <ShieldCheckIcon className="w-7 h-7" />,
       title: "Certificat professionnel",
-      description: "Certificats valides internationalement",
+      description: "",
       color: "from-indigo-500 to-blue-500"
     }
   ];
@@ -719,7 +675,7 @@ const LandingPage = () => {
     },
     {
       question: "Comment puis-je retirer mes gains d'affiliation ?",
-      answer: "Vous pouvez demander un retrait dès que votre solde atteint 5,000 FCFA. Les retraits sont traités sous 24-48h via Mobile Money."
+      answer: "Vous pouvez demander un retrait dès que votre solde atteint 2,000 FCFA. Les retraits sont traités sous 24-48h via Mobile Money."
     }
   ];
 
@@ -923,7 +879,7 @@ const LandingPage = () => {
                   </div>
                   <div>
                     <p className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">Certificat professionnel</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Reconnu internationalement</p>
+                    {/* <p className="text-xs text-gray-600 dark:text-gray-400">Reconnu internationalement</p> */}
                   </div>
                 </div>
               </motion.div>
@@ -1363,53 +1319,38 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer - Responsive */}
-      <footer className="bg-gray-900 dark:bg-black text-white py-8 px-4 sm:px-6 lg:px-8">
+      {/* Footer - Simple */}
+      <footer className="bg-gray-900 dark:bg-black text-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-            <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-600 to-primary-400 rounded-lg flex items-center justify-center">
-                  <SparklesIcon className="w-5 h-5 text-white" />
+          <div className="flex flex-col items-center text-center space-y-6">
+            {/* Logo et description */}
+            <div>
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-400 rounded-lg flex items-center justify-center">
+                  <SparklesIcon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold">Formaneo</h3>
+                <h3 className="text-2xl font-bold">Formaneo</h3>
               </div>
-              <p className="text-gray-400 text-sm text-justify">
+              <p className="text-gray-400 text-base max-w-md mx-auto">
                 Plateforme e-learning accessible mondialement. Développez vos compétences, où que vous soyez.
               </p>
             </div>
 
-            {[
-              {
-                title: "Formations",
-                links: ["Développement Web", "Marketing Digital", "Business & Finance", "Design Graphique"]
-              },
-              {
-                title: "Entreprise",
-                links: ["À propos", "Devenir formateur", "Affiliation", "Contact"]
-              },
-              {
-                title: "Support",
-                links: ["Centre d'aide", "FAQ", "Conditions d'utilisation", "Confidentialité"]
-              }
-            ].map((section, index) => (
-              <div key={index}>
-                <h4 className="font-bold mb-3 text-sm">{section.title}</h4>
-                <ul className="space-y-2">
-                  {section.links.map((link, i) => (
-                    <li key={i}>
-                      <a href="#" className="text-gray-400 hover:text-white transition text-xs sm:text-sm">
-                        {link}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+            {/* Liens légaux */}
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+              <Link to="/legal/terms-of-service" className="text-gray-400 hover:text-white transition">
+                Conditions d'utilisation
+              </Link>
+              <span className="text-gray-600">•</span>
+              <Link to="/legal/privacy-policy" className="text-gray-400 hover:text-white transition">
+                Politique de confidentialité
+              </Link>
+            </div>
 
-          <div className="border-t border-gray-800 pt-6 text-center">
-            <p className="text-gray-400 text-xs sm:text-sm">&copy; 2024 Formaneo. Tous droits réservés.</p>
+            {/* Copyright */}
+            <div className="border-t border-gray-800 pt-6 w-full">
+              <p className="text-gray-400 text-sm">&copy; 2024 Formaneo. Tous droits réservés.</p>
+            </div>
           </div>
         </div>
       </footer>

@@ -121,16 +121,18 @@ class WalletService {
 
   /**
    * Initie un retrait
+   * @param operator - Code opérateur optionnel (null pour détection automatique par CinetPay)
    */
-  async initiateWithdrawal(amount: number, phoneNumber: string, operator: string): Promise<WithdrawalResponse> {
+  async initiateWithdrawal(amount: number, phoneNumber: string, operator: string | null = null): Promise<WithdrawalResponse> {
     try {
       // Utiliser l'endpoint CinetPay comme dans l'app mobile
       const payload: any = {
         amount,
         phone_number: phoneNumber,
       };
-      
-      // Si opérateur n'est pas AUTO, l'inclure dans la requête
+
+      // Si opérateur est spécifié et n'est pas AUTO, l'inclure dans la requête
+      // Pour le Cameroun, ne pas envoyer d'opérateur (CinetPay détecte automatiquement)
       if (operator && operator !== 'AUTO') {
         payload.operator = operator;
       }

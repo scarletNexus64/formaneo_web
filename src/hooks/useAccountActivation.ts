@@ -7,15 +7,26 @@ export const useAccountActivation = () => {
   const navigate = useNavigate();
 
   const isAccountActive = user?.account_status === 'active';
-  const isAccountInactive = user?.account_status === 'inactive';
+  const isAccountPendingPayment = user?.account_status === 'pending_payment';
   const isAccountExpired = user?.account_status === 'expired';
+  const isAccountSuspended = user?.account_status === 'suspended';
+  // Legacy support
+  const isAccountInactive = isAccountPendingPayment;
 
   const checkActivationAndBlock = (action: string = 'cette action'): boolean => {
     if (isAccountActive) {
       return true; // Autorisé
     }
 
-    const message = isAccountExpired 
+    // Suspended accounts cannot activate - must contact support
+    if (isAccountSuspended) {
+      toast.error('Votre compte a été suspendu. Veuillez contacter le support.', {
+        duration: 5000,
+      });
+      return false;
+    }
+
+    const message = isAccountExpired
       ? `Renouvelez votre abonnement pour ${action}`
       : `Activez votre compte pour ${action}`;
 
@@ -43,8 +54,10 @@ export const useAccountActivation = () => {
 
   return {
     isAccountActive,
-    isAccountInactive,
+    isAccountInactive, // Legacy - maps to isAccountPendingPayment
+    isAccountPendingPayment,
     isAccountExpired,
+    isAccountSuspended,
     checkActivationAndBlock,
     withActivationCheck
   };
