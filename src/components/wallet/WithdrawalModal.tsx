@@ -25,8 +25,9 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
     max_amount: 1000000
   });
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [cinetpayNotification, setCinetpayNotification] = useState<string | null>(null);
 
-  // Récupérer les paramètres de retrait au chargement du composant
+  // Récupérer les paramètres de retrait et la notification au chargement du composant
   useEffect(() => {
     const fetchWithdrawalSettings = async () => {
       try {
@@ -41,8 +42,18 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
       }
     };
 
+    const fetchCinetPayNotification = async () => {
+      try {
+        const { message } = await walletService.getCinetPayNotification();
+        setCinetpayNotification(message);
+      } catch (error) {
+        console.error('Erreur lors de la récupération de la notification CinetPay:', error);
+      }
+    };
+
     if (isOpen) {
       fetchWithdrawalSettings();
+      fetchCinetPayNotification();
     }
   }, [isOpen]);
 
@@ -167,6 +178,16 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="mt-4">
         <div className="space-y-4">
+          {/* Notification CinetPay */}
+          {cinetpayNotification && (
+            <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-3">
+              <p className="text-red-800 dark:text-red-200 text-sm flex items-start">
+                <span className="mr-2">⚠️</span>
+                <span className="font-medium">{cinetpayNotification}</span>
+              </p>
+            </div>
+          )}
+
           {/* Solde disponible */}
           <div className="bg-orange-50 dark:bg-orange-900 border border-orange-200 dark:border-orange-700 rounded-lg p-3">
             <p className="text-orange-800 dark:text-orange-200 text-sm">
@@ -230,8 +251,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
           {/* Information sur le traitement */}
           <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
             <p className="text-blue-800 dark:text-blue-200 text-sm">
-              ⏰ <strong>Validation manuelle:</strong> Votre demande de retrait sera validée par un administrateur avant traitement.
-              Consultez l'historique pour suivre l'avancement.
+              ⏰ <strong>Votre demande de retrait sera traitée sous 24 heures maximum.</strong>
             </p>
           </div>
 

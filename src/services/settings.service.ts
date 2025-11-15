@@ -22,10 +22,10 @@ class SettingsService {
   async getWhatsAppNumber(): Promise<string> {
     try {
       const settings = await this.getSettings();
-      return settings.whatsapp_number || '+237658895572'; // Numéro par défaut
+      return settings.whatsapp_number || '+237692573597'; // Numéro par défaut
     } catch (error) {
       console.error('Error fetching WhatsApp number:', error);
-      return '+237658895572'; // Numéro par défaut en cas d'erreur
+      return '+237692573597'; // Numéro par défaut en cas d'erreur
     }
   }
 }

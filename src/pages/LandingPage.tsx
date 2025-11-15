@@ -362,6 +362,8 @@ const BannerSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   // Récupérer les bannières depuis l'API
   useEffect(() => {
@@ -413,6 +415,39 @@ const BannerSlider = () => {
     setCurrentIndex(index);
   };
 
+  // Gestion du swipe tactile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      // Swipe vers la gauche - bannière suivante
+      setDirection(1);
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
+    }
+
+    if (isRightSwipe) {
+      // Swipe vers la droite - bannière précédente
+      setDirection(-1);
+      setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
+    }
+
+    // Réinitialiser
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
   // Ne rien afficher s'il n'y a pas de bannières
   if (!isLoading && banners.length === 0) {
     return null;
@@ -425,6 +460,9 @@ const BannerSlider = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] rounded-2xl overflow-hidden shadow-2xl bg-gray-200 dark:bg-gray-700"
         >
           {isLoading ? (
@@ -1319,37 +1357,41 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer - Simple */}
-      <footer className="bg-gray-900 dark:bg-black text-white py-12 px-4 sm:px-6 lg:px-8">
+      {/* Footer - Responsive */}
+      <footer className="bg-gray-900 dark:bg-black text-white py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center text-center space-y-6">
+          <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6">
             {/* Logo et description */}
-            <div>
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-400 rounded-lg flex items-center justify-center">
-                  <SparklesIcon className="w-6 h-6 text-white" />
+            <div className="w-full">
+              <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-600 to-primary-400 rounded-lg flex items-center justify-center">
+                  <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold">Formaneo</h3>
+                <h3 className="text-xl sm:text-2xl font-bold">Formaneo</h3>
               </div>
-              <p className="text-gray-400 text-base max-w-md mx-auto">
+              <p className="text-gray-400 text-sm sm:text-base max-w-md mx-auto px-2">
                 Plateforme e-learning accessible mondialement. Développez vos compétences, où que vous soyez.
               </p>
             </div>
 
             {/* Liens légaux */}
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
-              <Link to="/legal/terms-of-service" className="text-gray-400 hover:text-white transition">
+            <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm w-full">
+              <Link to="/legal/terms-of-service" className="text-gray-400 hover:text-white transition whitespace-nowrap">
                 Conditions d'utilisation
               </Link>
-              <span className="text-gray-600">•</span>
-              <Link to="/legal/privacy-policy" className="text-gray-400 hover:text-white transition">
+              <span className="hidden sm:inline text-gray-600">•</span>
+              <Link to="/legal/privacy-policy" className="text-gray-400 hover:text-white transition whitespace-nowrap">
                 Politique de confidentialité
+              </Link>
+              <span className="hidden sm:inline text-gray-600">•</span>
+              <Link to="/legal/legal-notice" className="text-gray-400 hover:text-white transition whitespace-nowrap">
+                Mentions légales
               </Link>
             </div>
 
             {/* Copyright */}
-            <div className="border-t border-gray-800 pt-6 w-full">
-              <p className="text-gray-400 text-sm">&copy; 2024 Formaneo. Tous droits réservés.</p>
+            <div className="border-t border-gray-800 pt-4 sm:pt-6 w-full">
+              <p className="text-gray-400 text-xs sm:text-sm">&copy; 2024 Formaneo. Tous droits réservés.</p>
             </div>
           </div>
         </div>

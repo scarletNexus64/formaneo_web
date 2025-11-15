@@ -244,11 +244,26 @@ class WalletService {
   }
 
   /**
+   * Récupère la notification CinetPay active
+   */
+  async getCinetPayNotification(): Promise<{ message: string | null }> {
+    try {
+      const response = await apiService.get('/cinetpay-notification');
+      return {
+        message: response.data.message || null
+      };
+    } catch (error) {
+      console.error('Erreur lors de la récupération de la notification CinetPay:', error);
+      return { message: null };
+    }
+  }
+
+  /**
    * Test la connexion avec le serveur
    */
   async testConnection(): Promise<{ success: boolean; message?: string }> {
     try {
-      const response = await apiService.get('/health-check');
+      await apiService.get('/health-check');
       return { success: true };
     } catch (error: any) {
       console.error('Test de connexion échoué:', error);

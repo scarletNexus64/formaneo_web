@@ -29,6 +29,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
 import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import LegalNotice from './pages/legal/LegalNotice';
 
 // Simple Login Page component
 const LoginPage = () => {
@@ -491,6 +492,7 @@ const AppContent = () => {
       } />
       <Route path="/legal/terms-of-service" element={<TermsOfService />} />
       <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/legal/legal-notice" element={<LegalNotice />} />
       <Route path="*" element={<LandingPage />} />
     </Routes>
   );
