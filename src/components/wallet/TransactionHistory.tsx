@@ -215,48 +215,56 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
       
       {/* Pagination */}
       {pagination && pagination.last_page > 1 && (
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          {/* Info sur mobile, caché sur desktop */}
+          <div className="sm:hidden text-xs text-center text-gray-500 dark:text-gray-400 mb-3">
             Page {pagination.current_page} sur {pagination.last_page} ({pagination.total} transactions)
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onPageChange?.(pagination.current_page - 1)}
-              disabled={pagination.current_page <= 1}
-              className="px-3 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Précédent
-            </button>
-            
-            <div className="flex items-center space-x-1">
-              {/* Afficher toutes les pages avec un style plus compact */}
-              {[...Array(pagination.last_page)].map((_, index) => {
-                const pageNumber = index + 1;
-                
-                return (
-                  <button
-                    key={pageNumber}
-                    onClick={() => onPageChange?.(pageNumber)}
-                    className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
-                      pageNumber === pagination.current_page
-                        ? 'bg-primary-600 dark:bg-primary-700 text-white shadow-sm'
-                        : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                    }`}
-                  >
-                    {pageNumber}
-                  </button>
-                );
-              })}
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            {/* Info sur desktop, caché sur mobile */}
+            <div className="hidden sm:block text-sm text-gray-500 dark:text-gray-400">
+              Page {pagination.current_page} sur {pagination.last_page} ({pagination.total} transactions)
             </div>
-            
-            <button
-              onClick={() => onPageChange?.(pagination.current_page + 1)}
-              disabled={pagination.current_page >= pagination.last_page}
-              className="px-3 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Suivant
-            </button>
+
+            <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => onPageChange?.(pagination.current_page - 1)}
+                disabled={pagination.current_page <= 1}
+                className="px-3 py-1.5 text-xs sm:text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                Précédent
+              </button>
+
+              <div className="flex items-center gap-1 overflow-x-auto max-w-[200px] sm:max-w-none">
+                {/* Afficher toutes les pages avec un style plus compact */}
+                {[...Array(pagination.last_page)].map((_, index) => {
+                  const pageNumber = index + 1;
+
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => onPageChange?.(pageNumber)}
+                      className={`min-w-[28px] sm:min-w-[32px] px-2 py-1 text-xs font-medium rounded-md transition-colors flex-shrink-0 ${
+                        pageNumber === pagination.current_page
+                          ? 'bg-primary-600 dark:bg-primary-700 text-white shadow-sm'
+                          : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => onPageChange?.(pagination.current_page + 1)}
+                disabled={pagination.current_page >= pagination.last_page}
+                className="px-3 py-1.5 text-xs sm:text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                Suivant
+              </button>
+            </div>
           </div>
         </div>
       )}
