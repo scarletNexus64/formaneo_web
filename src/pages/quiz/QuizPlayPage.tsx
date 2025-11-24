@@ -49,26 +49,18 @@ const QuizPlayPage = () => {
   const loadQuiz = async () => {
     try {
       setLoading(true);
-      const response = await quizService.getAvailableQuizzes();
+      // Filtrer directement par sujet côté backend
+      const response = await quizService.getAvailableQuizzes(subject);
       const availableQuizzes = response.quizzes;
 
       if (availableQuizzes.length === 0) {
-        toast.error('Aucun quiz disponible');
+        toast.error('Aucun quiz disponible pour ce domaine');
         navigate('/quizz');
         return;
       }
 
-      // Filtrer par sujet si possible, sinon prendre un quiz aléatoire
-      let filteredQuizzes = availableQuizzes.filter(q => 
-        q.subject?.toLowerCase().includes(subject.toLowerCase())
-      );
-
-      if (filteredQuizzes.length === 0) {
-        filteredQuizzes = availableQuizzes;
-      }
-
-      // Sélectionner un quiz aléatoire
-      const randomQuiz = filteredQuizzes[Math.floor(Math.random() * filteredQuizzes.length)];
+      // Sélectionner un quiz aléatoire parmi ceux du domaine
+      const randomQuiz = availableQuizzes[Math.floor(Math.random() * availableQuizzes.length)];
       setQuiz(randomQuiz);
       setQuizStartTime(Date.now());
     } catch (error) {

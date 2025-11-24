@@ -289,11 +289,11 @@ const RegisterPage = () => {
                 />
                 <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                   J'accepte les{' '}
-                  <Link to="/terms" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+                  <Link to="/legal/terms-of-service" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
                     conditions d'utilisation
                   </Link>{' '}
                   et la{' '}
-                  <Link to="/privacy" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+                  <Link to="/legal/privacy-policy" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
                     politique de confidentialité
                   </Link>
                 </label>
@@ -336,7 +336,7 @@ const RegisterPage = () => {
             </Link>
           </div>
 
-          <div className="mt-4 text-center text-xs text-gray-500 dark:text-gray-500 space-x-3">
+          {/* <div className="mt-4 text-center text-xs text-gray-500 dark:text-gray-500 space-x-3">
             <Link to="/legal/terms-of-service" className="hover:text-blue-600 dark:hover:text-blue-400 underline">
               CGU
             </Link>
@@ -344,7 +344,7 @@ const RegisterPage = () => {
             <Link to="/legal/privacy-policy" className="hover:text-blue-600 dark:hover:text-blue-400 underline">
               Politique de confidentialité
             </Link>
-          </div>
+          </div> */}
         </motion.div>
       </div>
     </div>

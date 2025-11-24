@@ -1,14 +1,14 @@
 import apiService from './api.service';
 
 export interface QuizQuestion {
-  id: number;
   question: string;
   options: string[];
   correctAnswer: number;
+  explanation?: string;
 }
 
 export interface Quiz {
-  id: string;
+  id: number;
   title: string;
   description: string;
   questions: QuizQuestion[];
@@ -16,6 +16,8 @@ export interface Quiz {
   subject: string;
   questions_count: number;
   is_active: boolean;
+  passing_score?: number;
+  reward_per_correct?: number;
 }
 
 export interface QuizResult {
@@ -49,9 +51,10 @@ class QuizService {
   /**
    * Obtenir les quiz disponibles
    */
-  async getAvailableQuizzes(): Promise<{ quizzes: Quiz[] }> {
+  async getAvailableQuizzes(subject?: string): Promise<{ quizzes: Quiz[] }> {
     try {
-      const response = await apiService.get<{ quizzes: Quiz[] }>('/quiz/available');
+      const params = subject ? `?subject=${encodeURIComponent(subject)}` : '';
+      const response = await apiService.get<{ quizzes: Quiz[] }>(`/quiz/available${params}`);
       return response.data;
     } catch (error) {
       console.error('Erreur lors du chargement des quiz:', error);

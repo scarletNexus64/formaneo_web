@@ -26,16 +26,16 @@ const QuizPage = () => {
   const [loading, setLoading] = useState(true);
 
   const subjects = [
-    { name: 'Dropshipping', icon: '📦', color: 'bg-blue-500', key: 'dropshipping' },
-    { name: 'Marketing Digital', icon: '📱', color: 'bg-green-500', key: 'marketing' },
-    { name: 'E-commerce', icon: '🛒', color: 'bg-purple-500', key: 'ecommerce' },
-    { name: 'Marketing d\'Affiliation', icon: '🤝', color: 'bg-indigo-500', key: 'affiliation' },
-    { name: 'Shopify', icon: '🏪', color: 'bg-yellow-500', key: 'shopify' },
-    { name: 'Design & Créativité', icon: '🎨', color: 'bg-teal-500', key: 'design' },
-    { name: 'Finance & Business', icon: '💼', color: 'bg-pink-500', key: 'finance' },
-    { name: 'Réseaux Sociaux', icon: '📲', color: 'bg-red-500', key: 'social_media' },
-    { name: 'Entrepreneuriat', icon: '🚀', color: 'bg-orange-500', key: 'entrepreneurship' },
-    { name: 'Publicité en Ligne', icon: '🎯', color: 'bg-cyan-500', key: 'advertising' },
+    { name: 'Informatique', icon: '💻', color: 'bg-blue-500', key: 'informatique' },
+    { name: 'Sciences', icon: '🔬', color: 'bg-green-500', key: 'sciences' },
+    { name: 'Histoire', icon: '📜', color: 'bg-purple-500', key: 'histoire' },
+    { name: 'Géographie', icon: '🌍', color: 'bg-indigo-500', key: 'geographie' },
+    { name: 'Mathématiques', icon: '🔢', color: 'bg-yellow-500', key: 'mathematiques' },
+    { name: 'Littérature', icon: '📚', color: 'bg-teal-500', key: 'litterature' },
+    { name: 'Arts', icon: '🎨', color: 'bg-pink-500', key: 'arts' },
+    { name: 'Sport', icon: '⚽', color: 'bg-red-500', key: 'sport' },
+    { name: 'Cinéma', icon: '🎬', color: 'bg-orange-500', key: 'cinema' },
+    { name: 'Musique', icon: '🎵', color: 'bg-cyan-500', key: 'musique' },
   ];
 
   useEffect(() => {
@@ -96,7 +96,7 @@ const QuizPage = () => {
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Quiz Éducatifs</h1>
           </div>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            Testez vos connaissances business et e-commerce, et gagnez des FCFA avec nos quiz spécialisés !
+            Testez vos connaissances générales dans 10 domaines différents et gagnez des FCFA à chaque quiz réussi !
           </p>
         </div>
 
@@ -128,7 +128,7 @@ const QuizPage = () => {
           <div className="lg:col-span-2">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Choisissez votre domaine</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Nos quiz couvrent tous les aspects du business en ligne : dropshipping, marketing, e-commerce, affiliation et plus encore !
+              Nos quiz couvrent de nombreux domaines : informatique, sciences, histoire, géographie, mathématiques, littérature, arts, sport, cinéma et musique !
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -148,7 +148,7 @@ const QuizPage = () => {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{subject.name}</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Questions de niveau baccalauréat</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">3 niveaux de difficulté disponibles</p>
                     </div>
                     {freeQuizzesLeft === 0 && (
                       <div className="text-gray-400">
