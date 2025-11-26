@@ -35,7 +35,7 @@ const ActivationReturnPage: React.FC = () => {
   useEffect(() => {
     // Si pas d'ID de transaction, rediriger vers la page d'activation
     if (!transactionId) {
-      toast.error('Transaction introuvable');
+      // toast.error('Transaction introuvable');
       navigate('/account/activate');
       return;
     }
