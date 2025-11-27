@@ -64,12 +64,12 @@ export const useActivationStatus = ({
           
           // Rafraîchir les données utilisateur
           await fetchUser();
-          
-          toast.success('🎉 Compte activé avec succès ! Redirection vers le dashboard...');
-          
-          // Redirection automatique vers le dashboard après 2 secondes
+
+          toast.success('🎉 Compte activé avec succès ! Préparation de votre bienvenue...');
+
+          // Redirection vers la page de bienvenue après 2 secondes
           setTimeout(() => {
-            window.location.href = '/dashboard';
+            window.location.href = '/account/welcome';
           }, 2000);
           
           onSuccess?.();

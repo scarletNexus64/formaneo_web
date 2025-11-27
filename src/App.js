@@ -22,6 +22,7 @@ import QuizHistoryPage from './pages/quiz/QuizHistoryPage';
 import ChallengesPage from './pages/challenges/ChallengesPage';
 import AccountActivationPage from './pages/account/AccountActivationPage';
 import ActivationReturnPage from './pages/account/ActivationReturnPage';
+import WelcomePage from './pages/account/WelcomePage';
 import AffiliatePageAuth from './pages/affiliate/AffiliatePage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import ProfilePage from './pages/profile/ProfilePage';
@@ -488,6 +489,11 @@ const AppContent = () => {
       <Route path="/account/activation/return" element={
         <ProtectedRoute>
           <ActivationReturnPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/account/welcome" element={
+        <ProtectedRoute>
+          <WelcomePage />
         </ProtectedRoute>
       } />
       <Route path="/legal/terms-of-service" element={<TermsOfService />} />

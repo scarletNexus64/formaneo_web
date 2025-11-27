@@ -9,6 +9,20 @@ interface ActivationStatusResponse {
   debug?: any;
 }
 
+interface ClaimWelcomeBonusResponse {
+  success: boolean;
+  message: string;
+  bonus_awarded: number;
+  old_balance: number;
+  new_balance: number;
+  commissions_distributed: {
+    level_1: number;
+    level_2: number;
+    distributed: boolean;
+  };
+  already_claimed?: boolean;
+}
+
 class ActivationService {
   async getActivationInfo(): Promise<AccountActivationInfo> {
     const response = await apiService.get<AccountActivationInfo>('/account/activation/info');
@@ -51,7 +65,7 @@ class ActivationService {
     try {
       // Ouvrir dans un nouvel onglet
       const newTab = window.open(paymentUrl, '_blank');
-      
+
       if (!newTab) {
         // Si le popup est bloqué, essayer une redirection directe
         window.location.href = paymentUrl;
@@ -62,6 +76,18 @@ class ActivationService {
       window.location.href = paymentUrl;
     }
   }
+
+  /**
+   * Réclamer le bonus de bienvenue après activation du compte
+   * Cette méthode est appelée depuis la page de bienvenue après paiement réussi
+   */
+  async claimWelcomeBonus(): Promise<ClaimWelcomeBonusResponse> {
+    const response = await apiService.post<ClaimWelcomeBonusResponse>(
+      '/account/activation/claim-welcome-bonus'
+    );
+    return response.data;
+  }
 }
 
-export default new ActivationService();
+export const activationService = new ActivationService();
+export default activationService;

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import InactiveAccountOverlay from './InactiveAccountOverlay';
 
@@ -9,6 +10,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, user, initializeAuth } = useAuthStore();
   const [isInitialized, setIsInitialized] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const initialize = async () => {
@@ -34,6 +36,26 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // Rediriger vers login si pas authentifié
   if (!isAuthenticated || !user) {
     window.location.href = '/login';
+    return null;
+  }
+
+  // IMPORTANT: Rediriger vers la page de bienvenue si le bonus n'est pas réclamé
+  // Pages exclues de cette redirection (pages liées à l'activation)
+  const excludedFromWelcomeRedirect = [
+    '/account/welcome',
+    '/account/activate',
+    '/account/activation/return',
+    '/login',
+    '/register'
+  ];
+
+  const shouldRedirectToWelcome =
+    user.account_status === 'active' &&
+    !user.welcome_bonus_claimed &&
+    !excludedFromWelcomeRedirect.some(path => location.pathname.startsWith(path));
+
+  if (shouldRedirectToWelcome) {
+    window.location.href = '/account/welcome';
     return null;
   }
 
