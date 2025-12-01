@@ -21,11 +21,13 @@ import {
   FireIcon,
   ShieldCheckIcon,
   ChevronDownIcon,
+  ChevronUpIcon,
   EnvelopeIcon,
   PhoneIcon,
   MapPinIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 
 // Hook personnalisé pour l'animation des compteurs
@@ -583,6 +585,8 @@ const LandingPage = () => {
   const isDark = theme === 'dark';
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLegalMenuOpen, setIsLegalMenuOpen] = useState(false);
+  const [isLegalMenuOpenMobile, setIsLegalMenuOpenMobile] = useState(false);
   const { scrollY } = useScroll();
   const navOpacity = useTransform(scrollY, [0, 100], [0.95, 1]);
 
@@ -746,6 +750,47 @@ const LandingPage = () => {
               <a href="#faq" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm">FAQ</a>
               <a href="#about" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm">À propos</a>
               <a href="#contact" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm">Contact</a>
+
+              {/* Dropdown Légal - Desktop */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsLegalMenuOpen(!isLegalMenuOpen)}
+                  className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm"
+                >
+                  <DocumentTextIcon className="w-4 h-4" />
+                  Légal
+                  {isLegalMenuOpen ? <ChevronUpIcon className="w-3 h-3" /> : <ChevronDownIcon className="w-3 h-3" />}
+                </button>
+                <AnimatePresence>
+                  {isLegalMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+                    >
+                      <Link
+                        to="/legal/terms-of-service"
+                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                      >
+                        Conditions d'utilisation
+                      </Link>
+                      <Link
+                        to="/legal/privacy-policy"
+                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                      >
+                        Politique de confidentialité
+                      </Link>
+                      <Link
+                        to="/legal/legal-notice"
+                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                      >
+                        Mentions légales
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
@@ -794,6 +839,54 @@ const LandingPage = () => {
                 <a href="#faq" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">FAQ</a>
                 <a href="#about" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">À propos</a>
                 <a href="#contact" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">Contact</a>
+
+                {/* Dropdown Légal - Mobile */}
+                <div>
+                  <button
+                    onClick={() => setIsLegalMenuOpenMobile(!isLegalMenuOpenMobile)}
+                    className="flex items-center justify-between w-full py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium"
+                  >
+                    <div className="flex items-center gap-2">
+                      <DocumentTextIcon className="w-4 h-4" />
+                      Légal
+                    </div>
+                    {isLegalMenuOpenMobile ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
+                  </button>
+                  <AnimatePresence>
+                    {isLegalMenuOpenMobile && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="ml-6 mt-2 space-y-1">
+                          <Link
+                            to="/legal/terms-of-service"
+                            onClick={handleNavClick}
+                            className="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition"
+                          >
+                            Conditions d'utilisation
+                          </Link>
+                          <Link
+                            to="/legal/privacy-policy"
+                            onClick={handleNavClick}
+                            className="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition"
+                          >
+                            Politique de confidentialité
+                          </Link>
+                          <Link
+                            to="/legal/legal-notice"
+                            onClick={handleNavClick}
+                            className="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition"
+                          >
+                            Mentions légales
+                          </Link>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
                   <Link to="/login" onClick={handleNavClick} className="block w-full text-center py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">

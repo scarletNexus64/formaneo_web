@@ -49,7 +49,9 @@ class ChallengesService {
     }
   }
 
-  // Récupérer la récompense d'un défi
+  // DÉSACTIVÉ - Récupérer la récompense d'un défi
+  // L'attribution des bonus pour les challenges est désactivée
+  /*
   async claimReward(challengeId: number): Promise<{ success: boolean; message: string; new_balance?: number }> {
     try {
       const response = await apiService.post<{ success: boolean; message: string; new_balance?: number }>(
@@ -69,6 +71,7 @@ class ChallengesService {
       };
     }
   }
+  */
 
   // Mettre à jour la progression d'un défi
   async updateProgress(challengeId: number, progress: number): Promise<{ success: boolean; message: string; is_completed: boolean }> {

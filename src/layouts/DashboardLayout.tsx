@@ -14,7 +14,10 @@ import {
   XMarkIcon,
   ArrowLeftOnRectangleIcon,
   BellIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../store/authStore';
 import AccountActivationBanner from '../components/AccountActivationBanner';
@@ -26,6 +29,8 @@ const DashboardLayout = () => {
   const { user, logout } = useAuthStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isLegalMenuOpen, setIsLegalMenuOpen] = useState(false);
+  const [isLegalMenuOpenMobile, setIsLegalMenuOpenMobile] = useState(false);
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
@@ -89,7 +94,51 @@ const DashboardLayout = () => {
                   </Link>
                 ))}
               </nav>
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t space-y-2">
+                {/* Dropdown Légal - Mobile */}
+                <div>
+                  <button
+                    onClick={() => setIsLegalMenuOpenMobile(!isLegalMenuOpenMobile)}
+                    className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <DocumentTextIcon className="w-5 h-5 mr-3" />
+                      Informations légales
+                    </div>
+                    {isLegalMenuOpenMobile ? (
+                      <ChevronUpIcon className="w-4 h-4" />
+                    ) : (
+                      <ChevronDownIcon className="w-4 h-4" />
+                    )}
+                  </button>
+                  <AnimatePresence>
+                    {isLegalMenuOpenMobile && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="ml-8 mt-2 space-y-1">
+                          <Link
+                            to="/legal/legal-notice"
+                            onClick={() => setIsSidebarOpen(false)}
+                            className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
+                          >
+                            Mentions légales
+                          </Link>
+                          <Link
+                            to="/legal/terms-of-service"
+                            onClick={() => setIsSidebarOpen(false)}
+                            className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg"
+                          >
+                            CGU
+                          </Link>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
                 <button
                   onClick={handleLogout}
                   className="flex items-center w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -125,7 +174,7 @@ const DashboardLayout = () => {
               </Link>
             ))}
           </nav>
-          <div className="p-4 border-t">
+          <div className="p-4 border-t space-y-2">
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
                 <span className="text-primary-700 font-semibold">
@@ -137,6 +186,50 @@ const DashboardLayout = () => {
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
             </div>
+
+            {/* Dropdown Légal - Desktop */}
+            <div>
+              <button
+                onClick={() => setIsLegalMenuOpen(!isLegalMenuOpen)}
+                className="flex items-center justify-between w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <div className="flex items-center">
+                  <DocumentTextIcon className="w-4 h-4 mr-2" />
+                  Informations légales
+                </div>
+                {isLegalMenuOpen ? (
+                  <ChevronUpIcon className="w-3 h-3" />
+                ) : (
+                  <ChevronDownIcon className="w-3 h-3" />
+                )}
+              </button>
+              <AnimatePresence>
+                {isLegalMenuOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="ml-6 mt-1 space-y-1">
+                      <Link
+                        to="/legal/legal-notice"
+                        className="block px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                      >
+                        Mentions légales
+                      </Link>
+                      <Link
+                        to="/legal/terms-of-service"
+                        className="block px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded-lg"
+                      >
+                        CGU
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button
               onClick={handleLogout}
               className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"

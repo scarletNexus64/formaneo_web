@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   TrophyIcon,
   ClockIcon,
-  CheckIcon,
-  GiftIcon,
   CurrencyDollarIcon,
   SparklesIcon,
   ChatBubbleLeftRightIcon
@@ -20,7 +18,6 @@ import ChallengeImage from '../../components/ChallengeImage';
 const ChallengesPage = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
-  const [claimingReward, setClaimingReward] = useState<number | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState<string>('');
 
   useEffect(() => {
@@ -46,28 +43,6 @@ const ChallengesPage = () => {
       toast.error('Erreur lors du chargement des défis');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleClaimReward = async (challengeId: number) => {
-    setClaimingReward(challengeId);
-    try {
-      const result = await challengesService.claimReward(challengeId);
-      if (result.success) {
-        toast.success(result.message);
-        // Mettre à jour le défi dans la liste
-        setChallenges(challenges.map(challenge =>
-          challenge.id === challengeId
-            ? { ...challenge, reward_claimed: true }
-            : challenge
-        ));
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      toast.error('Erreur lors de la réclamation de la récompense');
-    } finally {
-      setClaimingReward(null);
     }
   };
 
@@ -270,28 +245,6 @@ const ChallengesPage = () => {
                               <ChatBubbleLeftRightIcon className="h-4 w-4 mr-2" />
                               Contacter WhatsApp
                             </button>
-
-                            {challenge.is_completed && !challenge.reward_claimed && (
-                              <button
-                                onClick={() => handleClaimReward(challenge.id)}
-                                disabled={claimingReward === challenge.id}
-                                className="bg-gradient-to-r from-yellow-400 to-orange-500 dark:from-yellow-500 dark:to-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-yellow-500 hover:to-orange-600 dark:hover:from-yellow-600 dark:hover:to-orange-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                              >
-                                {claimingReward === challenge.id ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                ) : (
-                                  <GiftIcon className="h-4 w-4 mr-2" />
-                                )}
-                                Réclamer
-                              </button>
-                            )}
-
-                            {challenge.reward_claimed && (
-                              <div className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-medium flex items-center">
-                                <CheckIcon className="h-4 w-4 mr-1" />
-                                Réclamé
-                              </div>
-                            )}
                           </div>
                         </div>
                       </div>

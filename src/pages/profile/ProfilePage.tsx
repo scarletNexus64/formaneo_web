@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   UserCircleIcon,
@@ -7,23 +7,52 @@ import {
   CalendarIcon,
   CheckCircleIcon,
   XCircleIcon,
+  ChatBubbleLeftRightIcon,
+  LifebuoyIcon,
+  DocumentTextIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../store/authStore';
 import apiService from '../../services/api.service';
+import settingsService from '../../services/settings.service';
 import Navigation from '../../components/Navigation';
+import toast from 'react-hot-toast';
 
 const ProfilePage = () => {
   const { user, updateProfile } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  // Support contact info
+  const [supportEmail, setSupportEmail] = useState('');
+  const [supportPhone, setSupportPhone] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
   });
+
+  useEffect(() => {
+    loadSupportInfo();
+  }, []);
+
+  const loadSupportInfo = async () => {
+    try {
+      const [email, phone, whatsapp] = await Promise.all([
+        settingsService.getSupportEmail(),
+        settingsService.getSupportPhone(),
+        settingsService.getWhatsAppNumber(),
+      ]);
+      setSupportEmail(email);
+      setSupportPhone(phone);
+      setWhatsappNumber(whatsapp);
+    } catch (error) {
+      console.error('Error loading support info:', error);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -33,23 +62,18 @@ const ProfilePage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSuccess(false);
 
     try {
       const response = await apiService.put('/auth/profile', formData);
 
       if (response.data.success) {
         updateProfile(response.data.user);
-        setSuccess(true);
         setIsEditing(false);
-
-        setTimeout(() => {
-          setSuccess(false);
-        }, 3000);
+        toast.success('Profil mis à jour avec succès !');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de la mise à jour du profil');
+      const errorMsg = err.response?.data?.message || 'Erreur lors de la mise à jour du profil';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -62,7 +86,31 @@ const ProfilePage = () => {
       phone: user?.phone || '',
     });
     setIsEditing(false);
-    setError(null);
+  };
+
+  const handleContactWhatsApp = () => {
+    if (!whatsappNumber) {
+      toast.error('Numéro WhatsApp non disponible');
+      return;
+    }
+
+    const message = `Bonjour, je suis ${user?.name} (${user?.email}). J'ai besoin d'aide concernant mon compte.`;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^\d+]/g, '')}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleContactEmail = () => {
+    if (!supportEmail) {
+      toast.error('Email de support non disponible');
+      return;
+    }
+
+    const subject = encodeURIComponent('Demande de support - Formaneo');
+    const body = encodeURIComponent(
+      `Bonjour,\n\nJe suis ${user?.name}\nEmail: ${user?.email}\nCode promo: ${user?.promo_code}\n\nMa demande:\n\n`
+    );
+    window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
   };
 
   const formatDate = (dateString: string | null) => {
@@ -79,9 +127,8 @@ const ProfilePage = () => {
   };
 
   const getAccountStatus = () => {
-    if (!user) return { text: 'Inconnu', color: 'gray', description: '' };
+    if (!user) return { text: 'Inconnu', color: 'gray', icon: ShieldCheckIcon, description: '' };
 
-    // Type assertion for backward compatibility with old 'inactive' status
     const status = user.account_status as 'pending_payment' | 'active' | 'expired' | 'suspended' | 'inactive';
 
     switch (status) {
@@ -89,265 +136,366 @@ const ProfilePage = () => {
         return {
           text: 'Actif',
           color: 'green',
+          icon: CheckCircleIcon,
           description: user.account_expires_at
             ? `Expire le ${new Date(user.account_expires_at).toLocaleDateString('fr-FR')}`
-            : ''
+            : 'Compte actif'
         };
       case 'pending_payment':
         return {
           text: 'En attente d\'activation',
           color: 'yellow',
+          icon: SparklesIcon,
           description: 'Activez votre compte pour débloquer toutes les fonctionnalités'
         };
       case 'expired':
         return {
           text: 'Expiré',
           color: 'red',
+          icon: XCircleIcon,
           description: 'Renouvelez votre abonnement pour continuer'
         };
       case 'suspended':
         return {
           text: 'Suspendu',
           color: 'red',
+          icon: XCircleIcon,
           description: user.deactivation_reason === 'admin_action'
             ? 'Compte suspendu par l\'administrateur - Contactez le support'
             : 'Compte suspendu - Contactez le support'
         };
-      case 'inactive': // Legacy status for backward compatibility
+      case 'inactive':
         return {
           text: 'Inactif',
           color: 'yellow',
+          icon: SparklesIcon,
           description: 'Activez votre compte pour accéder aux fonctionnalités'
         };
       default:
-        return { text: 'Inconnu', color: 'gray', description: '' };
+        return { text: 'Inconnu', color: 'gray', icon: ShieldCheckIcon, description: '' };
     }
   };
 
   const accountStatus = getAccountStatus();
+  const StatusIcon = accountStatus.icon;
 
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2 sm:gap-3">
-            <UserCircleIcon className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 dark:text-primary-400" />
-            Mon Profil
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
-            Gérez vos informations personnelles
-          </p>
-        </div>
-
-        {/* Success Message */}
-        {success && (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-blue-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-3"
+            className="mb-8"
           >
-            <CheckCircleIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
-            <p className="text-green-600 dark:text-green-400 font-medium">
-              Profil mis à jour avec succès !
-            </p>
-          </motion.div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3"
-          >
-            <XCircleIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-          </motion.div>
-        )}
-
-        {/* Profile Information */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-              Informations personnelles
-            </h2>
-            {!isEditing && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsEditing(true)}
-                className="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm sm:text-base"
-              >
-                Modifier
-              </motion.button>
-            )}
-          </div>
-
-          {isEditing ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-lg">
+                <UserCircleIcon className="w-8 h-8 text-white" />
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Nom complet
-                </label>
-                <div className="relative">
-                  <UserCircleIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email
-                </label>
-                <div className="relative">
-                  <EnvelopeIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Téléphone
-                </label>
-                <div className="relative">
-                  <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-                >
-                  {loading ? 'Enregistrement...' : 'Enregistrer'}
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  type="button"
-                  onClick={handleCancel}
-                  disabled={loading}
-                  className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-                >
-                  Annuler
-                </motion.button>
-              </div>
-            </form>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <UserCircleIcon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Nom</p>
-                  <p className="text-lg font-medium text-gray-900 dark:text-white">{user?.name}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <EnvelopeIcon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Email</p>
-                  <p className="text-lg font-medium text-gray-900 dark:text-white">{user?.email}</p>
-                </div>
-              </div>
-
-              {user?.phone && (
-                <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <PhoneIcon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Téléphone</p>
-                    <p className="text-lg font-medium text-gray-900 dark:text-white">{user.phone}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Account Information */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 sm:p-6 md:p-8">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-6">
-            Informations du compte
-          </h2>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Code promo</p>
-                <p className="text-lg font-mono font-semibold text-primary-600 dark:text-primary-400">
-                  {user?.promo_code}
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  Mon Profil
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Gérez vos informations personnelles et contactez le support
                 </p>
               </div>
             </div>
+          </motion.div>
 
-            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Statut du compte</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${accountStatus.color}-100 dark:bg-${accountStatus.color}-900/20 text-${accountStatus.color}-700 dark:text-${accountStatus.color}-400`}>
-                    {accountStatus.text}
-                  </span>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Profile & Account Info */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Profile Information */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-gray-700"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                    Informations personnelles
+                  </h2>
+                  {!isEditing && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsEditing(true)}
+                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all shadow-md hover:shadow-lg text-sm font-medium"
+                    >
+                      Modifier
+                    </motion.button>
+                  )}
                 </div>
-                {accountStatus.description && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {accountStatus.description}
-                  </p>
+
+                {isEditing ? (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Nom complet
+                      </label>
+                      <div className="relative">
+                        <UserCircleIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="text"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white transition-all"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Email
+                      </label>
+                      <div className="relative">
+                        <EnvelopeIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white transition-all"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Téléphone
+                      </label>
+                      <div className="relative">
+                        <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      >
+                        {loading ? 'Enregistrement...' : 'Enregistrer'}
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={loading}
+                        className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      >
+                        Annuler
+                      </motion.button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                      <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
+                        <UserCircleIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Nom complet</p>
+                        <p className="text-base font-semibold text-gray-900 dark:text-white">{user?.name}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                      <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
+                        <EnvelopeIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Email</p>
+                        <p className="text-base font-semibold text-gray-900 dark:text-white break-all">{user?.email}</p>
+                      </div>
+                    </div>
+
+                    {user?.phone && (
+                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                        <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
+                          <PhoneIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Téléphone</p>
+                          <p className="text-base font-semibold text-gray-900 dark:text-white">{user.phone}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
-              </div>
+              </motion.div>
+
+              {/* Account Information */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-gray-700"
+              >
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                  <ShieldCheckIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                  Informations du compte
+                </h2>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-900/30 rounded-xl border border-primary-200 dark:border-primary-800">
+                    <div className="flex-1">
+                      <p className="text-xs text-primary-700 dark:text-primary-300 mb-1 font-medium">Code promo</p>
+                      <p className="text-xl font-mono font-bold text-primary-600 dark:text-primary-400">
+                        {user?.promo_code}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                    <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
+                      <StatusIcon className={`w-5 h-5 text-${accountStatus.color}-600 dark:text-${accountStatus.color}-400`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Statut du compte</p>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-${accountStatus.color}-100 dark:bg-${accountStatus.color}-900/30 text-${accountStatus.color}-700 dark:text-${accountStatus.color}-400`}>
+                          {accountStatus.text}
+                        </span>
+                      </div>
+                      {accountStatus.description && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                          {accountStatus.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {user?.account_activated_at && (
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                      <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
+                        <CalendarIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Compte activé le</p>
+                        <p className="text-base font-semibold text-gray-900 dark:text-white">
+                          {formatDate(user.account_activated_at)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {user?.account_expires_at && (
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                      <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
+                        <CalendarIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Expire le</p>
+                        <p className="text-base font-semibold text-gray-900 dark:text-white">
+                          {formatDate(user.account_expires_at)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
             </div>
 
-            {user?.account_activated_at && (
-              <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <CalendarIcon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Compte activé le</p>
-                  <p className="text-lg font-medium text-gray-900 dark:text-white">
-                    {formatDate(user.account_activated_at)}
-                  </p>
+            {/* Right Column - Support Contact */}
+            <div className="lg:col-span-1">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-2xl shadow-xl p-6 text-white sticky top-8"
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                    <LifebuoyIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Support Client</h2>
+                    <p className="text-sm text-primary-100">Nous sommes là pour vous aider</p>
+                  </div>
                 </div>
-              </div>
-            )}
 
-            {user?.account_expires_at && (
-              <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <CalendarIcon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Expire le</p>
-                  <p className="text-lg font-medium text-gray-900 dark:text-white">
-                    {formatDate(user.account_expires_at)}
+                <div className="space-y-4">
+                  {/* WhatsApp Contact */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleContactWhatsApp}
+                    className="w-full bg-white/10 backdrop-blur-sm hover:bg-white/20 p-4 rounded-xl transition-all border border-white/20 hover:border-white/40 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-500 rounded-lg group-hover:bg-green-600 transition-colors">
+                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-xs text-primary-100 mb-1">WhatsApp</p>
+                        <p className="font-semibold text-sm">{whatsappNumber || 'Chargement...'}</p>
+                      </div>
+                    </div>
+                  </motion.button>
+
+                  {/* Email Contact */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleContactEmail}
+                    className="w-full bg-white/10 backdrop-blur-sm hover:bg-white/20 p-4 rounded-xl transition-all border border-white/20 hover:border-white/40 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-500 rounded-lg group-hover:bg-blue-600 transition-colors">
+                        <EnvelopeIcon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-xs text-primary-100 mb-1">Email</p>
+                        <p className="font-semibold text-sm break-all">{supportEmail || 'Chargement...'}</p>
+                      </div>
+                    </div>
+                  </motion.button>
+
+                  {/* Phone Contact */}
+                  {supportPhone && (
+                    <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-500 rounded-lg">
+                          <PhoneIcon className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-xs text-primary-100 mb-1">Téléphone</p>
+                          <a href={`tel:${supportPhone}`} className="font-semibold text-sm hover:underline">
+                            {supportPhone}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                  <p className="text-xs text-primary-100 leading-relaxed">
+                    Notre équipe est disponible pour répondre à toutes vos questions et vous accompagner dans votre parcours de formation.
                   </p>
                 </div>
-              </div>
-            )}
+              </motion.div>
+            </div>
           </div>
-        </div>
         </div>
       </div>
     </>

@@ -28,6 +28,26 @@ class SettingsService {
       return '+237692573597'; // Numéro par défaut en cas d'erreur
     }
   }
+
+  async getSupportEmail(): Promise<string> {
+    try {
+      const settings = await this.getSettings();
+      return settings.support_email || 'support@formaneo.com';
+    } catch (error) {
+      console.error('Error fetching support email:', error);
+      return 'support@formaneo.com';
+    }
+  }
+
+  async getSupportPhone(): Promise<string> {
+    try {
+      const settings = await this.getSettings();
+      return settings.support_phone || '+237691592882';
+    } catch (error) {
+      console.error('Error fetching support phone:', error);
+      return '+237691592882';
+    }
+  }
 }
 
 const settingsService = new SettingsService();
