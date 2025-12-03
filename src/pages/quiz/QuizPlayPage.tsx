@@ -13,6 +13,7 @@ import Navigation from '../../components/Navigation';
 const QuizPlayPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const quizId = searchParams.get('id');
   const subject = searchParams.get('subject') || '';
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -49,20 +50,52 @@ const QuizPlayPage = () => {
   const loadQuiz = async () => {
     try {
       setLoading(true);
-      // Filtrer directement par sujet côté backend
-      const response = await quizService.getAvailableQuizzes(subject);
-      const availableQuizzes = response.quizzes;
 
-      if (availableQuizzes.length === 0) {
-        toast.error('Aucun quiz disponible pour ce domaine');
-        navigate('/quizz');
-        return;
+      // Si un ID spécifique est fourni, charger ce quiz
+      if (quizId) {
+        const response = await quizService.getAvailableQuizzes(subject);
+        const allQuizzes = response.quizzes;
+        const selectedQuiz = allQuizzes.find((q: any) => q.id.toString() === quizId);
+
+        if (!selectedQuiz) {
+          toast.error('Quiz non trouvé');
+          navigate('/quizz');
+          return;
+        }
+
+        if (selectedQuiz.user_has_attempted) {
+          toast.error('Vous avez déjà participé à ce quiz');
+          navigate('/quizz');
+          return;
+        }
+
+        setQuiz(selectedQuiz);
+        setQuizStartTime(Date.now());
+      } else {
+        // Mode aléatoire (ancien comportement)
+        const response = await quizService.getAvailableQuizzes(subject);
+        const allQuizzes = response.quizzes;
+
+        if (allQuizzes.length === 0) {
+          toast.error('Aucun quiz disponible pour cette catégorie');
+          navigate('/quizz');
+          return;
+        }
+
+        // Filtrer les quiz non encore tentés par l'utilisateur
+        const notAttemptedQuizzes = allQuizzes.filter((q: any) => !q.user_has_attempted);
+
+        if (notAttemptedQuizzes.length === 0) {
+          toast.error('Vous avez déjà participé à tous les quiz de cette catégorie');
+          navigate('/quizz');
+          return;
+        }
+
+        // Sélectionner un quiz aléatoire parmi ceux non encore tentés
+        const randomQuiz = notAttemptedQuizzes[Math.floor(Math.random() * notAttemptedQuizzes.length)];
+        setQuiz(randomQuiz);
+        setQuizStartTime(Date.now());
       }
-
-      // Sélectionner un quiz aléatoire parmi ceux du domaine
-      const randomQuiz = availableQuizzes[Math.floor(Math.random() * availableQuizzes.length)];
-      setQuiz(randomQuiz);
-      setQuizStartTime(Date.now());
     } catch (error) {
       toast.error('Erreur lors du chargement du quiz');
       navigate('/quizz');
@@ -87,8 +120,11 @@ const QuizPlayPage = () => {
     setUserAnswers(newAnswers);
 
     // Vérifier la réponse
-    if (quiz && selectedAnswer === quiz.questions[currentQuestionIndex].correctAnswer) {
-      setScore(score + 1);
+    if (quiz) {
+      const correctAnswer = parseInt(quiz.questions[currentQuestionIndex].correct_answer.toString());
+      if (selectedAnswer === correctAnswer) {
+        setScore(score + 1);
+      }
     }
 
     if (currentQuestionIndex === quiz!.questions.length - 1) {
@@ -102,7 +138,8 @@ const QuizPlayPage = () => {
   const finishQuiz = async () => {
     if (!quiz) return;
 
-    const finalScore = score + (selectedAnswer === quiz.questions[currentQuestionIndex]?.correctAnswer ? 1 : 0);
+    const correctAnswer = parseInt(quiz.questions[currentQuestionIndex]?.correct_answer.toString() || '0');
+    const finalScore = score + (selectedAnswer === correctAnswer ? 1 : 0);
     const timeTaken = Math.floor((Date.now() - quizStartTime) / 1000);
     const percentage = Math.round((finalScore / quiz.questions.length) * 100);
 
@@ -123,13 +160,20 @@ const QuizPlayPage = () => {
         toast.success(`Félicitations ! Vous avez gagné ${result.reward} FCFA !`);
         // Tracker le défi de quiz réussi
         await challengeTracker.trackQuizPassed(
-          parseInt(quiz.id.toString()), 
-          quiz.title || `Quiz ${subject}`, 
+          parseInt(quiz.id.toString()),
+          quiz.title || `Quiz ${subject}`,
           percentage
         );
       }
-    } catch (error) {
-      toast.error('Erreur lors de la sauvegarde du résultat');
+    } catch (error: any) {
+      // Gérer l'erreur 403 (déjà joué)
+      if (error?.response?.status === 403) {
+        toast.error('Vous avez déjà participé à ce quiz');
+        setTimeout(() => navigate('/quizz'), 2000);
+      } else {
+        toast.error('Erreur lors de la sauvegarde du résultat');
+      }
+      console.error('Erreur lors de la sauvegarde du résultat:', error);
     }
   };
 
@@ -158,7 +202,8 @@ const QuizPlayPage = () => {
   }
 
   if (showResult) {
-    const finalScore = score + (selectedAnswer === quiz?.questions[currentQuestionIndex]?.correctAnswer ? 1 : 0);
+    const correctAnswer = parseInt(quiz?.questions[currentQuestionIndex]?.correct_answer.toString() || '0');
+    const finalScore = score + (selectedAnswer === correctAnswer ? 1 : 0);
     return <QuizResultScreen 
       result={quizResult} 
       quiz={quiz} 
@@ -294,7 +339,7 @@ const QuizResultScreen: React.FC<{
   onRestart: () => void;
   finalScore: number;
   totalQuestions: number;
-}> = ({ result, quiz, onRestart, finalScore, totalQuestions }) => {
+}> = ({ result, onRestart, finalScore, totalQuestions }) => {
   const navigate = useNavigate();
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price);

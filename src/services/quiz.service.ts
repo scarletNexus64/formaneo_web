@@ -3,8 +3,19 @@ import apiService from './api.service';
 export interface QuizQuestion {
   question: string;
   options: string[];
-  correctAnswer: number;
+  correct_answer: number | string;
   explanation?: string;
+}
+
+export interface QuizCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+  color: string;
+  order: number;
+  quizzes_count: number;
 }
 
 export interface Quiz {
@@ -16,8 +27,13 @@ export interface Quiz {
   subject: string;
   questions_count: number;
   is_active: boolean;
-  passing_score?: number;
-  reward_per_correct?: number;
+  passing_score: number;
+  reward_amount: number;
+  status: 'draft' | 'scheduled' | 'published' | 'closed';
+  max_participants?: number;
+  current_participants: number;
+  published_at?: string;
+  user_has_attempted?: boolean;
 }
 
 export interface QuizResult {
@@ -38,6 +54,24 @@ export interface QuizStats {
   total_rewards: number;
 }
 
+export interface LeaderboardEntry {
+  rank: number;
+  user_id: number;
+  user_name: string;
+  total_quizzes: number;
+  passed_quizzes: number;
+  average_score: number;
+  best_score: number;
+  total_correct_answers: number;
+}
+
+export interface LeaderboardResponse {
+  leaderboard: LeaderboardEntry[];
+  user_stats: LeaderboardEntry;
+  total_participants: number;
+  filter: { subject?: string } | null;
+}
+
 export interface QuizResultResponse {
   success: boolean;
   result_id: number;
@@ -48,6 +82,32 @@ export interface QuizResultResponse {
 }
 
 class QuizService {
+  /**
+   * Obtenir toutes les catégories de quiz
+   */
+  async getCategories(): Promise<{ categories: QuizCategory[] }> {
+    try {
+      const response = await apiService.get<{ categories: QuizCategory[] }>('/quiz-categories');
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors du chargement des catégories:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtenir une catégorie et ses quiz
+   */
+  async getCategoryQuizzes(slug: string): Promise<{ category: QuizCategory; quizzes: Quiz[] }> {
+    try {
+      const response = await apiService.get<{ category: QuizCategory; quizzes: Quiz[] }>(`/quiz-categories/${slug}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors du chargement des quiz de la catégorie:', error);
+      throw error;
+    }
+  }
+
   /**
    * Obtenir les quiz disponibles
    */
@@ -133,6 +193,26 @@ class QuizService {
       return response.data;
     } catch (error) {
       console.error('Erreur lors du chargement des statistiques:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtenir le classement des quiz
+   */
+  async getLeaderboard(subject?: string, limit?: number): Promise<LeaderboardResponse> {
+    try {
+      const params = new URLSearchParams();
+      if (subject) params.append('subject', subject);
+      if (limit) params.append('limit', limit.toString());
+
+      const queryString = params.toString();
+      const url = `/quiz/leaderboard${queryString ? `?${queryString}` : ''}`;
+
+      const response = await apiService.get<LeaderboardResponse>(url);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors du chargement du classement:', error);
       throw error;
     }
   }

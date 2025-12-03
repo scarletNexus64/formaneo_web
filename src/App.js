@@ -17,8 +17,10 @@ import FormationLearnPageAuth from './pages/formations/FormationLearnPage';
 import EbooksPageAuth from './pages/ebooks/EbooksPage';
 import WalletPageAuth from './pages/wallet/WalletPage';
 import QuizPage from './pages/quiz/QuizPage';
+import QuizCategoryPage from './pages/quiz/QuizCategoryPage';
 import QuizPlayPage from './pages/quiz/QuizPlayPage';
 import QuizHistoryPage from './pages/quiz/QuizHistoryPage';
+import QuizLeaderboardPage from './pages/quiz/QuizLeaderboardPage';
 import ChallengesPage from './pages/challenges/ChallengesPage';
 import AccountActivationPage from './pages/account/AccountActivationPage';
 import ActivationReturnPage from './pages/account/ActivationReturnPage';
@@ -446,6 +448,11 @@ const AppContent = () => {
           <QuizPage />
         </ProtectedRoute>
       } />
+      <Route path="/quizz/category/:slug" element={
+        <ProtectedRoute>
+          <QuizCategoryPage />
+        </ProtectedRoute>
+      } />
       <Route path="/quizz/play" element={
         <ProtectedRoute>
           <QuizPlayPage />
@@ -454,6 +461,11 @@ const AppContent = () => {
       <Route path="/quizz/history" element={
         <ProtectedRoute>
           <QuizHistoryPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/quizz/leaderboard" element={
+        <ProtectedRoute>
+          <QuizLeaderboardPage />
         </ProtectedRoute>
       } />
       <Route path="/challenges" element={
