@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Push Notifications - Formaneo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        .status-box {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .status-box.error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        .status-box.success {
+            background: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button.danger {
+            background: #ef4444;
+        }
+        button.danger:hover {
+            background: #dc2626;
+        }
+        .info {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        pre {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Push Notifications</h1>
+        <p>Cette page vous aide à déboguer les notifications push.</p>
+
+        <div id="status"></div>
+
+        <h2>État actuel</h2>
+        <div id="current-status"></div>
+
+        <h2>Actions</h2>
+        <button onclick="checkStatus()">🔄 Vérifier l'état</button>
+        <button onclick="clearStorage()" class="danger">🗑️ Réinitialiser localStorage</button>
+        <button onclick="showLocalStorage()">📦 Voir localStorage</button>
+        <button onclick="checkPermission()">🔔 Vérifier permission</button>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = `status-box ${type}`;
+            div.innerHTML = message;
+            output.appendChild(div);
+        }
+
+        function checkStatus() {
+            document.getElementById('output').innerHTML = '';
+
+            // Check if authenticated
+            const token = localStorage.getItem('token');
+            const isAuthenticated = !!token;
+            log(`🔐 <strong>Authentification:</strong> ${isAuthenticated ? '✅ Connecté' : '❌ Non connecté'}`, isAuthenticated ? 'success' : 'error');
+
+            // Check FCM token
+            const fcmToken = localStorage.getItem('fcm_token');
+            log(`📱 <strong>FCM Token:</strong> ${fcmToken ? '✅ Présent (' + fcmToken.substring(0, 30) + '...)' : '❌ Absent'}`, fcmToken ? 'success' : 'error');
+
+            // Check notification permission
+            if ('Notification' in window) {
+                const permission = Notification.permission;
+                const emoji = permission === 'granted' ? '✅' : permission === 'denied' ? '❌' : '⚠️';
+                log(`🔔 <strong>Permission navigateur:</strong> ${emoji} ${permission}`, permission === 'granted' ? 'success' : permission === 'denied' ? 'error' : 'info');
+            } else {
+                log('❌ <strong>Notifications non supportées</strong> dans ce navigateur', 'error');
+            }
+
+            // Check modal dismissal
+            const dismissedAt = localStorage.getItem('notification_modal_dismissed_at');
+            if (dismissedAt) {
+                const date = new Date(parseInt(dismissedAt));
+                const hoursSince = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60);
+                log(`🕒 <strong>Modal fermé le:</strong> ${date.toLocaleString()} (il y a ${hoursSince.toFixed(1)} heures)`, 'info');
+
+                if (hoursSince < 24) {
+                    log(`⚠️ <strong>Le modal ne s'affichera pas avant:</strong> ${new Date(parseInt(dismissedAt) + 24 * 60 * 60 * 1000).toLocaleString()}`, 'error');
+                } else {
+                    log(`✅ Le modal peut s'afficher (plus de 24h écoulées)`, 'success');
+                }
+            } else {
+                log('✅ <strong>Modal jamais fermé</strong> - il devrait s\'afficher', 'success');
+            }
+
+            // Check if push is enabled
+            const isEnabled = Notification.permission === 'granted' && !!fcmToken;
+            log(`<strong>📊 Résumé:</strong> Push notifications ${isEnabled ? '✅ ACTIVÉES' : '❌ DÉSACTIVÉES'}`, isEnabled ? 'success' : 'error');
+
+            if (!isAuthenticated) {
+                log('💡 <strong>Solution:</strong> Connectez-vous d\'abord à l\'application', 'info');
+            } else if (Notification.permission === 'denied') {
+                log('💡 <strong>Solution:</strong> Débloquez les notifications dans les paramètres du navigateur (voir instructions ci-dessous)', 'info');
+                showUnblockInstructions();
+            } else if (!fcmToken && Notification.permission === 'default') {
+                log('💡 <strong>Solution:</strong> Le modal devrait s\'afficher 3 secondes après le login', 'success');
+            }
+        }
+
+        function clearStorage() {
+            if (confirm('⚠️ Voulez-vous vraiment réinitialiser le localStorage?\n\nCela va:\n- Supprimer le token FCM\n- Réinitialiser le délai du modal\n\nVous devrez accepter à nouveau les notifications.')) {
+                localStorage.removeItem('fcm_token');
+                localStorage.removeItem('notification_modal_dismissed_at');
+                localStorage.removeItem('push_notification_prompt_dismissed');
+                log('✅ localStorage réinitialisé! Rechargez la page.', 'success');
+            }
+        }
+
+        function showLocalStorage() {
+            document.getElementById('output').innerHTML = '';
+            const relevantKeys = ['token', 'fcm_token', 'notification_modal_dismissed_at', 'push_notification_prompt_dismissed'];
+
+            let html = '<strong>📦 Contenu du localStorage:</strong><pre>';
+            relevantKeys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    html += `${key}: ${value.length > 100 ? value.substring(0, 100) + '...' : value}\n`;
+                } else {
+                    html += `${key}: (vide)\n`;
+                }
+            });
+            html += '</pre>';
+
+            log(html, 'info');
+        }
+
+        function checkPermission() {
+            document.getElementById('output').innerHTML = '';
+
+            if (!('Notification' in window)) {
+                log('❌ Les notifications ne sont pas supportées dans ce navigateur', 'error');
+                return;
+            }
+
+            log(`🔔 Permission actuelle: <strong>${Notification.permission}</strong>`, 'info');
+
+            if (Notification.permission === 'default') {
+                log('💡 La permission n\'a jamais été demandée. Le modal devrait s\'afficher automatiquement.', 'info');
+            } else if (Notification.permission === 'denied') {
+                log('❌ Les notifications sont bloquées. Vous devez les débloquer manuellement.', 'error');
+                showUnblockInstructions();
+            } else if (Notification.permission === 'granted') {
+                log('✅ Permission accordée!', 'success');
+            }
+        }
+
+        function showUnblockInstructions() {
+            const instructions = `
+                <h3>📖 Comment débloquer les notifications:</h3>
+                <div class="info">
+                    <strong>Chrome/Edge:</strong><br>
+                    1. Cliquez sur l'icône 🔒 à gauche de l'URL<br>
+                    2. Cliquez sur "Paramètres du site"<br>
+                    3. Dans "Notifications", changez à "Autoriser"<br>
+                    4. Rechargez la page (F5)<br><br>
+
+                    <strong>Firefox:</strong><br>
+                    1. Cliquez sur l'icône 🔒 à gauche de l'URL<br>
+                    2. Cliquez sur "Plus d'informations"<br>
+                    3. Allez dans "Permissions" > "Recevoir des notifications"<br>
+                    4. Changez à "Autoriser"<br>
+                    5. Rechargez la page
+                </div>
+            `;
+            log(instructions, 'info');
+        }
+
+        // Auto-check on page load
+        window.addEventListener('load', () => {
+            checkStatus();
+        });
+    </script>
+</body>
+</html>

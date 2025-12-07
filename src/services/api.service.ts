@@ -130,6 +130,20 @@ class ApiService {
               // toast.error('Erreur serveur, veuillez réessayer plus tard');
               console.error('❌ 500 Server Error:', error.response.data);
               break;
+            case 503:
+              // Service Unavailable - Maintenance mode
+              const maintenanceData = error.response.data;
+              if (maintenanceData?.maintenance) {
+                console.warn('🛠️ Maintenance mode active');
+                // Store maintenance info in sessionStorage
+                sessionStorage.setItem('maintenanceInfo', JSON.stringify({
+                  title: maintenanceData.title,
+                  message: maintenanceData.message
+                }));
+                // Redirect to maintenance page
+                window.location.href = '/maintenance';
+              }
+              break;
             default:
               toast.error(error.response.data.message || 'Une erreur est survenue');
           }

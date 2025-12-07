@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Push Notifications</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #4338CA;
+        }
+        button:disabled {
+            background: #9CA3AF;
+            cursor: not-allowed;
+        }
+        .output {
+            background: #1F2937;
+            color: #10B981;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #10B981; }
+        .error { color: #EF4444; }
+        .info { color: #3B82F6; }
+        h1 { color: #1F2937; }
+        .token-display {
+            background: #FEF3C7;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 Test Push Notifications FCM</h1>
+        <p>Utilisez cette page pour tester les notifications push sans l'application complète.</p>
+
+        <div>
+            <button onclick="requestPermission()">1. Demander Permission</button>
+            <button onclick="getToken()" id="tokenBtn" disabled>2. Obtenir Token FCM</button>
+            <button onclick="registerToken()" id="registerBtn" disabled>3. Enregistrer Token</button>
+        </div>
+
+        <div id="tokenDisplay" style="display:none;" class="token-display">
+            <strong>Token FCM:</strong><br>
+            <span id="tokenValue"></span>
+        </div>
+
+        <div id="output" class="output"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+
+        // Configuration Firebase - À REMPLACER PAR VOS VALEURS
+        const firebaseConfig = {
+            apiKey: "AIzaSyA11yhQjEQ7s-knZHZPdty24q8yeY39efk",
+            authDomain: "formaneo-66677.firebaseapp.com",
+            projectId: "formaneo-66677",
+            storageBucket: "formaneo-66677.firebasestorage.app",
+            messagingSenderId: "498934458846",
+            appId: "1:498934458846:web:feecd9405b9a079aa2154f"
+        };
+
+        const vapidKey = "BNFddtOlUJTKu7mqQxrhvhzxXxaSOAuFjTok56zzTFDheMst3m8epHDc3QUvZtLVZAMap-LMAmcIE2UrYUxBUik";
+
+        let currentToken = null;
+        let messaging = null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const time = new Date().toLocaleTimeString();
+            const className = type;
+            output.innerHTML += `<div class="${className}">[${time}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        window.requestPermission = async function() {
+            log('Demande de permission...', 'info');
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    log('✅ Permission accordée!', 'success');
+                    document.getElementById('tokenBtn').disabled = false;
+
+                    // Initialize messaging
+                    messaging = getMessaging(app);
+
+                    // Listen for messages
+                    onMessage(messaging, (payload) => {
+                        log('📬 Message reçu en foreground:', 'success');
+                        log(JSON.stringify(payload, null, 2), 'info');
+
+                        // Show browser notification
+                        new Notification(payload.notification.title, {
+                            body: payload.notification.body,
+                            icon: '/logo192.png'
+                        });
+                    });
+                } else {
+                    log('❌ Permission refusée', 'error');
+                }
+            } catch (error) {
+                log('❌ Erreur: ' + error.message, 'error');
+            }
+        };
+
+        window.getToken = async function() {
+            if (!messaging) {
+                log('❌ Firebase Messaging non initialisé', 'error');
+                return;
+            }
+
+            log('Récupération du token FCM...', 'info');
+            try {
+                const token = await getToken(messaging, {
+                    vapidKey: vapidKey
+                });
+
+                if (token) {
+                    currentToken = token;
+                    log('✅ Token FCM obtenu!', 'success');
+                    log(`Token: ${token.substring(0, 50)}...`, 'info');
+
+                    // Display token
+                    document.getElementById('tokenDisplay').style.display = 'block';
+                    document.getElementById('tokenValue').textContent = token;
+                    document.getElementById('registerBtn').disabled = false;
+                } else {
+                    log('❌ Pas de token disponible', 'error');
+                }
+            } catch (error) {
+                log('❌ Erreur: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+
+        window.registerToken = async function() {
+            if (!currentToken) {
+                log('❌ Pas de token à enregistrer', 'error');
+                return;
+            }
+
+            // Récupérer le token d'authentification
+            const authToken = localStorage.getItem('token');
+            if (!authToken) {
+                log('⚠️  Pas de token d\'authentification. Connectez-vous d\'abord sur l\'app principale.', 'error');
+                log('Ou entrez votre email ci-dessous pour un test manuel', 'info');
+                return;
+            }
+
+            log('Enregistrement du token sur le serveur...', 'info');
+            try {
+                const response = await fetch('http://192.168.1.149:8001/api/v1/notifications/fcm-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fcm_token: currentToken
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    log('✅ Token enregistré avec succès!', 'success');
+                    log('Vous pouvez maintenant envoyer une notification de test depuis tinker', 'info');
+                    log('Commande: \\App\\Models\\UserNotification::createForUser($userId, "Test", "Message", "test")', 'info');
+                } else {
+                    log('❌ Erreur: ' + JSON.stringify(data), 'error');
+                }
+            } catch (error) {
+                log('❌ Erreur réseau: ' + error.message, 'error');
+            }
+        };
+
+        log('Page de test chargée. Suivez les étapes ci-dessus.', 'info');
+    </script>
+</body>
+</html>

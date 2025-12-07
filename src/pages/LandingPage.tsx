@@ -597,6 +597,26 @@ const LandingPage = () => {
     whatsapp: '+237 678 613 653',
   });
 
+  // Vérifier le statut de maintenance au chargement
+  useEffect(() => {
+    const checkMaintenanceStatus = async () => {
+      try {
+        const response = await apiService.get('/maintenance/status');
+        // Si on reçoit une réponse 200, pas de maintenance
+        if (response.data && !response.data.maintenance) {
+          console.log('✅ Site opérationnel');
+          // Nettoyer le sessionStorage si le mode maintenance est désactivé
+          sessionStorage.removeItem('maintenanceInfo');
+        }
+      } catch (error: any) {
+        // Si on reçoit une erreur 503, le middleware redirigera automatiquement
+        console.log('🛠️ Vérification maintenance effectuée');
+      }
+    };
+
+    checkMaintenanceStatus();
+  }, []);
+
   // Récupérer les informations de contact depuis l'API
   useEffect(() => {
     const fetchContactInfo = async () => {

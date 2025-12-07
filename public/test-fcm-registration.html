@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test FCM Token Registration</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e40af;
+        }
+        .log {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .log div {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #3b82f6;
+            padding-left: 10px;
+        }
+        .log .error {
+            border-left-color: #ef4444;
+            color: #fca5a5;
+        }
+        .log .success {
+            border-left-color: #22c55e;
+            color: #86efac;
+        }
+        .log .info {
+            border-left-color: #3b82f6;
+            color: #93c5fd;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .status-box {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .status-box.error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        .status-box.success {
+            background: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test FCM Token Registration</h1>
+        <p>Cette page teste l'enregistrement du token FCM étape par étape.</p>
+
+        <h2>Étape 1: Vérifier l'authentification</h2>
+        <div id="auth-status"></div>
+        <button onclick="checkAuth()">Vérifier Auth</button>
+
+        <h2>Étape 2: Obtenir le token FCM</h2>
+        <div id="fcm-status"></div>
+        <button onclick="getFCMToken()">Obtenir FCM Token</button>
+
+        <h2>Étape 3: Enregistrer le token dans l'API</h2>
+        <div id="api-status"></div>
+        <button onclick="registerToken()">Enregistrer Token</button>
+
+        <h2>📋 Logs en temps réel</h2>
+        <div id="logs" class="log"></div>
+        <button onclick="clearLogs()">Effacer les logs</button>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+
+    <script>
+        let currentToken = null;
+        let authToken = null;
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyA11yhQjEQ7s-knZHZPdty24q8yeY39efk",
+            authDomain: "formaneo-66677.firebaseapp.com",
+            projectId: "formaneo-66677",
+            storageBucket: "formaneo-66677.firebasestorage.app",
+            messagingSenderId: "498934458846",
+            appId: "1:498934458846:web:feecd9405b9a079aa2154f"
+        };
+
+        const VAPID_KEY = "BNFddtOlUJTKu7mqQxrhvhzxXxaSOAuFjTok56zzTFDheMst3m8epHDc3QUvZtLVZAMap-LMAmcIE2UrYUxBUik";
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const messaging = firebase.messaging();
+
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsDiv.appendChild(div);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        async function checkAuth() {
+            log('🔍 Vérification de l\'authentification...', 'info');
+            const statusDiv = document.getElementById('auth-status');
+
+            // Check localStorage token
+            const plainToken = localStorage.getItem('token');
+            log(`📦 localStorage.token: ${plainToken ? 'Présent' : 'Absent'}`, plainToken ? 'success' : 'error');
+
+            // Check auth-storage (Zustand)
+            const authStorage = localStorage.getItem('auth-storage');
+            if (authStorage) {
+                try {
+                    const parsed = JSON.parse(authStorage);
+                    authToken = parsed.state?.token;
+                    const user = parsed.state?.user;
+
+                    log(`✅ Zustand auth-storage trouvé`, 'success');
+                    log(`👤 User: ${user?.name} (${user?.email})`, 'info');
+                    log(`🔑 Token: ${authToken ? authToken.substring(0, 30) + '...' : 'NULL'}`, authToken ? 'success' : 'error');
+
+                    statusDiv.innerHTML = `
+                        <div class="status-box success">
+                            <strong>✅ Authentifié</strong><br>
+                            User: ${user?.name} (${user?.email})<br>
+                            Token présent: Oui
+                        </div>
+                    `;
+                    return true;
+                } catch (e) {
+                    log(`❌ Erreur de parsing auth-storage: ${e.message}`, 'error');
+                    statusDiv.innerHTML = `
+                        <div class="status-box error">
+                            <strong>❌ Non authentifié</strong><br>
+                            Erreur: ${e.message}
+                        </div>
+                    `;
+                    return false;
+                }
+            } else {
+                log('❌ Pas de auth-storage trouvé', 'error');
+                statusDiv.innerHTML = `
+                    <div class="status-box error">
+                        <strong>❌ Non authentifié</strong><br>
+                        Veuillez vous connecter sur <a href="http://localhost:3001/login">l'application</a>
+                    </div>
+                `;
+                return false;
+            }
+        }
+
+        async function getFCMToken() {
+            log('🔍 Demande du token FCM...', 'info');
+            const statusDiv = document.getElementById('fcm-status');
+
+            try {
+                // Check permission
+                const permission = await Notification.requestPermission();
+                log(`🔔 Permission: ${permission}`, permission === 'granted' ? 'success' : 'error');
+
+                if (permission !== 'granted') {
+                    statusDiv.innerHTML = `
+                        <div class="status-box error">
+                            <strong>❌ Permission refusée</strong><br>
+                            Veuillez autoriser les notifications dans votre navigateur.
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Get token
+                const token = await messaging.getToken({
+                    vapidKey: VAPID_KEY
+                });
+
+                if (token) {
+                    currentToken = token;
+                    log(`✅ Token FCM obtenu: ${token.substring(0, 50)}...`, 'success');
+                    log(`📏 Longueur du token: ${token.length} caractères`, 'info');
+
+                    statusDiv.innerHTML = `
+                        <div class="status-box success">
+                            <strong>✅ Token FCM obtenu</strong><br>
+                            <code style="word-break: break-all; display: block; margin-top: 10px; max-height: 100px; overflow-y: auto;">${token}</code>
+                        </div>
+                    `;
+                } else {
+                    log('❌ Impossible d\'obtenir le token FCM', 'error');
+                    statusDiv.innerHTML = `
+                        <div class="status-box error">
+                            <strong>❌ Pas de token FCM</strong><br>
+                            Vérifiez que le service worker est enregistré.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                log(`❌ Erreur Firebase: ${error.message}`, 'error');
+                console.error('Erreur complète:', error);
+                statusDiv.innerHTML = `
+                    <div class="status-box error">
+                        <strong>❌ Erreur Firebase</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function registerToken() {
+            log('🚀 Enregistrement du token dans l\'API...', 'info');
+            const statusDiv = document.getElementById('api-status');
+
+            if (!authToken) {
+                log('❌ Pas de token d\'authentification. Vérifiez d\'abord l\'authentification.', 'error');
+                statusDiv.innerHTML = `
+                    <div class="status-box error">
+                        <strong>❌ Pas de token auth</strong><br>
+                        Cliquez d'abord sur "Vérifier Auth"
+                    </div>
+                `;
+                return;
+            }
+
+            if (!currentToken) {
+                log('❌ Pas de token FCM. Obtenez d\'abord le token FCM.', 'error');
+                statusDiv.innerHTML = `
+                    <div class="status-box error">
+                        <strong>❌ Pas de token FCM</strong><br>
+                        Cliquez d'abord sur "Obtenir FCM Token"
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const apiUrl = 'http://localhost:8001/api/v1/notifications/fcm-token';
+                log(`📍 URL: ${apiUrl}`, 'info');
+                log(`🔑 Token auth: ${authToken.substring(0, 30)}...`, 'info');
+                log(`📱 Token FCM: ${currentToken.substring(0, 50)}...`, 'info');
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                        'X-Platform': 'web'
+                    },
+                    body: JSON.stringify({
+                        fcm_token: currentToken
+                    })
+                });
+
+                log(`📊 Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+
+                const data = await response.json();
+                log(`📦 Response: ${JSON.stringify(data)}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    localStorage.setItem('fcm_token', currentToken);
+                    statusDiv.innerHTML = `
+                        <div class="status-box success">
+                            <strong>✅ Token enregistré avec succès!</strong><br>
+                            Message: ${data.message}<br>
+                            Le token a été sauvegardé dans la base de données.
+                        </div>
+                    `;
+                    log('✅ ✅ ✅ TOKEN ENREGISTRÉ AVEC SUCCÈS!', 'success');
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="status-box error">
+                            <strong>❌ Erreur API</strong><br>
+                            Status: ${response.status}<br>
+                            Message: ${data.message || 'Erreur inconnue'}
+                        </div>
+                    `;
+                    log(`❌ Erreur API: ${data.message || response.statusText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Erreur réseau: ${error.message}`, 'error');
+                console.error('Erreur complète:', error);
+                statusDiv.innerHTML = `
+                    <div class="status-box error">
+                        <strong>❌ Erreur réseau</strong><br>
+                        ${error.message}<br>
+                        Vérifiez que le backend Laravel tourne sur le port 8001
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-check auth on load
+        window.addEventListener('load', () => {
+            log('🚀 Page chargée', 'info');
+            checkAuth();
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  AcademicCapIcon, 
-  BookOpenIcon, 
+import {
+  AcademicCapIcon,
+  BookOpenIcon,
   CurrencyDollarIcon,
   UserGroupIcon,
   ChartBarIcon,
@@ -13,12 +13,21 @@ import {
   EyeSlashIcon,
   SparklesIcon,
   FireIcon,
-  StarIcon
+  StarIcon,
+  PencilIcon,
+  CheckIcon,
+  XMarkIcon,
+  DocumentDuplicateIcon,
+  LinkIcon
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../store/authStore';
 import { Link } from 'react-router-dom';
 import { dashboardService, DashboardStats, FormationProgress, RecentActivity } from '../../services/dashboard.service';
 import Navigation from '../../components/Navigation';
+import toast from 'react-hot-toast';
+import apiService from '../../services/api.service';
+import { ENDPOINTS } from '../../config/api.config';
+import { generateAffiliateLink } from '../../utils/affiliateUtils';
 
 const DashboardPage = () => {
   const { user } = useAuthStore();
@@ -28,6 +37,11 @@ const DashboardPage = () => {
   const [inProgressFormations, setInProgressFormations] = useState<FormationProgress[]>([]);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditingPromoCode, setIsEditingPromoCode] = useState(false);
+  const [newPromoCode, setNewPromoCode] = useState('');
+  const [isCheckingCode, setIsCheckingCode] = useState(false);
+  const [codeAvailability, setCodeAvailability] = useState<{ available: boolean; message: string; is_current?: boolean } | null>(null);
+  const [isUpdatingCode, setIsUpdatingCode] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -119,6 +133,104 @@ const DashboardPage = () => {
     
     return iconMap[iconName] || <CurrencyDollarIcon className={`${iconClass} text-gray-500`} />;
   };
+
+  // Fonction pour copier dans le presse-papiers
+  const copyToClipboard = async (text: string, type: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        toast.success(`${type} copié dans le presse-papiers !`);
+      } else {
+        // Fallback pour les navigateurs plus anciens
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          document.execCommand('copy');
+          toast.success(`${type} copié dans le presse-papiers !`);
+        } catch (err) {
+          toast.error('Erreur lors de la copie');
+        }
+
+        document.body.removeChild(textArea);
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la copie');
+    }
+  };
+
+  // Fonction pour vérifier la disponibilité du code promo
+  const checkPromoCode = async (code: string) => {
+    if (!code || code.length < 3) {
+      setCodeAvailability(null);
+      return;
+    }
+
+    try {
+      setIsCheckingCode(true);
+      const response = await apiService.post(ENDPOINTS.AFFILIATE.CHECK_PROMO_CODE, {
+        promo_code: code
+      });
+      setCodeAvailability(response.data);
+    } catch (error: any) {
+      setCodeAvailability({
+        available: false,
+        message: error.response?.data?.message || 'Erreur lors de la vérification'
+      });
+    } finally {
+      setIsCheckingCode(false);
+    }
+  };
+
+  // Fonction pour mettre à jour le code promo
+  const handleUpdatePromoCode = async () => {
+    if (!newPromoCode || newPromoCode.length < 3) {
+      toast.error('Le code promo doit contenir au moins 3 caractères');
+      return;
+    }
+
+    if (!codeAvailability?.available || codeAvailability?.is_current) {
+      toast.error('Veuillez choisir un code promo disponible');
+      return;
+    }
+
+    try {
+      setIsUpdatingCode(true);
+      const response = await apiService.put(ENDPOINTS.AFFILIATE.UPDATE_PROMO_CODE, {
+        promo_code: newPromoCode
+      });
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        // Recharger les données de l'utilisateur
+        window.location.reload(); // Recharger la page pour mettre à jour le code promo
+        setIsEditingPromoCode(false);
+        setNewPromoCode('');
+        setCodeAvailability(null);
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du code promo');
+    } finally {
+      setIsUpdatingCode(false);
+    }
+  };
+
+  // Gérer le changement du code promo avec debounce
+  useEffect(() => {
+    if (isEditingPromoCode && newPromoCode) {
+      const timer = setTimeout(() => {
+        checkPromoCode(newPromoCode);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [newPromoCode, isEditingPromoCode]);
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
@@ -566,23 +678,146 @@ const DashboardPage = () => {
             <div className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-700 dark:to-blue-700 rounded-xl p-6 text-white shadow-lg border border-primary-500 dark:border-primary-600">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold">Votre Code Promo</h3>
-                <StarIcon className="w-5 h-5" />
+                <div className="flex items-center space-x-2">
+                  {user?.account_status === 'active' && !isEditingPromoCode && (
+                    <button
+                      onClick={() => {
+                        setIsEditingPromoCode(true);
+                        setNewPromoCode(user?.promo_code || '');
+                      }}
+                      className="text-white hover:text-primary-200 flex items-center text-sm bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors"
+                    >
+                      <PencilIcon className="w-4 h-4 mr-1" />
+                      Modifier
+                    </button>
+                  )}
+                  <StarIcon className="w-5 h-5" />
+                </div>
               </div>
-              <div className="bg-white/20 dark:bg-white/10 rounded-lg p-3 mb-3 backdrop-blur-sm">
-                <p className="font-mono text-lg font-bold text-center">
-                  {user?.account_status === 'active'
-                    ? (user?.promo_code || 'LOADING...')
-                    : '****'
-                  }
-                </p>
-              </div>
-              <p className="text-primary-100 dark:text-primary-200 text-sm text-center">
-                {user?.account_status === 'active'
-                  ? 'Partagez et gagnez des commissions !'
-                  : 'Activez votre compte pour voir votre code'
-                }
-              </p>
+
+              {!isEditingPromoCode ? (
+                <>
+                  <div className="bg-white/20 dark:bg-white/10 rounded-lg p-3 mb-3 backdrop-blur-sm">
+                    <p className="font-mono text-lg font-bold text-center">
+                      {user?.account_status === 'active'
+                        ? (user?.promo_code || 'LOADING...')
+                        : '****'
+                      }
+                    </p>
+                  </div>
+                  {user?.account_status === 'active' && (
+                    <button
+                      onClick={() => copyToClipboard(user?.promo_code || '', 'Code promo')}
+                      className="w-full bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors flex items-center justify-center mb-3"
+                    >
+                      <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
+                      Copier le code
+                    </button>
+                  )}
+                  <p className="text-primary-100 dark:text-primary-200 text-sm text-center">
+                    {user?.account_status === 'active'
+                      ? 'Partagez et gagnez des commissions !'
+                      : 'Activez votre compte pour voir votre code'
+                    }
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <input
+                      type="text"
+                      value={newPromoCode}
+                      onChange={(e) => {
+                        // Convertir en majuscules et accepter uniquement alphanumérique
+                        const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        if (value.length <= 20) {
+                          setNewPromoCode(value);
+                        }
+                      }}
+                      placeholder="Entrez votre nouveau code"
+                      className="w-full px-3 py-2 border border-white/30 rounded-lg bg-white/10 text-white font-mono text-lg text-center placeholder-white/50 focus:ring-2 focus:ring-white/50 focus:border-white/50"
+                    />
+                    {isCheckingCode && (
+                      <p className="text-xs text-white/70 mt-1 text-center">
+                        Vérification...
+                      </p>
+                    )}
+                    {codeAvailability && !isCheckingCode && (
+                      <p className={`text-xs mt-1 text-center ${
+                        codeAvailability.available
+                          ? codeAvailability.is_current
+                            ? 'text-white/70'
+                            : 'text-green-200'
+                          : 'text-red-200'
+                      }`}>
+                        {codeAvailability.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleUpdatePromoCode}
+                      disabled={isUpdatingCode || !codeAvailability?.available || codeAvailability?.is_current || isCheckingCode}
+                      className="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CheckIcon className="w-4 h-4 mr-1" />
+                      {isUpdatingCode ? 'Mise à jour...' : 'Enregistrer'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingPromoCode(false);
+                        setNewPromoCode('');
+                        setCodeAvailability(null);
+                      }}
+                      disabled={isUpdatingCode}
+                      className="flex-1 px-3 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors flex items-center justify-center"
+                    >
+                      <XMarkIcon className="w-4 h-4 mr-1" />
+                      Annuler
+                    </button>
+                  </div>
+                  <div className="bg-white/10 border border-white/20 rounded-lg p-2">
+                    <p className="text-xs text-white/80">
+                      <strong>Conseil :</strong> Utilisez 3 à 20 caractères alphanumériques uniquement.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Affiliate Link */}
+            {user?.account_status === 'active' && user?.promo_code && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                    <LinkIcon className="w-5 h-5 mr-2 text-primary-600 dark:text-primary-400" />
+                    Lien d'Affiliation
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Partagez ce lien pour inviter vos amis. Ils seront automatiquement redirigés vers la page d'inscription avec votre code promo prérempli.
+                </p>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <input
+                    type="text"
+                    value={generateAffiliateLink(user.promo_code)}
+                    readOnly
+                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm font-mono"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(generateAffiliateLink(user.promo_code), 'Lien d\'affiliation')}
+                    className="px-4 py-2 sm:py-3 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors flex items-center justify-center whitespace-nowrap"
+                  >
+                    <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
+                  </button>
+                </div>
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-xs text-blue-800 dark:text-blue-300">
+                    <strong>Astuce :</strong> Partagez ce lien sur les réseaux sociaux, par email ou par message pour maximiser vos chances de parrainages !
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

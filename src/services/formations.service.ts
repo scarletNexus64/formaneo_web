@@ -323,6 +323,25 @@ class FormationsService {
     }
   }
 
+  // Réclamer la récompense pour une vidéo complétée
+  async claimVideoReward(videoId: number): Promise<{
+    success: boolean;
+    message: string;
+    reward_amount: number;
+    new_balance: number;
+    available_for_withdrawal: number;
+  }> {
+    console.log('💰 FormationsService.claimVideoReward called with videoId:', videoId);
+    try {
+      const response = await apiService.post(`/formations/videos/${videoId}/claim-reward`);
+      console.log('✅ Reward claimed successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error claiming video reward:', error);
+      throw error;
+    }
+  }
+
   // Récupérer les catégories de formations
   async getFormationCategories(): Promise<string[]> {
     console.log('📂 FormationsService.getFormationCategories called');

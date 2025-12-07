@@ -24,7 +24,6 @@ import QuizLeaderboardPage from './pages/quiz/QuizLeaderboardPage';
 import ChallengesPage from './pages/challenges/ChallengesPage';
 import AccountActivationPage from './pages/account/AccountActivationPage';
 import ActivationReturnPage from './pages/account/ActivationReturnPage';
-import WelcomePage from './pages/account/WelcomePage';
 import AffiliatePageAuth from './pages/affiliate/AffiliatePage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import ProfilePage from './pages/profile/ProfilePage';
@@ -33,6 +32,14 @@ import LandingPage from './pages/LandingPage';
 import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 import LegalNotice from './pages/legal/LegalNotice';
+import MaintenancePage from './pages/maintenance/MaintenancePage';
+
+// Push Notifications
+import { usePushNotifications } from './hooks/usePushNotifications';
+import { PushNotificationPrompt } from './components/PushNotificationPrompt';
+import { NotificationPermissionModal } from './components/NotificationPermissionModal';
+import { notificationService } from './services/notificationService';
+import { useAuthStore } from './store/authStore';
 
 // Simple Login Page component
 const LoginPage = () => {
@@ -503,16 +510,75 @@ const AppContent = () => {
           <ActivationReturnPage />
         </ProtectedRoute>
       } />
-      <Route path="/account/welcome" element={
-        <ProtectedRoute>
-          <WelcomePage />
-        </ProtectedRoute>
-      } />
       <Route path="/legal/terms-of-service" element={<TermsOfService />} />
       <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/legal/legal-notice" element={<LegalNotice />} />
+      <Route path="/maintenance" element={<MaintenancePage />} />
       <Route path="*" element={<LandingPage />} />
     </Routes>
+  );
+};
+
+// Push Notification Manager Component
+const PushNotificationManager = () => {
+  const [showModal, setShowModal] = React.useState(false);
+
+  // Check if user is authenticated using Zustand store
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  // Initialize push notifications
+  usePushNotifications(isAuthenticated);
+
+  // Check if we should show the modal
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // Don't show if notifications are already enabled
+    const isEnabled = notificationService.isPushNotificationsEnabled();
+    if (isEnabled) {
+      console.log('Push notifications already enabled, not showing modal');
+      return;
+    }
+
+    // Don't show if permission is denied
+    if ('Notification' in window && Notification.permission === 'denied') {
+      console.log('Push notifications denied, not showing modal');
+      return;
+    }
+
+    // Don't show if already dismissed recently (within 24 hours)
+    const dismissedAt = localStorage.getItem('notification_modal_dismissed_at');
+    if (dismissedAt) {
+      const hoursSinceDismissed = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60);
+      if (hoursSinceDismissed < 24) {
+        console.log('Modal dismissed recently, not showing modal');
+        return;
+      }
+    }
+
+    // Show modal after 3 seconds (give time for user to settle in)
+    console.log('Scheduling modal to show in 3 seconds...');
+    const timer = setTimeout(() => {
+      console.log('Showing notification permission modal');
+      setShowModal(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated]);
+
+  // Show prompt only if authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return (
+    <>
+      <PushNotificationPrompt />
+      <NotificationPermissionModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+      />
+    </>
   );
 };
 
@@ -521,6 +587,7 @@ function App() {
     <ThemeProvider>
       <div className="App">
         <Router>
+          <PushNotificationManager />
           <AppContent />
           <Toaster
             position="top-right"

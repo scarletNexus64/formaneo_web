@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://192.168.1.149:8001/api/v1',
+  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8001/api/v1',
   TIMEOUT: 30000,
 };
 
@@ -75,6 +75,8 @@ export const ENDPOINTS = {
     LINKS: '/affiliate/links',
     COMMISSIONS: '/affiliate/commissions',
     BANNERS: '/affiliate/banners',
+    CHECK_PROMO_CODE: '/affiliate/check-promo-code',
+    UPDATE_PROMO_CODE: '/affiliate/update-promo-code',
   },
   CART: {
     GET: '/cart',

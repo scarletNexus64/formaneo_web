@@ -12,12 +12,15 @@ import {
   DocumentTextIcon,
   ShieldCheckIcon,
   SparklesIcon,
+  PencilIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../store/authStore';
 import apiService from '../../services/api.service';
 import settingsService from '../../services/settings.service';
 import Navigation from '../../components/Navigation';
 import toast from 'react-hot-toast';
+import { ENDPOINTS } from '../../config/api.config';
 
 const ProfilePage = () => {
   const { user, updateProfile } = useAuthStore();
@@ -28,6 +31,13 @@ const ProfilePage = () => {
   const [supportEmail, setSupportEmail] = useState('');
   const [supportPhone, setSupportPhone] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
+
+  // Promo code editing states
+  const [isEditingPromoCode, setIsEditingPromoCode] = useState(false);
+  const [newPromoCode, setNewPromoCode] = useState('');
+  const [isCheckingCode, setIsCheckingCode] = useState(false);
+  const [codeAvailability, setCodeAvailability] = useState<{ available: boolean; message: string; is_current?: boolean } | null>(null);
+  const [isUpdatingCode, setIsUpdatingCode] = useState(false);
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -112,6 +122,75 @@ const ProfilePage = () => {
     );
     window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
   };
+
+  // Fonction pour vérifier la disponibilité du code promo
+  const checkPromoCode = async (code: string) => {
+    if (!code || code.length < 3) {
+      setCodeAvailability(null);
+      return;
+    }
+
+    try {
+      setIsCheckingCode(true);
+      const response = await apiService.post(ENDPOINTS.AFFILIATE.CHECK_PROMO_CODE, {
+        promo_code: code
+      });
+      setCodeAvailability(response.data);
+    } catch (error: any) {
+      setCodeAvailability({
+        available: false,
+        message: error.response?.data?.message || 'Erreur lors de la vérification'
+      });
+    } finally {
+      setIsCheckingCode(false);
+    }
+  };
+
+  // Fonction pour mettre à jour le code promo
+  const handleUpdatePromoCode = async () => {
+    if (!newPromoCode || newPromoCode.length < 3) {
+      toast.error('Le code promo doit contenir au moins 3 caractères');
+      return;
+    }
+
+    if (!codeAvailability?.available || codeAvailability?.is_current) {
+      toast.error('Veuillez choisir un code promo disponible');
+      return;
+    }
+
+    try {
+      setIsUpdatingCode(true);
+      const response = await apiService.put(ENDPOINTS.AFFILIATE.UPDATE_PROMO_CODE, {
+        promo_code: newPromoCode
+      });
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        // Mettre à jour l'utilisateur dans le store
+        if (user) {
+          updateProfile({ ...user, promo_code: newPromoCode });
+        }
+        setIsEditingPromoCode(false);
+        setNewPromoCode('');
+        setCodeAvailability(null);
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour du code promo');
+    } finally {
+      setIsUpdatingCode(false);
+    }
+  };
+
+  // Gérer le changement du code promo avec debounce
+  useEffect(() => {
+    if (isEditingPromoCode && newPromoCode) {
+      const timer = setTimeout(() => {
+        checkPromoCode(newPromoCode);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [newPromoCode, isEditingPromoCode]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Non disponible';
@@ -356,13 +435,86 @@ const ProfilePage = () => {
                 </h2>
 
                 <div className="space-y-3">
-                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-900/30 rounded-xl border border-primary-200 dark:border-primary-800">
-                    <div className="flex-1">
-                      <p className="text-xs text-primary-700 dark:text-primary-300 mb-1 font-medium">Code promo</p>
+                  <div className="p-4 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-900/30 rounded-xl border border-primary-200 dark:border-primary-800">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-primary-700 dark:text-primary-300 font-medium">Code promo</p>
+                      {!isEditingPromoCode && (
+                        <button
+                          onClick={() => {
+                            setIsEditingPromoCode(true);
+                            setNewPromoCode(user?.promo_code || '');
+                          }}
+                          className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center text-xs"
+                        >
+                          <PencilIcon className="w-3 h-3 mr-1" />
+                          Modifier
+                        </button>
+                      )}
+                    </div>
+
+                    {!isEditingPromoCode ? (
                       <p className="text-xl font-mono font-bold text-primary-600 dark:text-primary-400">
                         {user?.promo_code}
                       </p>
-                    </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex flex-col gap-2">
+                          <input
+                            type="text"
+                            value={newPromoCode}
+                            onChange={(e) => {
+                              const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                              if (value.length <= 20) {
+                                setNewPromoCode(value);
+                              }
+                            }}
+                            placeholder="Nouveau code"
+                            className="w-full px-3 py-2 border border-primary-300 dark:border-primary-700 rounded-lg bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-mono text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          />
+                          {isCheckingCode && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Vérification...
+                            </p>
+                          )}
+                          {codeAvailability && !isCheckingCode && (
+                            <p className={`text-xs ${
+                              codeAvailability.available
+                                ? codeAvailability.is_current
+                                  ? 'text-gray-600 dark:text-gray-400'
+                                  : 'text-green-600 dark:text-green-400'
+                                : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {codeAvailability.message}
+                            </p>
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleUpdatePromoCode}
+                              disabled={isUpdatingCode || !codeAvailability?.available || codeAvailability?.is_current || isCheckingCode}
+                              className="flex-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isUpdatingCode ? 'Enregistrement...' : 'Enregistrer'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsEditingPromoCode(false);
+                                setNewPromoCode('');
+                                setCodeAvailability(null);
+                              }}
+                              disabled={isUpdatingCode}
+                              className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-xs font-medium flex items-center"
+                            >
+                              <XMarkIcon className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-2">
+                          <p className="text-xs text-blue-800 dark:text-blue-300">
+                            3-20 caractères alphanumériques uniquement
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">

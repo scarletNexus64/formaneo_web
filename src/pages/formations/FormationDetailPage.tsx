@@ -240,8 +240,17 @@ const FormationDetailPage = () => {
               {/* Action Button - En premier sur mobile */}
               {hasAccess ? (
                 <button
-                  onClick={() => navigate(`/formations/${formation.id}/learn`)}
-                  className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl mb-4 sm:mb-6 transition-colors text-sm sm:text-base"
+                  onClick={() => {
+                    // Naviguer vers la première formation du pack
+                    const firstFormation = formations[0];
+                    if (firstFormation) {
+                      navigate(`/formations/${firstFormation.id}/learn`);
+                    } else {
+                      toast.error('Aucune formation disponible dans ce pack');
+                    }
+                  }}
+                  disabled={formations.length === 0}
+                  className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl mb-4 sm:mb-6 transition-colors text-sm sm:text-base"
                 >
                   <PlayIcon className="w-4 h-4 sm:w-5 sm:h-5 inline mr-2" />
                   Commencer la formation

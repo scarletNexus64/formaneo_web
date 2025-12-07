@@ -1,5 +1,6 @@
 import apiService from './api.service';
 import { NotificationsResponse, UnreadCountResponse } from '../types/notification';
+import { requestNotificationPermission } from '../config/firebase';
 
 export const notificationService = {
   // Get notifications for authenticated user
@@ -66,4 +67,79 @@ export const notificationService = {
       throw error;
     }
   },
+
+  // Register FCM token for push notifications
+  registerFcmToken: async (fcmToken: string) => {
+    try {
+      const response = await apiService.post('/notifications/fcm-token', {
+        fcm_token: fcmToken
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error registering FCM token:', error);
+      throw error;
+    }
+  },
+
+  // Remove FCM token
+  removeFcmToken: async () => {
+    try {
+      const response = await apiService.delete('/notifications/fcm-token');
+      return response.data;
+    } catch (error) {
+      console.error('Error removing FCM token:', error);
+      throw error;
+    }
+  },
+
+  // Request permission and register token
+  requestAndRegisterPushNotifications: async (): Promise<boolean> => {
+    try {
+      console.log('🚀 [NotificationService] Starting requestAndRegisterPushNotifications...');
+
+      // Request notification permission and get token
+      console.log('📱 [NotificationService] Requesting notification permission...');
+      const token = await requestNotificationPermission();
+      console.log('📱 [NotificationService] Token received:', token ? token.substring(0, 50) + '...' : 'NULL');
+
+      if (token) {
+        // Register token with backend
+        console.log('📤 [NotificationService] Registering token with backend...');
+        const response = await notificationService.registerFcmToken(token);
+        console.log('📥 [NotificationService] Backend response:', response);
+        console.log('✅ [NotificationService] Push notifications registered successfully');
+
+        // Store token in localStorage for future reference
+        localStorage.setItem('fcm_token', token);
+        console.log('💾 [NotificationService] Token stored in localStorage');
+
+        return true;
+      } else {
+        console.warn('⚠️ [NotificationService] Failed to get FCM token');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ [NotificationService] Error setting up push notifications:', error);
+      return false;
+    }
+  },
+
+  // Check if push notifications are enabled
+  isPushNotificationsEnabled: (): boolean => {
+    if (!('Notification' in window)) {
+      return false;
+    }
+    return Notification.permission === 'granted' && !!localStorage.getItem('fcm_token');
+  },
+
+  // Unregister push notifications
+  unregisterPushNotifications: async (): Promise<void> => {
+    try {
+      await notificationService.removeFcmToken();
+      localStorage.removeItem('fcm_token');
+      console.log('Push notifications unregistered');
+    } catch (error) {
+      console.error('Error unregistering push notifications:', error);
+    }
+  }
 };

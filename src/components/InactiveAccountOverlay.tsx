@@ -12,7 +12,7 @@ const InactiveAccountOverlay: React.FC<InactiveAccountOverlayProps> = ({ childre
   const location = useLocation();
 
   // Pages où l'overlay ne doit PAS apparaître (pages d'activation)
-  const excludedPaths = ['/account/activate', '/account/activation/return', '/account/welcome'];
+  const excludedPaths = ['/account/activate', '/account/activation/return'];
   const isExcludedPage = excludedPaths.some(path => location.pathname.startsWith(path));
 
   if (!user || user.account_status === 'active' || isExcludedPage) {
