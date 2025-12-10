@@ -26,18 +26,25 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
         onClose();
       } else {
         console.warn('⚠️ [Modal] Failed to enable notifications');
-        // If denied, show instructions
+        alert('⚠️ Une erreur est survenue lors de l\'activation des notifications. Veuillez réessayer.');
+      }
+    } catch (error) {
+      console.error('❌ [Modal] Error enabling notifications:', error);
+      const errorMessage = (error as Error).message;
+
+      // Show user-friendly error message
+      if (errorMessage.includes('Permission refusée')) {
         alert(
-          '🔔 Pour activer les notifications:\n\n' +
+          '🔒 Permission refusée\n\n' +
+          'Pour activer les notifications:\n\n' +
           '1. Cliquez sur l\'icône 🔒 à gauche de l\'URL\n' +
           '2. Allez dans "Paramètres du site"\n' +
           '3. Dans "Notifications", changez à "Autoriser"\n' +
           '4. Rechargez la page'
         );
+      } else {
+        alert('❌ Erreur: ' + errorMessage);
       }
-    } catch (error) {
-      console.error('❌ [Modal] Error enabling notifications:', error);
-      alert('Erreur: ' + (error as Error).message);
     } finally {
       setIsLoading(false);
     }

@@ -533,16 +533,36 @@ const PushNotificationManager = () => {
   React.useEffect(() => {
     if (!isAuthenticated) return;
 
+    // Check if notifications are supported
+    if (!('Notification' in window)) {
+      console.log('Notifications not supported, not showing modal');
+      return;
+    }
+
+    const permission = Notification.permission;
+
     // Don't show if notifications are already enabled
     const isEnabled = notificationService.isPushNotificationsEnabled();
     if (isEnabled) {
-      console.log('Push notifications already enabled, not showing modal');
+      console.log('✅ Push notifications already enabled, not showing modal');
+      return;
+    }
+
+    // Don't show if permission is already granted (auto-register will handle it)
+    if (permission === 'granted') {
+      console.log('✅ Permission already granted, auto-register will handle it');
       return;
     }
 
     // Don't show if permission is denied
-    if ('Notification' in window && Notification.permission === 'denied') {
-      console.log('Push notifications denied, not showing modal');
+    if (permission === 'denied') {
+      console.log('❌ Push notifications denied, not showing modal');
+      return;
+    }
+
+    // Only show if permission is 'default' (not asked yet)
+    if (permission !== 'default') {
+      console.log('⚠️ Unknown permission state:', permission);
       return;
     }
 
@@ -551,15 +571,15 @@ const PushNotificationManager = () => {
     if (dismissedAt) {
       const hoursSinceDismissed = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60);
       if (hoursSinceDismissed < 24) {
-        console.log('Modal dismissed recently, not showing modal');
+        console.log('⏳ Modal dismissed recently, not showing modal');
         return;
       }
     }
 
     // Show modal after 3 seconds (give time for user to settle in)
-    console.log('Scheduling modal to show in 3 seconds...');
+    console.log('⏳ Scheduling modal to show in 3 seconds...');
     const timer = setTimeout(() => {
-      console.log('Showing notification permission modal');
+      console.log('📱 Showing notification permission modal');
       setShowModal(true);
     }, 3000);
 

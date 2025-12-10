@@ -276,3 +276,16 @@ export interface ChallengeProgress {
   completed_at?: string;
   reward_claimed: boolean;
 }
+
+// Announcement Types
+export interface Announcement {
+  id: number;
+  title: string;
+  content: string;
+  type: 'info' | 'warning' | 'success' | 'danger';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  image_url?: string;
+  published_at?: string;
+  expires_at?: string;
+  metadata?: Record<string, any>;
+}

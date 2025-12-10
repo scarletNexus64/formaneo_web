@@ -16,6 +16,7 @@ interface ActivationStatusState {
   checkCount: number;
   bonusClaimed?: boolean;
   bonusAmount?: number;
+  isRenewal?: boolean;
   commissionsDistributed?: {
     level_1: number;
     level_2: number;
@@ -88,6 +89,8 @@ export const useActivationStatus = ({
               if (bonusResponse.success) {
                 console.log('💰 Bonus réclamé avec succès:', bonusResponse);
 
+                const isRenewal = bonusResponse.is_renewal || false;
+
                 // Mettre à jour le state avec les infos du bonus
                 setState(prev => ({
                   ...prev,
@@ -95,16 +98,21 @@ export const useActivationStatus = ({
                   isLoading: false,
                   bonusClaimed: true,
                   bonusAmount: bonusResponse.bonus_awarded,
+                  isRenewal: isRenewal,
                   commissionsDistributed: bonusResponse.commissions_distributed
                 }));
 
-                // Afficher le toast de succès
-                toast.success(`🎉 Compte activé ! ${bonusResponse.bonus_awarded} FCFA ajoutés à votre compte !`, {
+                // Afficher le toast de succès adapté
+                const successMessage = isRenewal
+                  ? `🎉 Compte renouvelé ! ${bonusResponse.bonus_awarded} FCFA ajoutés à votre compte !`
+                  : `🎉 Compte activé ! ${bonusResponse.bonus_awarded} FCFA ajoutés à votre compte !`;
+
+                toast.success(successMessage, {
                   duration: 5000
                 });
 
-                // Afficher les commissions d'affiliation si distribuées
-                if (bonusResponse.commissions_distributed?.distributed) {
+                // Afficher les commissions d'affiliation UNIQUEMENT si c'est une première activation
+                if (!isRenewal && bonusResponse.commissions_distributed?.distributed) {
                   const { level_1, level_2 } = bonusResponse.commissions_distributed;
                   if (level_1 > 0 || level_2 > 0) {
                     setTimeout(() => {

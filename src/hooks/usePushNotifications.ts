@@ -19,22 +19,51 @@ export const usePushNotifications = (isAuthenticated: boolean) => {
     setIsEnabled(enabled);
   }, []);
 
-  // Setup push notifications when user is authenticated
+  // Auto-register FCM token when user is authenticated
   useEffect(() => {
-    if (isAuthenticated && !isEnabled) {
-      // Wait a bit after login to ask for permission (better UX)
-      const timer = setTimeout(() => {
-        // Check again if not already enabled
-        if (!notificationService.isPushNotificationsEnabled()) {
-          // Only auto-request if permission is 'default' (not denied)
-          if ('Notification' in window && Notification.permission === 'default') {
-            setupPushNotifications();
-          }
-        }
-      }, 2000); // Wait 2 seconds after login
+    if (!isAuthenticated) return;
 
-      return () => clearTimeout(timer);
-    }
+    const autoRegisterFCM = async () => {
+      // Check if notifications are supported
+      if (!('Notification' in window)) {
+        console.log('Notifications not supported in this browser');
+        return;
+      }
+
+      const permission = Notification.permission;
+      const hasToken = !!localStorage.getItem('fcm_token');
+
+      console.log('🔔 Auto-register FCM check:', { permission, hasToken, isAuthenticated });
+
+      // Case 1: Permission already granted - ALWAYS regenerate token for this session
+      if (permission === 'granted') {
+        console.log('✅ Permission granted, registering/updating FCM token for this user...');
+        try {
+          // Clear old token to force regeneration
+          localStorage.removeItem('fcm_token');
+          await setupPushNotifications();
+          console.log('✅ FCM token registered/updated successfully for current user');
+        } catch (error) {
+          console.error('❌ Failed to register FCM token:', error);
+        }
+      }
+      // Case 2: Permission is default - will be handled by modal after 3 seconds (in App.js)
+      else if (permission === 'default') {
+        console.log('⏳ Permission not requested yet, modal will show');
+      }
+      // Case 3: Permission denied
+      else if (permission === 'denied') {
+        console.log('❌ Notification permission denied by user');
+      }
+    };
+
+    // Auto-register immediately if already granted, otherwise wait a bit
+    const hasPermission = 'Notification' in window && Notification.permission === 'granted';
+    const delay = hasPermission ? 1000 : 2000; // 1s if granted (to ensure auth is ready), 2s otherwise
+
+    const timer = setTimeout(autoRegisterFCM, delay);
+
+    return () => clearTimeout(timer);
   }, [isAuthenticated]);
 
   // Listen for foreground messages
@@ -71,17 +100,21 @@ export const usePushNotifications = (isAuthenticated: boolean) => {
     try {
       const success = await notificationService.requestAndRegisterPushNotifications();
       setIsEnabled(success);
-
-      if (success) {
-        toast.success('Notifications push activées!');
-      } else {
-        toast.error('Impossible d\'activer les notifications push');
-      }
-
+      // toast.success('Notifications push activées!');
       return success;
     } catch (error) {
       console.error('Error setting up push notifications:', error);
-      toast.error('Erreur lors de l\'activation des notifications');
+      const errorMessage = (error as Error).message;
+
+      // Show user-friendly error messages
+      if (errorMessage.includes('Permission refusée') || errorMessage.includes('Permission annulée')) {
+        toast.error('Permission refusée. Veuillez autoriser les notifications dans les paramètres.');
+      } else if (errorMessage.includes('Service Workers')) {
+        toast.error('Votre navigateur ne supporte pas les notifications push');
+      } else {
+        toast.error('Erreur lors de l\'activation des notifications');
+      }
+
       return false;
     } finally {
       setIsLoading(false);

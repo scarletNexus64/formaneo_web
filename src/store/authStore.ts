@@ -79,12 +79,33 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         set({ isLoading: true });
         try {
+          // Remove FCM token from backend before logout
+          const fcmToken = localStorage.getItem('fcm_token');
+          if (fcmToken) {
+            console.log('🧹 Removing FCM token from backend on logout');
+            try {
+              await apiService.delete('/notifications/fcm-token', {
+                data: { fcm_token: fcmToken }
+              });
+              console.log('✅ FCM token removed from backend');
+            } catch (error) {
+              console.error('⚠️ Failed to remove FCM token from backend:', error);
+            }
+          }
+
           await authService.logout();
         } catch (error) {
           // Continue logout even if API call fails
           console.error('Erreur lors de l\'appel API de déconnexion:', error);
         } finally {
           get().clearAuth();
+
+          // Clean up FCM token from localStorage
+          console.log('🧹 Cleaning FCM token from localStorage on logout');
+          localStorage.removeItem('fcm_token');
+          localStorage.removeItem('notification_modal_dismissed_at');
+          localStorage.removeItem('push_notification_prompt_dismissed');
+
           toast.success('Déconnexion réussie');
           // Redirection vers la page de login
           window.location.href = '/login';

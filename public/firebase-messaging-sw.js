@@ -21,29 +21,46 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
-  // Customize notification
-  const notificationTitle = payload.notification?.title || 'Nouvelle notification';
-  const notificationOptions = {
-    body: payload.notification?.body || '',
-    icon: '/logo192.png', // Votre icône d'application
-    badge: '/logo192.png',
-    tag: payload.data?.notification_id || 'notification',
-    data: payload.data,
-    requireInteraction: false,
-    vibrate: [200, 100, 200],
-    actions: [
-      {
-        action: 'open',
-        title: 'Ouvrir'
-      },
-      {
-        action: 'close',
-        title: 'Fermer'
-      }
-    ]
-  };
+  try {
+    // Customize notification
+    const notificationTitle = payload.notification?.title || payload.data?.title || 'Nouvelle notification';
+    const notificationBody = payload.notification?.body || payload.data?.body || '';
 
-  return self.registration.showNotification(notificationTitle, notificationOptions);
+    console.log('[firebase-messaging-sw.js] Preparing to show notification:', {
+      title: notificationTitle,
+      body: notificationBody
+    });
+
+    const notificationOptions = {
+      body: notificationBody,
+      icon: '/logo192.png',
+      badge: '/logo192.png',
+      tag: payload.data?.notification_id || 'notification-' + Date.now(),
+      data: payload.data || {},
+      requireInteraction: false,
+      vibrate: [200, 100, 200],
+      timestamp: Date.now()
+    };
+
+    console.log('[firebase-messaging-sw.js] Notification options:', notificationOptions);
+
+    // Show the notification
+    return self.registration.showNotification(notificationTitle, notificationOptions)
+      .then(() => {
+        console.log('[firebase-messaging-sw.js] ✅ Notification displayed successfully!');
+      })
+      .catch((error) => {
+        console.error('[firebase-messaging-sw.js] ❌ Error showing notification:', error);
+      });
+  } catch (error) {
+    console.error('[firebase-messaging-sw.js] ❌ Error in onBackgroundMessage:', error);
+
+    // Fallback: show a simple notification
+    return self.registration.showNotification('Nouvelle notification', {
+      body: 'Vous avez reçu une nouvelle notification',
+      icon: '/logo192.png'
+    });
+  }
 });
 
 // Handle notification click

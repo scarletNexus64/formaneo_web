@@ -119,7 +119,10 @@ const ActivationReturnPage: React.FC = () => {
             </h1>
 
             <p className="text-gray-600 mb-6">
-              Votre compte a été activé avec succès {activationStatus.bonusClaimed && 'et votre bonus de bienvenue a été ajouté'} ! Vous pouvez maintenant profiter de toutes les fonctionnalités de Formaneo.
+              {activationStatus.isRenewal
+                ? `Votre compte a été renouvelé avec succès ${activationStatus.bonusClaimed ? 'et votre bonus de renouvellement a été ajouté' : ''} ! Vous pouvez continuer à profiter de toutes les fonctionnalités de Formaneo.`
+                : `Votre compte a été activé avec succès ${activationStatus.bonusClaimed ? 'et votre bonus de bienvenue a été ajouté' : ''} ! Vous pouvez maintenant profiter de toutes les fonctionnalités de Formaneo.`
+              }
             </p>
 
             {/* Affichage du bonus si réclamé avec succès */}
@@ -128,7 +131,10 @@ const ActivationReturnPage: React.FC = () => {
                 <div className="flex items-center justify-center space-x-2 text-orange-700">
                   <SparklesIcon className="w-5 h-5" />
                   <span className="font-medium">
-                    Bonus de bienvenue de {activationStatus.bonusAmount} FCFA ajouté !
+                    {activationStatus.isRenewal
+                      ? `Bonus de renouvellement de ${activationStatus.bonusAmount} FCFA ajouté !`
+                      : `Bonus de bienvenue de ${activationStatus.bonusAmount} FCFA ajouté !`
+                    }
                   </span>
                 </div>
               </div>

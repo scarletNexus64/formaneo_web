@@ -16,8 +16,6 @@ import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/sol
 import HybridVideoPlayer from '../../components/video/HybridVideoPlayer';
 import { formationsService } from '../../services/formations.service';
 import { challengeTracker } from '../../services/challengeTracker.service';
-import { VideoRewardModal } from '../../components/formations/VideoRewardModal';
-import { ViewingRewardModal } from '../../components/formations/ViewingRewardModal';
 import { useWalletStore } from '../../store/walletStore';
 import toast from 'react-hot-toast';
 
@@ -34,6 +32,7 @@ interface FormationVideo {
   reward_claimed?: boolean; // Si la récompense a déjà été réclamée
   reward_display_percentage?: number; // À quel % afficher le popup (0-100)
   type?: 'video' | 'module'; // Pour différencier vidéos et modules
+  isMainFormationVideo?: boolean; // True si c'est la vidéo principale de la formation (pas dans formation_videos)
 }
 
 interface FormationModule {
@@ -71,37 +70,86 @@ const FormationLearnPage = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [lastProgressSave, setLastProgressSave] = useState(0);
-  const [viewingRewardShown, setViewingRewardShown] = useState<Record<number, boolean>>({});
-  const [rewardModal, setRewardModal] = useState<{
-    isOpen: boolean;
-    videoId: number | null;
-    videoTitle: string;
-    amount: number;
-  }>({
-    isOpen: false,
-    videoId: null,
-    videoTitle: '',
-    amount: 0
-  });
-  const [viewingRewardModal, setViewingRewardModal] = useState<{
-    isOpen: boolean;
-    videoId: number | null;
-    videoTitle: string;
-    amount: number;
-    progressPercentage: number;
-  }>({
-    isOpen: false,
-    videoId: null,
-    videoTitle: '',
-    amount: 0,
-    progressPercentage: 0
-  });
 
   useEffect(() => {
     if (id) {
       loadFormation();
     }
   }, [id]);
+
+  // Auto-réclamer la récompense dès l'ouverture d'une vidéo
+  useEffect(() => {
+    const autoClaimReward = async () => {
+      console.log('🔍 [AUTO-CLAIM] useEffect triggered with currentVideo:', currentVideo);
+
+      if (!currentVideo) {
+        console.log('❌ [AUTO-CLAIM] No currentVideo');
+        return;
+      }
+
+      if (currentVideo.type === 'module') {
+        console.log('❌ [AUTO-CLAIM] Is a module, skipping');
+        return;
+      }
+
+      const video = currentVideo as FormationVideo;
+      console.log('📊 [AUTO-CLAIM] Video data:', {
+        id: video.id,
+        title: video.title,
+        reward_amount: video.reward_amount,
+        reward_claimed: video.reward_claimed,
+        type: video.type
+      });
+
+      // Vérifier si la vidéo a une récompense et qu'elle n'a pas été réclamée
+      if (!video.reward_amount || video.reward_amount <= 0) {
+        console.log('❌ [AUTO-CLAIM] No reward_amount or <= 0');
+        return;
+      }
+
+      if (video.reward_claimed) {
+        console.log('❌ [AUTO-CLAIM] Reward already claimed');
+        return;
+      }
+
+      console.log('✅ [AUTO-CLAIM] All conditions met, claiming reward...');
+
+      try {
+        let result;
+
+        // Vérifier si c'est une formation principale ou une vidéo séparée
+        if ((video as any).isMainFormationVideo) {
+          console.log('🎁 Auto-claiming reward for MAIN FORMATION:', video.id);
+          result = await formationsService.claimFormationReward(video.id);
+        } else {
+          console.log('🎁 Auto-claiming reward for VIDEO:', video.id);
+          result = await formationsService.claimVideoReward(video.id);
+        }
+
+        // Succès ! Afficher une notification discrète
+        toast.success(result.message, {
+          icon: '💰',
+          duration: 4000,
+          position: 'top-right'
+        });
+
+        // Mettre à jour le wallet dans le store
+        walletStore.updateBalance(result.new_balance);
+
+        // Rafraîchir les données de la formation pour mettre à jour reward_claimed
+        await loadFormation();
+
+      } catch (error: any) {
+        console.error('❌ [AUTO-CLAIM] Error claiming reward:', error);
+        // Si déjà réclamée, ne rien faire (pas d'erreur affichée)
+        if (!error?.response?.data?.message?.includes('déjà réclamé')) {
+          console.error('Erreur lors de la réclamation automatique:', error);
+        }
+      }
+    };
+
+    autoClaimReward();
+  }, [currentVideo?.id]); // Se déclenche quand on change de vidéo
 
   const loadFormation = async () => {
     try {
@@ -136,7 +184,12 @@ const FormationLearnPage = () => {
           duration_minutes: response.duration_minutes,
           order: 1,
           user_progress: response.user_progress || 0,
-          completed_at: response.completed_at || null
+          completed_at: response.completed_at || null,
+          reward_amount: response.reward_amount || 0,
+          reward_claimed: response.reward_claimed || false,
+          reward_display_percentage: response.reward_display_percentage || 80,
+          type: 'video', // Marquer comme vidéo pour l'auto-claim
+          isMainFormationVideo: true // Flag pour identifier que c'est la vidéo principale de la formation
         };
         setCurrentVideo(mainVideo);
         setCurrentVideoIndex(0);
@@ -180,30 +233,6 @@ const FormationLearnPage = () => {
       setLastProgressSave(percent);
       updateVideoProgress(currentVideo.id, percent, currentVideo.type || 'video');
     }
-
-    // Vérifier si on doit afficher le popup de récompense de visionnage
-    const video = currentVideo as FormationVideo;
-    if (
-      video.type === 'video' &&
-      video.reward_amount &&
-      video.reward_amount > 0 &&
-      !video.reward_claimed &&
-      video.reward_display_percentage &&
-      !viewingRewardShown[video.id] &&
-      percent >= video.reward_display_percentage
-    ) {
-      // Marquer comme affiché pour ne pas le montrer plusieurs fois
-      setViewingRewardShown(prev => ({ ...prev, [video.id]: true }));
-
-      // Afficher le modal de récompense de visionnage
-      setViewingRewardModal({
-        isOpen: true,
-        videoId: video.id,
-        videoTitle: video.title,
-        amount: video.reward_amount,
-        progressPercentage: percent
-      });
-    }
   };
 
   const handleVideoEnd = async () => {
@@ -212,22 +241,7 @@ const FormationLearnPage = () => {
     // Marquer comme terminé
     updateVideoProgress(currentVideo.id, 100, currentVideo.type || 'video');
 
-    // Vérifier s'il y a une récompense disponible pour cette vidéo
-    const video = currentVideo as FormationVideo;
-    const hasReward = video.reward_amount && video.reward_amount > 0 && !video.reward_claimed;
-
-    if (hasReward && video.type === 'video') {
-      // Afficher le modal de récompense directement
-      setRewardModal({
-        isOpen: true,
-        videoId: video.id,
-        videoTitle: video.title,
-        amount: video.reward_amount || 0
-      });
-      return; // Ne pas passer à la vidéo suivante automatiquement
-    }
-
-    // Passer à l'item suivant automatiquement (si pas de récompense)
+    // Passer à l'item suivant automatiquement
     if (formation && formation.videos && currentVideoIndex < formation.videos.length - 1) {
       setTimeout(() => {
         playNextVideo();
@@ -238,69 +252,6 @@ const FormationLearnPage = () => {
       if (formation) {
         await challengeTracker.trackFormationCompleted(formation.id, formation.title);
       }
-    }
-  };
-
-  const handleClaimReward = async (videoId: number) => {
-    try {
-      const result = await formationsService.claimVideoReward(videoId);
-
-      // Succès !
-      toast.success(result.message, {
-        icon: '💰',
-        duration: 5000
-      });
-
-      // Mettre à jour le wallet dans le store
-      walletStore.updateBalance(result.new_balance);
-
-      // Fermer le modal
-      setRewardModal(prev => ({ ...prev, isOpen: false }));
-
-      // Rafraîchir les données de la formation pour mettre à jour reward_claimed
-      await loadFormation();
-
-      // Continuer la lecture automatique si ce n'était pas la dernière vidéo
-      if (formation && formation.videos && currentVideoIndex < formation.videos.length - 1) {
-        setTimeout(() => {
-          playNextVideo();
-        }, 1000);
-      } else {
-        // Si c'était la dernière vidéo
-        toast.success('Formation terminée ! Félicitations ! 🎉');
-        if (formation) {
-          await challengeTracker.trackFormationCompleted(formation.id, formation.title);
-        }
-      }
-
-    } catch (error: any) {
-      console.error('Erreur lors de la réclamation:', error);
-      throw error; // Le modal gérera l'affichage de l'erreur
-    }
-  };
-
-  const handleClaimViewingReward = async (videoId: number) => {
-    try {
-      const result = await formationsService.claimVideoReward(videoId);
-
-      // Succès !
-      toast.success(result.message, {
-        icon: '💰',
-        duration: 5000
-      });
-
-      // Mettre à jour le wallet dans le store
-      walletStore.updateBalance(result.new_balance);
-
-      // Fermer le modal
-      setViewingRewardModal(prev => ({ ...prev, isOpen: false }));
-
-      // Rafraîchir les données de la formation pour mettre à jour reward_claimed
-      await loadFormation();
-
-    } catch (error: any) {
-      console.error('Erreur lors de la réclamation:', error);
-      throw error; // Le modal gérera l'affichage de l'erreur
     }
   };
 
@@ -598,26 +549,6 @@ const FormationLearnPage = () => {
         </div>
       </div>
 
-      {/* Modal de récompense vidéo (fin de vidéo) */}
-      <VideoRewardModal
-        isOpen={rewardModal.isOpen}
-        onClose={() => setRewardModal(prev => ({ ...prev, isOpen: false }))}
-        videoId={rewardModal.videoId!}
-        videoTitle={rewardModal.videoTitle}
-        rewardAmount={rewardModal.amount}
-        onClaim={handleClaimReward}
-      />
-
-      {/* Modal de récompense de visionnage (pendant la vidéo) */}
-      <ViewingRewardModal
-        isOpen={viewingRewardModal.isOpen}
-        onClose={() => setViewingRewardModal(prev => ({ ...prev, isOpen: false }))}
-        videoId={viewingRewardModal.videoId!}
-        videoTitle={viewingRewardModal.videoTitle}
-        rewardAmount={viewingRewardModal.amount}
-        progressPercentage={viewingRewardModal.progressPercentage}
-        onClaim={handleClaimViewingReward}
-      />
     </div>
   );
 };

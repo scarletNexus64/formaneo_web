@@ -21,6 +21,7 @@ interface ClaimWelcomeBonusResponse {
     distributed: boolean;
   };
   already_claimed?: boolean;
+  is_renewal?: boolean;
 }
 
 class ActivationService {
