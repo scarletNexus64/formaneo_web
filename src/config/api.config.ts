@@ -109,9 +109,6 @@ export const ENDPOINTS = {
     LIST: '/announcements',
     DETAIL: (id: string) => `/announcements/${id}`,
   },
-  MAINTENANCE: {
-    STATUS: '/maintenance/status',
-  },
 };
 
 export const CINETPAY_CONFIG = {
