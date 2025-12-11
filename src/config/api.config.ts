@@ -109,6 +109,12 @@ export const ENDPOINTS = {
     LIST: '/announcements',
     DETAIL: (id: string) => `/announcements/${id}`,
   },
+  MAINTENANCE: {
+    STATUS: '/maintenance/status',
+  },
+  NOTIFICATIONS: {
+    FCM_TOKEN: '/notifications/fcm-token',
+  },
 };
 
 export const CINETPAY_CONFIG = {
