@@ -13,22 +13,31 @@ class MaintenanceService {
   }> {
     try {
       const response = await apiService.get(ENDPOINTS.MAINTENANCE.STATUS);
-      return {
-        inMaintenance: false,
-        ...response.data,
-      };
-    } catch (error: any) {
-      // If we get a 503 response with maintenance data, the app is in maintenance mode
-      if (error.response?.status === 503 && error.response?.data?.maintenance) {
+
+      // Simple approach: API always returns 200 OK with maintenance flag
+      const data = response.data;
+
+      if (data.maintenance === true) {
+        console.log('🔧 Maintenance mode is ACTIVE', {
+          title: data.title,
+          message: data.message,
+        });
+
         return {
           inMaintenance: true,
-          title: error.response.data.title,
-          message: error.response.data.message,
+          title: data.title,
+          message: data.message,
         };
       }
 
-      // For any other error, assume not in maintenance mode
-      console.warn('Failed to check maintenance status:', error);
+      console.log('✅ Maintenance mode is NOT active');
+      return {
+        inMaintenance: false,
+      };
+
+    } catch (error: any) {
+      // For any error, assume not in maintenance mode to avoid blocking users
+      console.warn('⚠️ Failed to check maintenance status:', error);
       return {
         inMaintenance: false,
       };
