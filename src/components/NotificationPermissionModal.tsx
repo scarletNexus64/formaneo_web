@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { BellIcon, XMarkIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
 import { notificationService } from '../services/notificationService';
+import { isPushNotificationSupported, isIOSDevice, getPushNotificationUnavailableMessage } from '../utils/deviceDetection';
 
 interface NotificationPermissionModalProps {
   isOpen: boolean;
@@ -9,8 +10,69 @@ interface NotificationPermissionModalProps {
 
 export const NotificationPermissionModal: React.FC<NotificationPermissionModalProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const isUnsupported = !isPushNotificationSupported();
+  const isIOS = isIOSDevice();
 
   if (!isOpen) return null;
+
+  // If on iOS/unsupported device, show different modal
+  if (isUnsupported) {
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        {/* Backdrop */}
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose}></div>
+
+        {/* Modal */}
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6 transform transition-all">
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="bg-orange-100 rounded-full p-4">
+                <DevicePhoneMobileIcon className="h-12 w-12 text-orange-600" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">
+              {isIOS ? 'Notifications non disponibles sur iOS' : 'Navigateur non compatible'}
+            </h3>
+
+            {/* Description */}
+            <p className="text-center text-gray-600 mb-6">
+              {getPushNotificationUnavailableMessage()}
+            </p>
+
+            {isIOS && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800 font-medium mb-2">
+                  💡 Alternative recommandée
+                </p>
+                <p className="text-sm text-blue-700">
+                  Pour recevoir des notifications sur votre iPhone/iPad, veuillez installer notre application mobile depuis l'App Store.
+                </p>
+              </div>
+            )}
+
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-700 transition-colors"
+            >
+              J'ai compris
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleEnable = async () => {
     console.log('🔔 [Modal] handleEnable clicked');

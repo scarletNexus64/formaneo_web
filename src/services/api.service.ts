@@ -135,13 +135,20 @@ class ApiService {
               const maintenanceData = error.response.data;
               if (maintenanceData?.maintenance) {
                 console.warn('🛠️ Maintenance mode active');
-                // Store maintenance info in sessionStorage
-                sessionStorage.setItem('maintenanceInfo', JSON.stringify({
-                  title: maintenanceData.title,
-                  message: maintenanceData.message
-                }));
-                // Redirect to maintenance page
-                window.location.href = '/maintenance';
+
+                // Avoid redirect loop - only redirect if not already on maintenance page
+                const currentPath = window.location.pathname;
+                if (currentPath !== '/maintenance') {
+                  // Store maintenance info in sessionStorage
+                  sessionStorage.setItem('maintenanceInfo', JSON.stringify({
+                    title: maintenanceData.title,
+                    message: maintenanceData.message
+                  }));
+                  // Redirect to maintenance page
+                  window.location.href = '/maintenance';
+                } else {
+                  console.log('Already on maintenance page, skipping redirect');
+                }
               }
               break;
             default:

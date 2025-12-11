@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { notificationService } from '../services/notificationService';
+import { isPushNotificationSupported, isIOSDevice } from '../utils/deviceDetection';
 
 interface PushNotificationPromptProps {
   onClose?: () => void;
@@ -15,6 +16,12 @@ export const PushNotificationPrompt: React.FC<PushNotificationPromptProps> = ({ 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // Don't show on iOS devices (push notifications not supported)
+    if (!isPushNotificationSupported()) {
+      console.log('❌ Push notifications not supported on this device, hiding prompt');
+      return;
+    }
+
     // Check if notifications are supported
     if (!('Notification' in window)) {
       return;

@@ -1,6 +1,7 @@
 import apiService from './api.service';
 import { NotificationsResponse, UnreadCountResponse } from '../types/notification';
 import { requestNotificationPermission } from '../config/firebase';
+import { isPushNotificationSupported, getPushNotificationUnavailableMessage } from '../utils/deviceDetection';
 
 export const notificationService = {
   // Get notifications for authenticated user
@@ -160,6 +161,13 @@ export const notificationService = {
     try {
       console.log('🚀 [NotificationService] Starting requestAndRegisterPushNotifications...');
 
+      // Check if push notifications are supported on this device
+      if (!isPushNotificationSupported()) {
+        const message = getPushNotificationUnavailableMessage();
+        console.error('❌ [NotificationService] Push notifications not supported:', message);
+        throw new Error(message);
+      }
+
       // Request notification permission and get token
       console.log('📱 [NotificationService] Requesting notification permission...');
       const token = await requestNotificationPermission();
@@ -190,6 +198,11 @@ export const notificationService = {
 
   // Check if push notifications are enabled
   isPushNotificationsEnabled: (): boolean => {
+    // First check if push notifications are supported on this device
+    if (!isPushNotificationSupported()) {
+      return false;
+    }
+
     if (!('Notification' in window)) {
       return false;
     }

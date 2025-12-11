@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { notificationService } from '../services/notificationService';
 import { onMessageListener } from '../config/firebase';
 import toast from 'react-hot-toast';
+import { isPushNotificationSupported } from '../utils/deviceDetection';
 
 /**
  * Hook to manage push notifications
@@ -22,6 +23,12 @@ export const usePushNotifications = (isAuthenticated: boolean) => {
   // Auto-register FCM token when user is authenticated
   useEffect(() => {
     if (!isAuthenticated) return;
+
+    // Don't attempt auto-register on unsupported devices (iOS/Safari)
+    if (!isPushNotificationSupported()) {
+      console.log('❌ Push notifications not supported on this device, skipping auto-register');
+      return;
+    }
 
     const autoRegisterFCM = async () => {
       // Check if notifications are supported

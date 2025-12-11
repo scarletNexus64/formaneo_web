@@ -41,6 +41,9 @@ import { NotificationPermissionModal } from './components/NotificationPermission
 import { notificationService } from './services/notificationService';
 import { useAuthStore } from './store/authStore';
 
+// Maintenance Check
+import { useMaintenanceCheck } from './hooks/useMaintenanceCheck';
+
 // Simple Login Page component
 const LoginPage = () => {
   return (
@@ -418,6 +421,26 @@ const DashboardPage = () => {
 
 // App component with routes
 const AppContent = () => {
+  // Check maintenance mode on app load
+  const { isChecking, inMaintenance } = useMaintenanceCheck();
+
+  // Show loading screen while checking maintenance status
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
+        <div className="text-center">
+          <div className="inline-block relative">
+            <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-2xl animate-pulse"></div>
+            <div className="relative text-6xl animate-spin">
+              ⚙️
+            </div>
+          </div>
+          <p className="mt-4 text-white text-lg">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -533,57 +556,66 @@ const PushNotificationManager = () => {
   React.useEffect(() => {
     if (!isAuthenticated) return;
 
-    // Check if notifications are supported
-    if (!('Notification' in window)) {
-      console.log('Notifications not supported, not showing modal');
-      return;
-    }
-
-    const permission = Notification.permission;
-
-    // Don't show if notifications are already enabled
-    const isEnabled = notificationService.isPushNotificationsEnabled();
-    if (isEnabled) {
-      console.log('✅ Push notifications already enabled, not showing modal');
-      return;
-    }
-
-    // Don't show if permission is already granted (auto-register will handle it)
-    if (permission === 'granted') {
-      console.log('✅ Permission already granted, auto-register will handle it');
-      return;
-    }
-
-    // Don't show if permission is denied
-    if (permission === 'denied') {
-      console.log('❌ Push notifications denied, not showing modal');
-      return;
-    }
-
-    // Only show if permission is 'default' (not asked yet)
-    if (permission !== 'default') {
-      console.log('⚠️ Unknown permission state:', permission);
-      return;
-    }
-
-    // Don't show if already dismissed recently (within 24 hours)
-    const dismissedAt = localStorage.getItem('notification_modal_dismissed_at');
-    if (dismissedAt) {
-      const hoursSinceDismissed = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60);
-      if (hoursSinceDismissed < 24) {
-        console.log('⏳ Modal dismissed recently, not showing modal');
+    // Import isPushNotificationSupported dynamically to avoid issues
+    import('./utils/deviceDetection').then(({ isPushNotificationSupported }) => {
+      // Don't show modal on unsupported devices (iOS/Safari)
+      if (!isPushNotificationSupported()) {
+        console.log('❌ Push notifications not supported on this device, not showing modal');
         return;
       }
-    }
 
-    // Show modal after 3 seconds (give time for user to settle in)
-    console.log('⏳ Scheduling modal to show in 3 seconds...');
-    const timer = setTimeout(() => {
-      console.log('📱 Showing notification permission modal');
-      setShowModal(true);
-    }, 3000);
+      // Check if notifications are supported
+      if (!('Notification' in window)) {
+        console.log('Notifications not supported, not showing modal');
+        return;
+      }
 
-    return () => clearTimeout(timer);
+      const permission = Notification.permission;
+
+      // Don't show if notifications are already enabled
+      const isEnabled = notificationService.isPushNotificationsEnabled();
+      if (isEnabled) {
+        console.log('✅ Push notifications already enabled, not showing modal');
+        return;
+      }
+
+      // Don't show if permission is already granted (auto-register will handle it)
+      if (permission === 'granted') {
+        console.log('✅ Permission already granted, auto-register will handle it');
+        return;
+      }
+
+      // Don't show if permission is denied
+      if (permission === 'denied') {
+        console.log('❌ Push notifications denied, not showing modal');
+        return;
+      }
+
+      // Only show if permission is 'default' (not asked yet)
+      if (permission !== 'default') {
+        console.log('⚠️ Unknown permission state:', permission);
+        return;
+      }
+
+      // Don't show if already dismissed recently (within 24 hours)
+      const dismissedAt = localStorage.getItem('notification_modal_dismissed_at');
+      if (dismissedAt) {
+        const hoursSinceDismissed = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60);
+        if (hoursSinceDismissed < 24) {
+          console.log('⏳ Modal dismissed recently, not showing modal');
+          return;
+        }
+      }
+
+      // Show modal after 3 seconds (give time for user to settle in)
+      console.log('⏳ Scheduling modal to show in 3 seconds...');
+      const timer = setTimeout(() => {
+        console.log('📱 Showing notification permission modal');
+        setShowModal(true);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    });
   }, [isAuthenticated]);
 
   // Show prompt only if authenticated
