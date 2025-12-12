@@ -29,49 +29,132 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
 
       login: async (credentials: LoginCredentials) => {
-        console.log('🏁 AuthStore.login started with:', credentials);
+        console.log('========== AUTH STORE LOGIN START ==========');
+        console.log('🏁 AuthStore.login started with:', {
+          email: credentials.email,
+          hasPassword: !!credentials.password,
+          timestamp: new Date().toISOString()
+        });
+
         set({ isLoading: true });
+        console.log('🔄 AuthStore loading state set to true');
+
         try {
+          console.log('📞 Calling authService.login...');
           const response = await authService.login(credentials);
-          console.log('📦 AuthStore received response:', response);
+
+          console.log('📦 AuthStore received response:', {
+            hasUser: !!response.user,
+            hasToken: !!response.token,
+            userId: response.user?.id,
+            userEmail: response.user?.email,
+            accountStatus: response.user?.account_status,
+            deactivationReason: response.user?.deactivation_reason
+          });
+
           const { user, token } = response;
-          
+
+          console.log('🔐 Setting auth token in apiService...');
           apiService.setAuthToken(token);
+
+          console.log('💾 Updating AuthStore state...');
           set({ user, token, isAuthenticated: true, isLoading: false });
-          console.log('✅ AuthStore state updated successfully');
+
+          console.log('✅ AuthStore state updated successfully:', {
+            userId: user.id,
+            email: user.email,
+            accountStatus: user.account_status,
+            isAuthenticated: true,
+            hasToken: !!token
+          });
+
           toast.success('Connexion réussie !');
-          
+
+          console.log('🎯 Scheduling daily login tracking...');
           // Tracker la connexion pour les défis (avec un délai pour éviter les erreurs d'initialisation)
           setTimeout(() => {
+            console.log('📊 Tracking daily login...');
             challengeTracker.trackDailyLogin();
           }, 2000);
+
+          console.log('========== AUTH STORE LOGIN SUCCESS ==========');
         } catch (error: any) {
-          console.error('❌ AuthStore.login error:', error);
+          console.error('========== AUTH STORE LOGIN ERROR ==========');
+          console.error('❌ AuthStore.login error:', {
+            message: error.message,
+            status: error.response?.status,
+            errorData: error.response?.data,
+            timestamp: new Date().toISOString()
+          });
+          console.error('Full error:', error);
+
           set({ isLoading: false });
+          console.log('🔄 AuthStore loading state set to false due to error');
+
           throw error;
         }
       },
 
       register: async (data: RegisterData) => {
-        console.log('🏁 AuthStore.register started with:', data);
+        console.log('========== AUTH STORE REGISTER START ==========');
+        console.log('🏁 AuthStore.register started with:', {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          hasPassword: !!data.password,
+          hasPromoCode: !!data.promo_code,
+          timestamp: new Date().toISOString()
+        });
+
         set({ isLoading: true });
+        console.log('🔄 AuthStore loading state set to true');
+
         try {
+          console.log('📞 Calling authService.register...');
           const response = await authService.register(data);
-          console.log('📦 AuthStore received register response:', response);
-          const { user, token } = response;
-          
-          apiService.setAuthToken(token);
-          set({ user, token, isAuthenticated: true, isLoading: false });
-          console.log('✅ AuthStore state updated after registration');
-          toast.success('Inscription réussie ! Bienvenue sur Formaneo');
-        } catch (error: any) {
-          console.error('❌ AuthStore.register error:', error);
-          console.error('Error details:', {
-            message: error.message,
-            response: error.response,
-            data: error.response?.data
+
+          console.log('📦 AuthStore received register response:', {
+            hasUser: !!response.user,
+            hasToken: !!response.token,
+            userId: response.user?.id,
+            userEmail: response.user?.email,
+            accountStatus: response.user?.account_status,
+            deactivationReason: response.user?.deactivation_reason,
+            balance: response.user?.balance
           });
+
+          const { user, token } = response;
+
+          console.log('🔐 Setting auth token in apiService...');
+          apiService.setAuthToken(token);
+
+          console.log('💾 Updating AuthStore state...');
+          set({ user, token, isAuthenticated: true, isLoading: false });
+
+          console.log('✅ AuthStore state updated after registration:', {
+            userId: user.id,
+            email: user.email,
+            accountStatus: user.account_status,
+            isAuthenticated: true,
+            hasToken: !!token
+          });
+
+          toast.success('Inscription réussie ! Bienvenue sur Formaneo');
+          console.log('========== AUTH STORE REGISTER SUCCESS ==========');
+        } catch (error: any) {
+          console.error('========== AUTH STORE REGISTER ERROR ==========');
+          console.error('❌ AuthStore.register error:', {
+            message: error.message,
+            status: error.response?.status,
+            errorData: error.response?.data,
+            validationErrors: error.response?.data?.errors,
+            timestamp: new Date().toISOString()
+          });
+          console.error('Full error:', error);
+
           set({ isLoading: false });
+          console.log('🔄 AuthStore loading state set to false due to error');
+
           throw error;
         }
       },
