@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 
 class ApiService {
   private axiosInstance: AxiosInstance;
+  private isRetrying: boolean = false;
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -19,6 +20,11 @@ class ApiService {
     this.setupInterceptors();
   }
 
+  private updateBaseURL() {
+    this.axiosInstance.defaults.baseURL = API_CONFIG.BASE_URL;
+    console.log('🔄 Base URL updated to:', API_CONFIG.BASE_URL);
+  }
+
   private setupInterceptors() {
     // Request interceptor
     this.axiosInstance.interceptors.request.use(
@@ -32,19 +38,26 @@ class ApiService {
         });
         
         // Récupérer le token depuis Zustand persist storage ou le token manuel
-        let token = localStorage.getItem('authToken');
-        if (!token) {
-          // Fallback: essayer de récupérer depuis le storage de Zustand
-          const authStorage = localStorage.getItem('auth-storage');
-          if (authStorage) {
-            try {
-              const parsed = JSON.parse(authStorage);
-              token = parsed.state?.token;
-            } catch (e) {
-              console.warn('Could not parse auth storage');
+        let token: string | null = null;
+        try {
+          token = localStorage.getItem('authToken');
+          if (!token) {
+            // Fallback: essayer de récupérer depuis le storage de Zustand
+            const authStorage = localStorage.getItem('auth-storage');
+            if (authStorage) {
+              try {
+                const parsed = JSON.parse(authStorage);
+                token = parsed.state?.token;
+              } catch (e) {
+                console.warn('Could not parse auth storage');
+              }
             }
           }
+        } catch (error) {
+          console.warn('⚠️ Failed to read from localStorage (private mode?)', error);
+          // In private mode, token will be set via apiService.setAuthToken directly in header
         }
+
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
           console.log('🔐 Token added to request');
@@ -127,8 +140,34 @@ class ApiService {
               toast.error(error.response.data.message || 'Erreur de validation');
               break;
             case 500:
-              // toast.error('Erreur serveur, veuillez réessayer plus tard');
+              // Gérer le fallback automatique vers l'URL de secours
               console.error('❌ 500 Server Error:', error.response.data);
+
+              // Basculer vers l'URL de fallback et retry une seule fois
+              if (!this.isRetrying) {
+                this.isRetrying = true;
+                API_CONFIG.handleError(error);
+                this.updateBaseURL();
+
+                // Retry la requête avec la nouvelle URL
+                console.log('🔄 Retrying request with fallback URL...');
+                return this.axiosInstance.request(error.config)
+                  .then(response => {
+                    console.log('✅ Request succeeded with fallback URL');
+                    this.isRetrying = false;
+                    return response;
+                  })
+                  .catch(retryError => {
+                    console.error('❌ Request failed even with fallback URL');
+                    this.isRetrying = false;
+                    toast.error('Erreur serveur, veuillez réessayer plus tard');
+                    return Promise.reject(retryError);
+                  });
+              } else {
+                // Si on est déjà en retry, ne pas retry à nouveau
+                toast.error('Erreur serveur, veuillez réessayer plus tard');
+                this.isRetrying = false;
+              }
               break;
             case 503:
               // Service Unavailable - Maintenance mode
@@ -188,13 +227,24 @@ class ApiService {
 
   public setAuthToken(token: string) {
     // Stocker le token à la fois dans authToken (pour compatibilité) et dans l'header
-    localStorage.setItem('authToken', token);
+    try {
+      localStorage.setItem('authToken', token);
+      console.log('🔐 Auth token saved to localStorage');
+    } catch (error) {
+      console.warn('⚠️ Failed to save token to localStorage (private mode?)', error);
+      // Token will still work via header, just won't persist across refreshes in private mode
+    }
     this.axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     console.log('🔐 Auth token set in apiService');
   }
 
   public clearAuthToken() {
-    localStorage.removeItem('authToken');
+    try {
+      localStorage.removeItem('authToken');
+      console.log('🧹 Auth token removed from localStorage');
+    } catch (error) {
+      console.warn('⚠️ Failed to remove token from localStorage', error);
+    }
     delete this.axiosInstance.defaults.headers.common['Authorization'];
     console.log('🧹 Auth token cleared from apiService');
   }

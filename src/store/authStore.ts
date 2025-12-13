@@ -1,10 +1,65 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { User, LoginCredentials, RegisterData } from '../types';
 import authService from '../services/auth.service';
 import apiService from '../services/api.service';
 import { challengeTracker } from '../services/challengeTracker.service';
 import toast from 'react-hot-toast';
+
+// Safe storage wrapper for private mode compatibility
+const createSafeStorage = (): StateStorage => {
+  let inMemoryStorage: { [key: string]: string } = {};
+  let isLocalStorageAvailable = true;
+
+  // Test localStorage availability
+  try {
+    const testKey = '__storage_test__';
+    localStorage.setItem(testKey, 'test');
+    localStorage.removeItem(testKey);
+  } catch (e) {
+    console.warn('⚠️ localStorage not available (private mode?), using in-memory storage');
+    isLocalStorageAvailable = false;
+  }
+
+  return {
+    getItem: (name: string): string | null => {
+      try {
+        if (isLocalStorageAvailable) {
+          return localStorage.getItem(name);
+        }
+        return inMemoryStorage[name] || null;
+      } catch (error) {
+        console.error('❌ Storage getItem error:', error);
+        return inMemoryStorage[name] || null;
+      }
+    },
+    setItem: (name: string, value: string): void => {
+      try {
+        if (isLocalStorageAvailable) {
+          localStorage.setItem(name, value);
+        }
+        // Always keep in-memory backup
+        inMemoryStorage[name] = value;
+      } catch (error) {
+        console.error('❌ Storage setItem error (falling back to memory):', error);
+        // Fallback to in-memory storage
+        isLocalStorageAvailable = false;
+        inMemoryStorage[name] = value;
+      }
+    },
+    removeItem: (name: string): void => {
+      try {
+        if (isLocalStorageAvailable) {
+          localStorage.removeItem(name);
+        }
+        delete inMemoryStorage[name];
+      } catch (error) {
+        console.error('❌ Storage removeItem error:', error);
+        delete inMemoryStorage[name];
+      }
+    },
+  };
+};
 
 interface AuthState {
   user: User | null;
@@ -163,7 +218,13 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           // Remove FCM token from backend before logout
-          const fcmToken = localStorage.getItem('fcm_token');
+          let fcmToken: string | null = null;
+          try {
+            fcmToken = localStorage.getItem('fcm_token');
+          } catch (e) {
+            console.warn('⚠️ Failed to read fcm_token from localStorage');
+          }
+
           if (fcmToken) {
             console.log('🧹 Removing FCM token from backend on logout');
             try {
@@ -185,9 +246,13 @@ export const useAuthStore = create<AuthState>()(
 
           // Clean up FCM token from localStorage
           console.log('🧹 Cleaning FCM token from localStorage on logout');
-          localStorage.removeItem('fcm_token');
-          localStorage.removeItem('notification_modal_dismissed_at');
-          localStorage.removeItem('push_notification_prompt_dismissed');
+          try {
+            localStorage.removeItem('fcm_token');
+            localStorage.removeItem('notification_modal_dismissed_at');
+            localStorage.removeItem('push_notification_prompt_dismissed');
+          } catch (error) {
+            console.warn('⚠️ Failed to clean localStorage on logout (private mode?)');
+          }
 
           toast.success('Déconnexion réussie');
           // Redirection vers la page de login
@@ -255,17 +320,24 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ 
-        token: state.token, 
+      storage: createJSONStorage(() => createSafeStorage()),
+      partialize: (state) => ({
+        token: state.token,
         user: state.user,
         isAuthenticated: state.isAuthenticated
       }),
       onRehydrateStorage: () => (state) => {
+        console.log('🔄 onRehydrateStorage called');
         if (state?.token && state?.user) {
           console.log('🔄 Rehydrating auth state:', { user: state.user.name, hasToken: !!state.token });
-          // Restaurer le token dans apiService
-          apiService.setAuthToken(state.token);
+          try {
+            // Restaurer le token dans apiService
+            apiService.setAuthToken(state.token);
+          } catch (error) {
+            console.error('❌ Error restoring token:', error);
+          }
+        } else {
+          console.log('🔄 No auth state to rehydrate');
         }
       },
     }
