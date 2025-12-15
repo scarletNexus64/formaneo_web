@@ -1,90 +1,15 @@
-// Configuration des URLs primaire et fallback
-const PRIMARY_URL = process.env.REACT_APP_API_URL_PRIMARY || 'https://admin.cleanestuaire.com/api/v1';
-const FALLBACK_URL = process.env.REACT_APP_API_URL_FALLBACK || 'https://formaneo-adminpanel.shop/api/v1';
 
-// Clé localStorage pour mémoriser l'URL active
-const ACTIVE_URL_KEY = 'formaneo_active_api_url';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://admin.cleanestuaire.com/api/v1';
 
-// Classe pour gérer le fallback automatique
-class APIConfigManager {
-  private currentBaseURL: string;
-  private isFallbackMode: boolean = false;
-
-  constructor() {
-    // Récupérer l'URL sauvegardée ou utiliser l'URL primaire par défaut
-    const savedURL = localStorage.getItem(ACTIVE_URL_KEY);
-    this.currentBaseURL = savedURL || PRIMARY_URL;
-    this.isFallbackMode = savedURL === FALLBACK_URL;
-
-    console.log('🌐 API Configuration initialized:', {
-      PRIMARY_URL,
-      FALLBACK_URL,
-      CURRENT_URL: this.currentBaseURL,
-      IS_FALLBACK_MODE: this.isFallbackMode,
-      NODE_ENV: process.env.NODE_ENV
-    });
-  }
-
-  /**
-   * Obtient l'URL de base actuelle
-   */
-  getBaseURL(): string {
-    return this.currentBaseURL;
-  }
-
-  /**
-   * Bascule vers l'URL de fallback en cas d'erreur 500
-   */
-  switchToFallback(): void {
-    if (!this.isFallbackMode) {
-      console.warn('⚠️ Switching to fallback API URL due to server error:', FALLBACK_URL);
-      this.currentBaseURL = FALLBACK_URL;
-      this.isFallbackMode = true;
-      localStorage.setItem(ACTIVE_URL_KEY, FALLBACK_URL);
-    }
-  }
-
-  /**
-   * Tente de revenir à l'URL primaire
-   */
-  resetToPrimary(): void {
-    console.log('🔄 Resetting to primary API URL:', PRIMARY_URL);
-    this.currentBaseURL = PRIMARY_URL;
-    this.isFallbackMode = false;
-    localStorage.setItem(ACTIVE_URL_KEY, PRIMARY_URL);
-  }
-
-  /**
-   * Vérifie si une erreur nécessite un fallback
-   */
-  shouldFallback(error: any): boolean {
-    // Vérifier si c'est une erreur 500 (Server Error)
-    return error?.response?.status === 500 || error?.status === 500;
-  }
-
-  /**
-   * Gère une erreur API et bascule si nécessaire
-   */
-  handleAPIError(error: any): void {
-    if (this.shouldFallback(error)) {
-      this.switchToFallback();
-    }
-  }
-}
-
-// Instance singleton du gestionnaire de configuration
-const apiConfigManager = new APIConfigManager();
+console.log('🌐 API Configuration initialized:', {
+  BASE_URL,
+  NODE_ENV: process.env.NODE_ENV
+});
 
 // Export de la configuration API
 export const API_CONFIG = {
-  get BASE_URL() {
-    return apiConfigManager.getBaseURL();
-  },
+  BASE_URL,
   TIMEOUT: 30000,
-  // Méthodes utilitaires
-  switchToFallback: () => apiConfigManager.switchToFallback(),
-  resetToPrimary: () => apiConfigManager.resetToPrimary(),
-  handleError: (error: any) => apiConfigManager.handleAPIError(error),
 };
 
 export const ENDPOINTS = {
@@ -193,5 +118,5 @@ export const ENDPOINTS = {
 export const CINETPAY_CONFIG = {
   API_KEY: process.env.REACT_APP_CINETPAY_API_KEY || '45213166268af015b7d2734.50726534',
   SITE_ID: process.env.REACT_APP_CINETPAY_SITE_ID || '105905750',
-  NOTIFY_URL: process.env.REACT_APP_CINETPAY_NOTIFY_URL || 'https://formaneo-adminpanel.shop/api/v1/cinetpay/notify',
+  NOTIFY_URL: process.env.REACT_APP_CINETPAY_NOTIFY_URL || 'https://admin.cleanestuaire.com/api/v1/cinetpay/notify',
 };

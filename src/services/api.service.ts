@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 
 class ApiService {
   private axiosInstance: AxiosInstance;
-  private isRetrying: boolean = false;
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -18,11 +17,6 @@ class ApiService {
     });
 
     this.setupInterceptors();
-  }
-
-  private updateBaseURL() {
-    this.axiosInstance.defaults.baseURL = API_CONFIG.BASE_URL;
-    console.log('🔄 Base URL updated to:', API_CONFIG.BASE_URL);
   }
 
   private setupInterceptors() {
@@ -140,34 +134,8 @@ class ApiService {
               toast.error(error.response.data.message || 'Erreur de validation');
               break;
             case 500:
-              // Gérer le fallback automatique vers l'URL de secours
               console.error('❌ 500 Server Error:', error.response.data);
-
-              // Basculer vers l'URL de fallback et retry une seule fois
-              if (!this.isRetrying) {
-                this.isRetrying = true;
-                API_CONFIG.handleError(error);
-                this.updateBaseURL();
-
-                // Retry la requête avec la nouvelle URL
-                console.log('🔄 Retrying request with fallback URL...');
-                return this.axiosInstance.request(error.config)
-                  .then(response => {
-                    console.log('✅ Request succeeded with fallback URL');
-                    this.isRetrying = false;
-                    return response;
-                  })
-                  .catch(retryError => {
-                    console.error('❌ Request failed even with fallback URL');
-                    this.isRetrying = false;
-                    toast.error('Erreur serveur, veuillez réessayer plus tard');
-                    return Promise.reject(retryError);
-                  });
-              } else {
-                // Si on est déjà en retry, ne pas retry à nouveau
-                toast.error('Erreur serveur, veuillez réessayer plus tard');
-                this.isRetrying = false;
-              }
+              toast.error('Erreur serveur, veuillez réessayer plus tard');
               break;
             case 503:
               // Service Unavailable - Maintenance mode
