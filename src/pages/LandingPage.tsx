@@ -30,77 +30,6 @@ import {
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
 
-// Composant effet de neige de Noël
-const ChristmasSnowEffect = () => {
-  const snowflakes = Array.from({ length: 50 }, (_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    animationDelay: `${Math.random() * 5}s`,
-    fontSize: `${Math.random() * 10 + 10}px`,
-    opacity: Math.random() * 0.6 + 0.4,
-  }));
-
-  return (
-    <>
-      {/* Effet de neige */}
-      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
-        {snowflakes.map((flake) => (
-          <motion.div
-            key={flake.id}
-            className="absolute text-white"
-            style={{
-              left: flake.left,
-              fontSize: flake.fontSize,
-              opacity: flake.opacity,
-              top: '-20px',
-            }}
-            animate={{
-              y: ['0vh', '100vh'],
-              x: [0, Math.random() * 100 - 50],
-              rotate: [0, 360],
-            }}
-            transition={{
-              duration: Math.random() * 3 + 5,
-              repeat: Infinity,
-              delay: parseFloat(flake.animationDelay),
-              ease: 'linear',
-            }}
-          >
-            ❄
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Message Joyeux Noël */}
-      <motion.div
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 0.5 }}
-        className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 pointer-events-none"
-      >
-        <motion.div
-          animate={{
-            scale: [1, 1.05, 1],
-            rotate: [-2, 2, -2],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-          className="bg-gradient-to-r from-red-600 via-green-600 to-red-600 text-white px-6 py-3 rounded-2xl shadow-2xl border-4 border-white/30 backdrop-blur-sm"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🎄</span>
-            <span className="font-bold text-xl tracking-wide">Joyeux Noël !</span>
-            <span className="text-2xl">🎅</span>
-          </div>
-        </motion.div>
-      </motion.div>
-    </>
-  );
-};
-
 // Hook personnalisé pour l'animation des compteurs
 const useCountUp = (end: number, duration: number = 2000, shouldStart: boolean = false) => {
   const [count, setCount] = useState(0);
@@ -814,9 +743,6 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-500">
-      {/* Effet de Noël */}
-      <ChristmasSnowEffect />
-
       {/* Navigation */}
       <motion.nav
         style={{ opacity: navOpacity }}
