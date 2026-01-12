@@ -241,6 +241,7 @@ export interface AccountActivationInfo {
   account_expires_at?: string;
   welcome_bonus_claimed: boolean;
   activation_cost: number;
+  activation_duration_months: number;
   welcome_bonus_amount: number;
 }
 

@@ -86,29 +86,6 @@ const AccountActivationPage: React.FC = () => {
     }
   };
 
-  const features = [
-    {
-      icon: SparklesIcon,
-      title: 'Bonus de bienvenue',
-      description: `Recevez ${activationInfo?.welcome_bonus_amount || 2000} FCFA immédiatement après activation`
-    },
-    {
-      icon: ShieldCheckIcon,
-      title: 'Accès complet',
-      description: 'Débloquez toutes les formations, e-books et fonctionnalités'
-    },
-    {
-      icon: ClockIcon,
-      title: 'Valide 1 mois',
-      description: 'Profitez de tous les avantages pendant 30 jours'
-    },
-    {
-      icon: CreditCardIcon,
-      title: 'Paiement sécurisé',
-      description: 'Transaction protégée via CinetPay (Mobile Money)'
-    }
-  ];
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -131,6 +108,34 @@ const AccountActivationPage: React.FC = () => {
 
   const isExpired = activationInfo.account_status === 'expired';
   const isPendingPayment = activationInfo.account_status === 'pending_payment';
+
+  // Calculer la durée dynamiquement
+  const durationMonths = activationInfo.activation_duration_months || 1;
+  const durationDays = durationMonths * 30;
+  const durationText = durationMonths > 1 ? `Valide ${durationMonths} mois` : 'Valide 1 mois';
+
+  const features = [
+    {
+      icon: SparklesIcon,
+      title: 'Bonus de bienvenue',
+      description: `Recevez ${activationInfo.welcome_bonus_amount || 2000} FCFA immédiatement après activation`
+    },
+    {
+      icon: ShieldCheckIcon,
+      title: 'Accès complet',
+      description: 'Débloquez toutes les formations, e-books et fonctionnalités'
+    },
+    {
+      icon: ClockIcon,
+      title: durationText,
+      description: `Profitez de tous les avantages pendant ${durationDays} jours`
+    },
+    {
+      icon: CreditCardIcon,
+      title: 'Paiement sécurisé',
+      description: 'Transaction protégée via CinetPay (Mobile Money)'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 dark:from-gray-900 dark:to-gray-800">
@@ -161,7 +166,9 @@ const AccountActivationPage: React.FC = () => {
             <span className="text-3xl font-bold text-gray-900 dark:text-white">
               {activationInfo.activation_cost.toLocaleString('fr-FR')} FCFA
             </span>
-            <span className="ml-2 text-gray-600 dark:text-gray-400">/ mois</span>
+            <span className="ml-2 text-gray-600 dark:text-gray-400">
+              / {durationMonths > 1 ? `${durationMonths} mois` : 'mois'}
+            </span>
           </div>
         </motion.div>
 
