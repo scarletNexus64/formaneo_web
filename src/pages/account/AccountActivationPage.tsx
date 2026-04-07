@@ -15,16 +15,21 @@ import walletService from '../../services/wallet.service';
 import { AccountActivationInfo } from '../../types';
 import toast from 'react-hot-toast';
 import { XMarkIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
+import { usePaymentContext } from '../../contexts/PaymentContext';
 
 const AccountActivationPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, fetchUser } = useAuthStore();
+  const { addPendingPayment, pendingPayments } = usePaymentContext();
   const [activationInfo, setActivationInfo] = useState<AccountActivationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [useProfilePhone, setUseProfilePhone] = useState(true);
+
+  // Vérifier si un paiement d'activation est en cours
+  const hasPendingActivation = pendingPayments.some(p => p.type === 'activation');
 
   useEffect(() => {
     loadActivationInfo();
@@ -99,24 +104,35 @@ const AccountActivationPage: React.FC = () => {
         ussd_mode: response.ussd_mode
       });
 
-      // Si FreeMoPay (USSD) : rester sur la même page et afficher les instructions
+      // Ajouter le paiement au context pour polling en arrière-plan
+      addPendingPayment({
+        transactionId: response.transaction_id,
+        type: 'activation',
+        provider: response.provider || 'cinetpay',
+        amount: activationInfo?.activation_cost,
+        startedAt: new Date().toISOString(),
+      });
+
+      // Si FreeMoPay (USSD) : afficher les instructions
       if (response.ussd_mode || response.provider === 'freemopay') {
-        toast.success('Code USSD envoyé ! Composez le code sur votre téléphone pour activer votre compte.', {
+        toast.success('📱 Demande de paiement envoyée ! Vérifiez votre téléphone Mobile Money et validez le paiement. Vous serez notifié dès confirmation.', {
           duration: 8000
         });
 
-        // Rediriger vers la page de vérification pour attendre la confirmation
-        navigate('/account/activation/return');
+        // NE PAS naviguer, rester sur la page
+        setIsProcessing(false);
 
       } else {
         // Si CinetPay (portail web) : ouvrir l'URL de paiement
         if (response.payment_url) {
           await activationService.openPaymentUrl(response.payment_url);
 
-          // Rediriger vers la page de vérification après un court délai
-          setTimeout(() => {
-            navigate('/account/activation/return');
-          }, 1000);
+          toast.success('💳 Page de paiement ouverte. Complétez le paiement sur la page CinetPay. Vous serez notifié dès confirmation.', {
+            duration: 8000
+          });
+
+          // NE PAS naviguer, rester sur la page
+          setIsProcessing(false);
         } else {
           toast.error('URL de paiement manquante');
           setIsProcessing(false);
@@ -333,14 +349,30 @@ const AccountActivationPage: React.FC = () => {
           className="text-center space-y-4"
         >
           <button
-            onClick={handleActivation}
+            onClick={hasPendingActivation ? () => {
+              // Scroller vers le banner en haut
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              toast('💳 Votre paiement est en cours de traitement. Vérifiez le banner en haut de la page.', {
+                icon: 'ℹ️',
+                duration: 5000
+              });
+            } : handleActivation}
             disabled={isProcessing}
-            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-orange-400 to-red-500 text-white font-semibold rounded-lg hover:from-orange-500 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`inline-flex items-center px-8 py-4 ${
+              hasPendingActivation
+                ? 'bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700'
+                : 'bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600'
+            } text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {isProcessing ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                Redirection en cours...
+                Traitement en cours...
+              </>
+            ) : hasPendingActivation ? (
+              <>
+                <ClockIcon className="w-5 h-5 mr-3" />
+                Vérifier le statut du paiement
               </>
             ) : (
               <>

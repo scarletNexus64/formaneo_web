@@ -4,6 +4,7 @@ import logo from './assets/logo.png';
 import { Toaster } from 'react-hot-toast';
 import AnimatedCounter from './components/AnimatedCounter';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { PaymentProvider } from './contexts/PaymentContext';
 
 // Import des vraies pages avec la logique API
 import LoginPageAuth from './pages/auth/LoginPage';
@@ -40,6 +41,9 @@ import { PushNotificationPrompt } from './components/PushNotificationPrompt';
 import { NotificationPermissionModal } from './components/NotificationPermissionModal';
 import { notificationService } from './services/notificationService';
 import { useAuthStore } from './store/authStore';
+
+// Payment Status Banner
+import { PaymentStatusBanner } from './components/PaymentStatusBanner';
 
 // Maintenance Check
 import { useMaintenanceCheck } from './hooks/useMaintenanceCheck';
@@ -421,6 +425,14 @@ const DashboardPage = () => {
 
 // App component with routes
 const AppContent = () => {
+  // Initialize auth on app load
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+
+  React.useEffect(() => {
+    console.log('🚀 App mounted - Initializing auth...');
+    initializeAuth();
+  }, [initializeAuth]);
+
   // Check maintenance mode on app load
   const { isChecking, inMaintenance } = useMaintenanceCheck();
 
@@ -637,22 +649,25 @@ const PushNotificationManager = () => {
 function App() {
   return (
     <ThemeProvider>
-      <div className="App">
-        <Router>
-          <PushNotificationManager />
-          <AppContent />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-            }}
-          />
-        </Router>
-      </div>
+      <PaymentProvider>
+        <div className="App">
+          <Router>
+            <PaymentStatusBanner />
+            <PushNotificationManager />
+            <AppContent />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+              }}
+            />
+          </Router>
+        </div>
+      </PaymentProvider>
     </ThemeProvider>
   );
 }

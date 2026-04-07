@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SimpleModal from './SimpleModal';
 import walletService, { PaymentProviderInfo } from '../../services/wallet.service';
 import toast from 'react-hot-toast';
+import { usePaymentContext } from '../../contexts/PaymentContext';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -10,11 +11,10 @@ interface DepositModalProps {
 }
 
 const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { addPendingPayment } = usePaymentContext();
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isWaitingForPayment, setIsWaitingForPayment] = useState(false);
-  const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
   const [providerInfo, setProviderInfo] = useState<PaymentProviderInfo | null>(null);
 
   // Charger les informations du provider au montage du composant
@@ -79,32 +79,49 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
       const result = await walletService.initiateDeposit(numericAmount, formattedPhone);
 
       if (result.success) {
-        setPendingTransactionId(result.transaction_id || null);
-        setIsWaitingForPayment(true);
-
         // Sauvegarder le provider pour la vérification du statut
         if (result.provider) {
           localStorage.setItem('deposit_provider', result.provider);
         }
 
+        // Ajouter au context pour polling en arrière-plan
+        addPendingPayment({
+          transactionId: result.transaction_id!,
+          type: 'deposit',
+          provider: result.provider || 'cinetpay',
+          amount: numericAmount,
+          startedAt: new Date().toISOString(),
+        });
+
         if (providerInfo?.ussd_mode) {
-          // Mode USSD (FreeMoPay) - Pas de redirection
-          toast.success(result.message || 'Code USSD envoyé sur votre téléphone');
-          // Commencer la vérification du statut
-          startStatusCheck(result.transaction_id!);
+          // Mode USSD (FreeMoPay) - Code USSD envoyé
+          toast.success('📱 ' + (result.message || 'Code USSD envoyé sur votre téléphone. Vous serez notifié dès confirmation.'), {
+            duration: 6000
+          });
+
+          // Fermer le modal, le polling continue en arrière-plan via le banner
+          setTimeout(() => {
+            handleClose();
+          }, 1500);
+
         } else if (result.payment_url) {
-          // Mode Web Portal (CinetPay) - Redirection
-          toast.success('Redirection vers le portail de paiement...');
+          // Mode Web Portal (CinetPay) - Ouvrir le portail
+          toast.success('💳 Redirection vers le portail de paiement...');
 
           // Ouvrir l'URL de paiement
           await walletService.openPaymentUrl(result.payment_url);
 
-          // Commencer la vérification du statut
-          startStatusCheck(result.transaction_id!);
+          toast.success('Complétez le paiement sur la page ouverte. Vous serez notifié dès confirmation.', {
+            duration: 6000
+          });
+
+          // Fermer le modal, le polling continue en arrière-plan via le banner
+          setTimeout(() => {
+            handleClose();
+          }, 1500);
+
         } else {
           toast.error('Erreur: URL de paiement manquante');
-          setIsWaitingForPayment(false);
-          setPendingTransactionId(null);
         }
       } else {
         toast.error(result.message || 'Erreur lors de l\'initiation du dépôt');
@@ -117,147 +134,22 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
     }
   };
 
-  const startStatusCheck = (transactionId: string) => {
-    const checkStatus = async () => {
-      try {
-        const result = await walletService.checkDepositStatus(transactionId);
-
-        if (result.success) {
-          if (result.status === 'completed') {
-            toast.success('Dépôt effectué avec succès !');
-            setIsWaitingForPayment(false);
-            setPendingTransactionId(null);
-            // Nettoyer le localStorage
-            localStorage.removeItem('deposit_provider');
-            onSuccess();
-            handleClose();
-            return true;
-          } else if (result.status === 'failed' || result.status === 'cancelled') {
-            toast.error('Le paiement a échoué ou été annulé');
-            setIsWaitingForPayment(false);
-            setPendingTransactionId(null);
-            // Nettoyer le localStorage
-            localStorage.removeItem('deposit_provider');
-            return true;
-          }
-        }
-        // Ne pas afficher d'erreur pour les vérifications automatiques
-        return false;
-      } catch (error) {
-        console.error('Erreur lors de la vérification:', error);
-        // Ne pas afficher de toast d'erreur pour les vérifications automatiques
-        return false;
-      }
-    };
-
-    const intervalId = setInterval(async () => {
-      const shouldStop = await checkStatus();
-      if (shouldStop) {
-        clearInterval(intervalId);
-      }
-    }, 10000);
-
-    setTimeout(() => {
-      clearInterval(intervalId);
-      if (isWaitingForPayment) {
-        setIsWaitingForPayment(false);
-        setPendingTransactionId(null);
-        toast('Vérification du paiement arrêtée. Vous pouvez vérifier manuellement dans l\'historique.', {
-          duration: 5000,
-        });
-      }
-    }, 300000);
-  };
-
-  const handleManualCheck = async () => {
-    if (!pendingTransactionId) return;
-
-    try {
-      const result = await walletService.checkDepositStatus(pendingTransactionId);
-
-      if (result.success) {
-        if (result.status === 'completed') {
-          toast.success('Dépôt confirmé !');
-          setIsWaitingForPayment(false);
-          setPendingTransactionId(null);
-          // Nettoyer le localStorage
-          localStorage.removeItem('deposit_provider');
-          onSuccess();
-          handleClose();
-        } else if (result.status === 'failed' || result.status === 'cancelled') {
-          toast.error('Le paiement a échoué ou été annulé');
-          setIsWaitingForPayment(false);
-          setPendingTransactionId(null);
-          // Nettoyer le localStorage
-          localStorage.removeItem('deposit_provider');
-        } else {
-          toast('Paiement toujours en attente...', { icon: '⏳' });
-        }
-      } else {
-        toast.error('Erreur lors de la vérification');
-      }
-    } catch (error) {
-      toast.error('Erreur lors de la vérification');
-    }
-  };
-
   const handleClose = () => {
-    if (!isWaitingForPayment) {
-      setAmount('');
-      setPhoneNumber('');
-      setIsLoading(false);
-      setPendingTransactionId(null);
-      // Nettoyer le localStorage
-      localStorage.removeItem('deposit_provider');
-      onClose();
-    }
+    setAmount('');
+    setPhoneNumber('');
+    setIsLoading(false);
+    onClose();
   };
 
   const validation = validateAmount();
 
   return (
-    <SimpleModal 
-      isOpen={isOpen} 
+    <SimpleModal
+      isOpen={isOpen}
       onClose={handleClose}
       title="Déposer des fonds"
     >
-      {isWaitingForPayment ? (
-        <div className="mt-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
-              <div>
-                <p className="text-blue-800 font-medium">Paiement en cours...</p>
-                <p className="text-blue-600 text-sm">
-                  {providerInfo?.ussd_mode
-                    ? 'Avez-vous composé le code USSD reçu ?'
-                    : 'Avez-vous terminé votre paiement ?'}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex flex-col space-y-3">
-            <button
-              onClick={handleManualCheck}
-              className="w-full bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors"
-            >
-              Vérifier le paiement
-            </button>
-            
-            <button
-              onClick={() => {
-                setIsWaitingForPayment(false);
-                setPendingTransactionId(null);
-              }}
-              className="w-full bg-gray-300 text-gray-700 dark:text-gray-300 rounded-lg px-4 py-2 hover:bg-gray-400 transition-colors"
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="mt-4">
+      <form onSubmit={handleSubmit} className="mt-4">
           <div className="space-y-4">
             <div>
               <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -331,7 +223,6 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
             </button>
           </div>
         </form>
-      )}
     </SimpleModal>
   );
 };

@@ -119,5 +119,5 @@ export const ENDPOINTS = {
 export const CINETPAY_CONFIG = {
   API_KEY: process.env.REACT_APP_CINETPAY_API_KEY || '45213166268af015b7d2734.50726534',
   SITE_ID: process.env.REACT_APP_CINETPAY_SITE_ID || '105905750',
-  NOTIFY_URL: process.env.REACT_APP_CINETPAY_NOTIFY_URL || 'https://admin.cleanestuaire.com/api/v1/cinetpay/notify',
+  NOTIFY_URL: process.env.REACT_APP_CINETPAY_NOTIFY_URL || 'https://formaneo-adminpanel.shop/api/v1/cinetpay/notify',
 };
