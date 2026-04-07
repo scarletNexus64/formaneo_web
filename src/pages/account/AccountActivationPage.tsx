@@ -11,8 +11,10 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../store/authStore';
 import activationService from '../../services/activation.service';
+import walletService from '../../services/wallet.service';
 import { AccountActivationInfo } from '../../types';
 import toast from 'react-hot-toast';
+import { XMarkIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
 
 const AccountActivationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +22,9 @@ const AccountActivationPage: React.FC = () => {
   const [activationInfo, setActivationInfo] = useState<AccountActivationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [useProfilePhone, setUseProfilePhone] = useState(true);
 
   useEffect(() => {
     loadActivationInfo();
@@ -58,30 +63,83 @@ const AccountActivationPage: React.FC = () => {
 
   const handleActivation = async () => {
     if (!activationInfo) return;
-    
+
+    // Vérifier le provider actif
+    const providerInfo = await activationService.getPaymentProvider();
+
+    // Si FreeMoPay (USSD), demander le numéro de téléphone d'abord
+    if (providerInfo.provider === 'freemopay' || providerInfo.ussd_mode) {
+      // Pré-remplir avec le numéro du profil s'il existe
+      if (user?.phone) {
+        setPhoneNumber(user.phone);
+      }
+      setShowPhoneModal(true);
+      return;
+    }
+
+    // Si CinetPay, continuer directement
+    await processActivation();
+  };
+
+  const processActivation = async (customPhone?: string) => {
     setIsProcessing(true);
+    setShowPhoneModal(false);
+
     try {
-      const response = await activationService.initiateActivation();
-      
-      // Sauvegarder l'ID de transaction pour la vérification
+      const response = await activationService.initiateActivation(customPhone);
+
+      // Sauvegarder l'ID de transaction ET le provider pour la vérification
       localStorage.setItem('activation_transaction_id', response.transaction_id);
-      
+      localStorage.setItem('activation_provider', response.provider || 'cinetpay');
+
       console.log('💳 Transaction d\'activation créée:', {
         transaction_id: response.transaction_id,
-        payment_url: response.payment_url
+        payment_url: response.payment_url,
+        provider: response.provider,
+        ussd_mode: response.ussd_mode
       });
-      
-      // Ouvrir le paiement dans un nouvel onglet
-      await activationService.openPaymentUrl(response.payment_url);
-      
-      // Rediriger vers la page de vérification après un court délai
-      setTimeout(() => {
+
+      // Si FreeMoPay (USSD) : rester sur la même page et afficher les instructions
+      if (response.ussd_mode || response.provider === 'freemopay') {
+        toast.success('Code USSD envoyé ! Composez le code sur votre téléphone pour activer votre compte.', {
+          duration: 8000
+        });
+
+        // Rediriger vers la page de vérification pour attendre la confirmation
         navigate('/account/activation/return');
-      }, 1000);
-      
+
+      } else {
+        // Si CinetPay (portail web) : ouvrir l'URL de paiement
+        if (response.payment_url) {
+          await activationService.openPaymentUrl(response.payment_url);
+
+          // Rediriger vers la page de vérification après un court délai
+          setTimeout(() => {
+            navigate('/account/activation/return');
+          }, 1000);
+        } else {
+          toast.error('URL de paiement manquante');
+          setIsProcessing(false);
+        }
+      }
+
     } catch (error: any) {
       console.error('Erreur lors de l\'activation:', error);
-      toast.error(error.response?.data?.message || 'Erreur lors de l\'activation');
+
+      // Messages d'erreur plus explicites
+      let errorMessage = 'Erreur lors de l\'activation';
+
+      if (error.code === 'ERR_BAD_REQUEST') {
+        errorMessage = error.response?.data?.message || 'Requête invalide. Vérifiez vos informations.';
+      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMessage = 'Le service de paiement ne répond pas. Réessayez dans quelques instants.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Erreur serveur. Contactez le support si le problème persiste.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      toast.error(errorMessage, { duration: 6000 });
       setIsProcessing(false);
     }
   };
@@ -133,7 +191,7 @@ const AccountActivationPage: React.FC = () => {
     {
       icon: CreditCardIcon,
       title: 'Paiement sécurisé',
-      description: 'Transaction protégée via CinetPay (Mobile Money)'
+      description: 'Transaction protégée via Mobile Money'
     }
   ];
 
@@ -261,7 +319,7 @@ const AccountActivationPage: React.FC = () => {
                 Information importante
               </p>
               <p className="text-sm text-blue-800 dark:text-blue-300 mt-1">
-                Après validation de votre paiement et réception de votre bonus, vous serez déconnecté automatiquement. Veuillez vous reconnecter pour profiter pleinement de votre compte activé.
+                Après validation de votre paiement et réception de votre bonus, vous serez automatiquement redirigé vers votre tableau de bord pour profiter de toutes les fonctionnalités.
               </p>
             </div>
           </div>
@@ -305,6 +363,104 @@ const AccountActivationPage: React.FC = () => {
           </button>
         </motion.div>
       </div>
+
+      {/* Modal pour choisir le numéro de téléphone (FreeMoPay USSD) */}
+      {showPhoneModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                <DevicePhoneMobileIcon className="w-6 h-6 mr-2 text-orange-500" />
+                Numéro de téléphone
+              </h3>
+              <button
+                onClick={() => setShowPhoneModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+              Le code USSD sera envoyé sur ce numéro. Assurez-vous qu'il est actif et que vous pouvez le recevoir.
+            </p>
+
+            <div className="space-y-4">
+              {/* Option : Utiliser le numéro du profil */}
+              {user?.phone && (
+                <label className="flex items-center space-x-3 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-orange-500 dark:hover:border-orange-500 transition-colors">
+                  <input
+                    type="radio"
+                    checked={useProfilePhone}
+                    onChange={() => {
+                      setUseProfilePhone(true);
+                      setPhoneNumber(user.phone || '');
+                    }}
+                    className="w-4 h-4 text-orange-500"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      Mon numéro de profil
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {user.phone}
+                    </div>
+                  </div>
+                </label>
+              )}
+
+              {/* Option : Utiliser un autre numéro */}
+              <label className="flex items-start space-x-3 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-orange-500 dark:hover:border-orange-500 transition-colors">
+                <input
+                  type="radio"
+                  checked={!useProfilePhone}
+                  onChange={() => setUseProfilePhone(false)}
+                  className="w-4 h-4 text-orange-500 mt-1"
+                />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 dark:text-white mb-2">
+                    Autre numéro
+                  </div>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      setPhoneNumber(e.target.value);
+                      setUseProfilePhone(false);
+                    }}
+                    placeholder="Ex: 651826475"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Format: 9 chiffres sans préfixe (ex: 651826475)
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="flex items-center space-x-3 mt-6">
+              <button
+                onClick={() => setShowPhoneModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => processActivation(phoneNumber)}
+                disabled={!phoneNumber || phoneNumber.length < 9}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-lg hover:from-orange-500 hover:to-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Continuer
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

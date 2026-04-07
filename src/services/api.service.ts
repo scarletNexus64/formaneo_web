@@ -89,9 +89,17 @@ class ApiService {
           switch (error.response.status) {
             case 401:
               // Unauthorized - redirect to login
-              localStorage.removeItem('authToken');
-              window.location.href = '/login';
-              toast.error('Session expirée, veuillez vous reconnecter');
+              // Avoid logout loop: only logout if we're not already on login page
+              const currentPath = window.location.pathname;
+              if (currentPath !== '/login') {
+                console.error('❌ 401 Unauthorized - Logging out user', {
+                  url: error.config?.url,
+                  currentPath
+                });
+                localStorage.removeItem('authToken');
+                window.location.href = '/login';
+                toast.error('Session expirée, veuillez vous reconnecter');
+              }
               break;
             case 403:
               const accountStatus = error.response.data?.account_status;

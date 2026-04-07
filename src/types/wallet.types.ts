@@ -24,6 +24,8 @@ export interface DepositResponse {
   payment_url?: string;
   payment_token?: string;
   message?: string;
+  provider?: 'freemopay' | 'cinetpay' | null;
+  ussd_mode?: boolean;
 }
 
 export interface WithdrawalResponse {
@@ -34,6 +36,8 @@ export interface WithdrawalResponse {
   new_balance?: number;
   processing_mode?: string;
   isTimeout?: boolean;
+  provider?: 'freemopay' | 'cinetpay' | null;
+  ussd_mode?: boolean;
 }
 
 export interface TransactionStatusResponse {

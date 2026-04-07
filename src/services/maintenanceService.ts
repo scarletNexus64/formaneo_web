@@ -12,10 +12,12 @@ class MaintenanceService {
     message?: string;
   }> {
     try {
+      console.log('🔍 Checking maintenance status from API...');
       const response = await apiService.get(ENDPOINTS.MAINTENANCE.STATUS);
 
       // Simple approach: API always returns 200 OK with maintenance flag
       const data = response.data;
+      console.log('📥 Received maintenance data:', data);
 
       if (data.maintenance === true) {
         console.log('🔧 Maintenance mode is ACTIVE', {
@@ -37,7 +39,12 @@ class MaintenanceService {
 
     } catch (error: any) {
       // For any error, assume not in maintenance mode to avoid blocking users
-      console.warn('⚠️ Failed to check maintenance status:', error);
+      console.error('⚠️ Failed to check maintenance status:', error);
+      console.error('⚠️ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       return {
         inMaintenance: false,
       };

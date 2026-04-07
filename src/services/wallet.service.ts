@@ -9,8 +9,14 @@ import {
   WithdrawalSettings
 } from '../types/wallet.types';
 
+export interface PaymentProviderInfo {
+  provider: 'freemopay' | 'cinetpay' | null;
+  ussd_mode: boolean;
+  web_portal: boolean;
+}
+
 class WalletService {
-  
+
   /**
    * Récupère les informations du wallet de l'utilisateur
    */
@@ -22,6 +28,25 @@ class WalletService {
     } catch (error) {
       console.error('Erreur lors de la récupération des informations du wallet:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Récupère le provider de paiement actif (FreeMoPay ou CinetPay)
+   */
+  async getPaymentProvider(): Promise<PaymentProviderInfo> {
+    try {
+      const response = await apiService.get('/wallet/payment-provider');
+      console.log('💳 Provider de paiement actif:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération du provider:', error);
+      // Retourner CinetPay par défaut en cas d'erreur (pour compatibilité)
+      return {
+        provider: 'cinetpay',
+        ussd_mode: false,
+        web_portal: true
+      };
     }
   }
 
@@ -66,23 +91,34 @@ class WalletService {
   }
 
   /**
-   * Initie un dépôt via CinetPay
+   * Initie un dépôt (FreeMoPay ou CinetPay selon la config)
    */
   async initiateDeposit(amount: number, phoneNumber?: string): Promise<DepositResponse> {
     try {
+      // Détecter le provider actif
+      const providerInfo = await this.getPaymentProvider();
+
       const payload: any = { amount };
       if (phoneNumber && phoneNumber.trim()) {
         payload.phone_number = phoneNumber;
       }
 
-      const response = await apiService.post('/cinetpay/deposit/initiate', payload);
+      // Choisir l'endpoint selon le provider
+      let endpoint = '/cinetpay/deposit/initiate'; // Par défaut CinetPay
+      if (providerInfo.provider === 'freemopay') {
+        endpoint = '/freemopay/deposit/initiate';
+      }
+
+      console.log(`💳 Initiation dépôt via ${providerInfo.provider}:`, payload);
+
+      const response = await apiService.post(endpoint, payload);
       return response.data;
     } catch (error: any) {
       console.error('Erreur lors de l\'initiation du dépôt:', error);
       console.error('Détails de l\'erreur:', error.response?.data);
       console.error('Status code:', error.response?.status);
       console.error('Request payload:', { amount, phoneNumber });
-      
+
       // Afficher les erreurs de validation spécifiques
       if (error.response?.status === 422 && error.response?.data?.errors) {
         const validationErrors = Object.values(error.response.data.errors).flat();
@@ -91,7 +127,7 @@ class WalletService {
           message: validationErrors.join(', ')
         };
       }
-      
+
       return {
         success: false,
         message: error.response?.data?.message || error.message || 'Erreur lors de l\'initiation du dépôt'
@@ -101,10 +137,23 @@ class WalletService {
 
   /**
    * Vérifie le statut d'une transaction de dépôt
+   * Détecte automatiquement le provider (FreeMoPay ou CinetPay)
    */
   async checkDepositStatus(transactionId: string): Promise<TransactionStatusResponse> {
     try {
-      const response = await apiService.post('/cinetpay/check-status', {
+      // Récupérer le provider depuis le localStorage (si disponible)
+      const provider = localStorage.getItem('deposit_provider');
+
+      let endpoint = '/cinetpay/check-status'; // Par défaut CinetPay
+
+      // Si FreeMoPay, utiliser l'endpoint FreeMoPay
+      if (provider === 'freemopay') {
+        endpoint = '/freemopay/check-status';
+      }
+
+      console.log('🔍 Vérification statut dépôt:', { transactionId, provider, endpoint });
+
+      const response = await apiService.post(endpoint, {
         transaction_id: transactionId
       });
       return response.data;
@@ -120,30 +169,36 @@ class WalletService {
   }
 
   /**
-   * Initie un retrait
+   * Initie un retrait (FreeMoPay ou CinetPay selon la config)
    * @param operator - Code opérateur optionnel (null pour détection automatique par CinetPay)
    */
   async initiateWithdrawal(amount: number, phoneNumber: string, operator: string | null = null): Promise<WithdrawalResponse> {
     try {
-      // Utiliser l'endpoint CinetPay comme dans l'app mobile
+      // Détecter le provider actif
+      const providerInfo = await this.getPaymentProvider();
+
       const payload: any = {
         amount,
         phone_number: phoneNumber,
       };
 
-      // Si opérateur est spécifié et n'est pas AUTO, l'inclure dans la requête
-      // Pour le Cameroun, ne pas envoyer d'opérateur (CinetPay détecte automatiquement)
-      if (operator && operator !== 'AUTO') {
+      // Si opérateur est spécifié et n'est pas AUTO, l'inclure (CinetPay uniquement)
+      if (operator && operator !== 'AUTO' && providerInfo.provider === 'cinetpay') {
         payload.operator = operator;
       }
-      
-      console.log('🏦 Payload retrait:', payload);
-      
-      const response = await apiService.post('/transfer/external', payload);
-      return response.data;
+
+      console.log(`🏦 Initiation retrait via ${providerInfo.provider}:`, payload);
+
+      // Utiliser l'endpoint unifié /wallet/withdraw qui route automatiquement
+      const response = await apiService.post('/wallet/withdraw', payload);
+      return {
+        ...response.data,
+        provider: providerInfo.provider,
+        ussd_mode: providerInfo.ussd_mode
+      };
     } catch (error: any) {
       console.error('Erreur lors de l\'initiation du retrait:', error);
-      
+
       // Gérer spécifiquement les timeouts
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         return {
@@ -152,7 +207,7 @@ class WalletService {
           isTimeout: true
         };
       }
-      
+
       return {
         success: false,
         message: error.response?.data?.message || error.message || 'Erreur lors de l\'initiation du retrait'

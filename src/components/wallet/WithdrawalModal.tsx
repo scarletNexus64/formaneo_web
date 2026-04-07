@@ -26,6 +26,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
   });
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [cinetpayNotification, setCinetpayNotification] = useState<string | null>(null);
+  const [paymentProvider, setPaymentProvider] = useState<'freemopay' | 'cinetpay' | null>(null);
 
   // Récupérer les paramètres de retrait et la notification au chargement du composant
   useEffect(() => {
@@ -51,9 +52,19 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
       }
     };
 
+    const fetchPaymentProvider = async () => {
+      try {
+        const providerInfo = await walletService.getPaymentProvider();
+        setPaymentProvider(providerInfo.provider);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du provider:', error);
+      }
+    };
+
     if (isOpen) {
       fetchWithdrawalSettings();
       fetchCinetPayNotification();
+      fetchPaymentProvider();
     }
   }, [isOpen]);
 
@@ -125,17 +136,24 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
       const result = await walletService.initiateWithdrawal(
         numericAmount,
         formattedPhone,
-        null // Pas d'opérateur - CinetPay détecte automatiquement
+        null // Pas d'opérateur - Détection automatique (CinetPay et FreeMoPay)
       );
-      
+
       if (result.success) {
-        if (result.isTimeout) {
-          // Cas spécial pour les timeouts - message plus informatif
+        if (result.ussd_mode) {
+          // Mode USSD (FreeMoPay) - Message différent
+          toast.success(
+            'Retrait initié ! 📱\n\nVous allez recevoir un code USSD sur votre téléphone. Composez ce code pour finaliser le retrait.\n\nL\'argent sera envoyé sur votre compte Mobile Money dans quelques instants après validation.',
+            { duration: 8000 }
+          );
+        } else if (result.isTimeout) {
+          // Cas spécial pour les timeouts
           toast.success(
             'Retrait initié avec succès ! \n\nLe traitement se fait en arrière-plan. Consultez l\'historique des transactions pour suivre l\'avancement.',
             { duration: 6000 }
           );
         } else {
+          // Mode portail web (CinetPay) ou autre
           toast.success(result.message || 'Retrait initié avec succès !');
         }
         onSuccess();
@@ -248,10 +266,19 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
             </p>
           </div>
 
-          {/* Information sur le traitement */}
+          {/* Information sur le traitement selon le provider */}
           <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
             <p className="text-blue-800 dark:text-blue-200 text-sm">
-              ⏰ <strong>Votre demande de retrait sera traitée sous 24 heures maximum.</strong>
+              {paymentProvider === 'freemopay' ? (
+                <>
+                  📱 <strong>Retrait via USSD (FreeMoPay)</strong><br />
+                  Vous recevrez un code USSD sur votre téléphone à composer pour finaliser le retrait.
+                </>
+              ) : (
+                <>
+                  ⏰ <strong>Votre demande de retrait sera traitée sous 24 heures maximum.</strong>
+                </>
+              )}
             </p>
           </div>
 

@@ -7,6 +7,7 @@ interface UseActivationStatusProps {
   transactionId: string | null;
   onSuccess?: () => void;
   onFailure?: () => void;
+  navigate?: (path: string) => void;
 }
 
 interface ActivationStatusState {
@@ -27,7 +28,8 @@ interface ActivationStatusState {
 export const useActivationStatus = ({
   transactionId,
   onSuccess,
-  onFailure
+  onFailure,
+  navigate
 }: UseActivationStatusProps) => {
   const { fetchUser } = useAuthStore();
   const [state, setState] = useState<ActivationStatusState>({
@@ -52,20 +54,42 @@ export const useActivationStatus = ({
     }
 
     try {
-      console.log(`🔍 Vérification du statut d'activation (tentative ${state.checkCount + 1})`, { transactionId });
-      
+      const checkStartTime = Date.now();
+      console.log(`🔍 Vérification du statut d'activation (tentative ${state.checkCount + 1})`, {
+        transactionId,
+        timestamp: new Date().toISOString(),
+        timeSinceStart: checkStartTime
+      });
+
       const response = await activationService.checkActivationStatus(transactionId);
-      
-      setState(prev => ({ 
-        ...prev, 
+
+      const checkDuration = Date.now() - checkStartTime;
+
+      setState(prev => ({
+        ...prev,
         checkCount: prev.checkCount + 1,
-        error: null 
+        error: null
       }));
 
-      console.log('📊 Réponse du statut d\'activation:', response);
+      console.log('📊 Réponse du statut d\'activation:', {
+        ...response,
+        checkDuration: `${checkDuration}ms`,
+        timestamp: new Date().toISOString()
+      });
 
       if (response.success) {
-        if (response.status === 'completed') {
+        // Utiliser current_status (normalisé en lowercase) ou status
+        const normalizedStatus = response.current_status || response.status?.toLowerCase();
+
+        console.log('🔄 Analyse du statut:', {
+          normalizedStatus,
+          rawStatus: response.status,
+          cinetpayStatus: response.cinetpay_status,
+          paymentMethod: response.payment_method,
+          timestamp: new Date().toISOString()
+        });
+
+        if (normalizedStatus === 'completed' || response.status === 'completed') {
           // Activation réussie - Appel automatique du claim bonus
           console.log('✅ Activation réussie, réclamation automatique du bonus...');
 
@@ -76,8 +100,14 @@ export const useActivationStatus = ({
             isLoading: true
           }));
 
-          // Rafraîchir les données utilisateur
-          await fetchUser();
+          // Rafraîchir les données utilisateur (ne pas bloquer si échoue)
+          try {
+            await fetchUser();
+            console.log('✅ Données utilisateur rafraîchies après activation');
+          } catch (error) {
+            console.error('⚠️ Échec du rafraîchissement utilisateur (non bloquant):', error);
+            // Ne pas bloquer le flux si fetchUser échoue
+          }
 
           // Réclamer automatiquement le bonus (une seule fois)
           if (!bonusClaimAttempted.current) {
@@ -125,12 +155,22 @@ export const useActivationStatus = ({
                   }
                 }
 
-                // Rafraîchir les données utilisateur après l'ajout du bonus
-                await fetchUser();
+                // Rafraîchir les données utilisateur après l'ajout du bonus (ne pas bloquer si échoue)
+                try {
+                  await fetchUser();
+                  console.log('✅ Données utilisateur rafraîchies après réclamation du bonus');
+                } catch (error) {
+                  console.error('⚠️ Échec du rafraîchissement utilisateur après bonus (non bloquant):', error);
+                  // Ne pas bloquer la redirection si fetchUser échoue
+                }
 
                 // Redirection vers le dashboard après 3 secondes
                 setTimeout(() => {
-                  window.location.href = '/dashboard';
+                  if (navigate) {
+                    navigate('/dashboard');
+                  } else {
+                    window.location.href = '/dashboard';
+                  }
                 }, 3000);
 
                 onSuccess?.();
@@ -153,7 +193,11 @@ export const useActivationStatus = ({
 
                 // Redirection vers le dashboard
                 setTimeout(() => {
-                  window.location.href = '/dashboard';
+                  if (navigate) {
+                    navigate('/dashboard');
+                  } else {
+                    window.location.href = '/dashboard';
+                  }
                 }, 2000);
 
                 onSuccess?.();
@@ -172,7 +216,11 @@ export const useActivationStatus = ({
               toast.error('Compte activé mais erreur lors de la réclamation du bonus. Contactez le support.');
 
               setTimeout(() => {
-                window.location.href = '/dashboard';
+                if (navigate) {
+                  navigate('/dashboard');
+                } else {
+                  window.location.href = '/dashboard';
+                }
               }, 3000);
 
               onSuccess?.();
@@ -180,24 +228,41 @@ export const useActivationStatus = ({
           }
 
           return;
-        } else if (response.status === 'failed' || response.status === 'cancelled') {
+        } else if (normalizedStatus === 'failed' || normalizedStatus === 'cancelled') {
           // Activation échouée
-          setState(prev => ({ 
-            ...prev, 
-            status: 'failed', 
+          console.log('❌ Activation échouée:', {
+            normalizedStatus,
+            rawStatus: response.status,
+            cinetpayStatus: response.cinetpay_status,
+            paymentMethod: response.payment_method,
+            message: response.message,
+            fullResponse: response,
+            timestamp: new Date().toISOString()
+          });
+
+          setState(prev => ({
+            ...prev,
+            status: 'failed',
             isLoading: false,
             error: response.message || 'Le paiement a échoué'
           }));
-          
+
           toast.error('❌ Le paiement a échoué');
           onFailure?.();
           return;
+        } else if (normalizedStatus === 'pending') {
+          console.log('⏳ Paiement toujours en attente:', {
+            normalizedStatus,
+            cinetpayStatus: response.cinetpay_status,
+            checkCount: state.checkCount + 1,
+            timestamp: new Date().toISOString()
+          });
         }
       }
 
       // Si toujours en attente, continuer à vérifier
-      setState(prev => ({ 
-        ...prev, 
+      setState(prev => ({
+        ...prev,
         status: 'pending'
       }));
 
@@ -209,7 +274,7 @@ export const useActivationStatus = ({
         checkCount: prev.checkCount + 1
       }));
     }
-  }, [transactionId, state.checkCount, fetchUser, onSuccess, onFailure]);
+  }, [transactionId, state.checkCount, fetchUser, onSuccess, onFailure, navigate]);
 
   useEffect(() => {
     if (!transactionId) return;

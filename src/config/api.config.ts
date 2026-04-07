@@ -1,5 +1,5 @@
 
-// const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001/api/v1/';
+// const BASE_URL = process.env.REACT_APP_API_URL || 'http://10.72.15.28:8001/api/v1/';
 const BASE_URL = process.env.REACT_APP_API_URL || 'https://formaneo-adminpanel.shop/api/v1';
 
 console.log('🌐 API Configuration initialized:', {

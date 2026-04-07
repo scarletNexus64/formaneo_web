@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import maintenanceService from '../../services/maintenanceService';
 
 interface MaintenancePageProps {
   title?: string;
@@ -25,6 +26,42 @@ const MaintenancePage: React.FC<MaintenancePageProps> = () => {
         console.error('Failed to parse maintenance info:', e);
       }
     }
+
+    // Check maintenance status periodically (every 30 seconds)
+    const checkMaintenanceInterval = setInterval(async () => {
+      console.log('🔄 Checking if maintenance mode is still active...');
+      try {
+        const status = await maintenanceService.checkMaintenanceStatus();
+        if (!status.inMaintenance) {
+          console.log('✅ Maintenance mode is OFF, redirecting to home...');
+          maintenanceService.clearMaintenanceInfo();
+          window.location.href = '/';
+        }
+      } catch (error) {
+        console.error('Error checking maintenance status:', error);
+      }
+    }, 30000); // Check every 30 seconds
+
+    // Initial check after 5 seconds
+    const initialCheckTimeout = setTimeout(async () => {
+      console.log('🔄 Initial maintenance check...');
+      try {
+        const status = await maintenanceService.checkMaintenanceStatus();
+        if (!status.inMaintenance) {
+          console.log('✅ Maintenance mode is OFF, redirecting to home...');
+          maintenanceService.clearMaintenanceInfo();
+          window.location.href = '/';
+        }
+      } catch (error) {
+        console.error('Error checking maintenance status:', error);
+      }
+    }, 5000);
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(checkMaintenanceInterval);
+      clearTimeout(initialCheckTimeout);
+    };
   }, []);
 
   const { title, message } = maintenanceInfo;

@@ -246,9 +246,15 @@ export interface AccountActivationInfo {
 }
 
 export interface ActivationPaymentResponse {
+  success: boolean;
   transaction_id: string;
-  payment_url: string;
-  payment_token: string;
+  payment_url?: string;
+  payment_token?: string;
+  message?: string;
+  freemopay_reference?: string;
+  provider?: 'freemopay' | 'cinetpay' | null;
+  ussd_mode?: boolean;
+  web_portal?: boolean;
 }
 
 // Challenge Types

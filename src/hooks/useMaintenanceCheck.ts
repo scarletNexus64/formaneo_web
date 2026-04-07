@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import maintenanceService from '../services/maintenanceService';
 
@@ -11,18 +11,23 @@ export const useMaintenanceCheck = () => {
   const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
   const [inMaintenance, setInMaintenance] = useState(false);
+  const hasChecked = useRef(false); // Prevent multiple checks
 
   useEffect(() => {
-    // Skip check if already on maintenance page
-    if (location.pathname === '/maintenance') {
-      setIsChecking(false);
-      setInMaintenance(true);
+    // Only run once on mount
+    if (hasChecked.current) {
+      console.log('🔍 Maintenance check already done, skipping...');
       return;
     }
 
+    hasChecked.current = true;
+
     const checkMaintenance = async () => {
       try {
+        console.log('🔍 useMaintenanceCheck: Starting check from path:', location.pathname);
         const status = await maintenanceService.checkMaintenanceStatus();
+
+        console.log('🔍 useMaintenanceCheck: Status received:', status);
 
         if (status.inMaintenance) {
           console.warn('🛠️ App is in maintenance mode, redirecting...');
@@ -33,14 +38,23 @@ export const useMaintenanceCheck = () => {
             maintenanceService.storeMaintenanceInfo(status.title, status.message);
           }
 
-          // Redirect to maintenance page
-          navigate('/maintenance', { replace: true });
+          // Redirect to maintenance page only if not already there
+          if (location.pathname !== '/maintenance') {
+            navigate('/maintenance', { replace: true });
+          }
         } else {
           console.log('✅ App is not in maintenance mode');
           setInMaintenance(false);
+
+          // If we're on the maintenance page but maintenance is OFF, redirect to home
+          if (location.pathname === '/maintenance') {
+            console.log('🏠 Redirecting from maintenance page to home');
+            maintenanceService.clearMaintenanceInfo();
+            navigate('/', { replace: true });
+          }
         }
       } catch (error) {
-        console.error('Error checking maintenance status:', error);
+        console.error('❌ Error checking maintenance status:', error);
         // If check fails, assume not in maintenance to avoid blocking users
         setInMaintenance(false);
       } finally {
@@ -49,7 +63,8 @@ export const useMaintenanceCheck = () => {
     };
 
     checkMaintenance();
-  }, [navigate, location.pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ✅ Empty array - only run once on mount
 
   return { isChecking, inMaintenance };
 };

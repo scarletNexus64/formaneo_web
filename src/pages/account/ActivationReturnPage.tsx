@@ -22,13 +22,16 @@ const ActivationReturnPage: React.FC = () => {
 
   const activationStatus = useActivationStatus({
     transactionId,
+    navigate, // Pass navigate function to prevent page reload
     onSuccess: () => {
       // Nettoyage du localStorage
       localStorage.removeItem('activation_transaction_id');
+      localStorage.removeItem('activation_provider');
     },
     onFailure: () => {
       // Nettoyage du localStorage
       localStorage.removeItem('activation_transaction_id');
+      localStorage.removeItem('activation_provider');
     }
   });
 
@@ -73,7 +76,7 @@ const ActivationReturnPage: React.FC = () => {
                 Vérification de votre paiement...
               </h2>
               <p className="text-gray-600 mb-4">
-                Veuillez patienter pendant que nous vérifions votre transaction CinetPay
+                Veuillez patienter pendant que nous vérifions votre transaction
               </p>
             </>
           )}
@@ -166,7 +169,7 @@ const ActivationReturnPage: React.FC = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => window.location.href = '/dashboard'}
+              onClick={() => navigate('/dashboard')}
               className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-400 to-red-500 text-white font-medium rounded-lg hover:from-orange-500 hover:to-red-600 transition-all duration-200 shadow-lg"
             >
               Accéder au tableau de bord maintenant

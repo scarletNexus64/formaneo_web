@@ -1,4 +1,5 @@
 import apiService from './api.service';
+import walletService from './wallet.service';
 import { AccountActivationInfo, ActivationPaymentResponse } from '../types';
 
 interface ActivationStatusResponse {
@@ -6,6 +7,10 @@ interface ActivationStatusResponse {
   status: 'pending' | 'completed' | 'failed' | 'cancelled';
   message?: string;
   current_status?: string;
+  cinetpay_status?: string;
+  payment_method?: string;
+  amount?: string;
+  created_at?: string;
   debug?: any;
 }
 
@@ -42,15 +47,53 @@ class ActivationService {
 
   /**
    * Vérifie le statut d'une transaction d'activation
+   * Détecte automatiquement le provider (FreeMoPay ou CinetPay)
    */
   async checkActivationStatus(transactionId: string): Promise<ActivationStatusResponse> {
     try {
-      const response = await apiService.post('/cinetpay/check-status', {
+      const startTime = Date.now();
+
+      // Récupérer le provider depuis le localStorage
+      const provider = localStorage.getItem('activation_provider');
+
+      let endpoint = '/cinetpay/check-status'; // Par défaut CinetPay
+
+      // Si FreeMoPay, utiliser l'endpoint FreeMoPay
+      if (provider === 'freemopay') {
+        endpoint = '/freemopay/check-status';
+      }
+
+      console.log('🔍 Vérification statut activation:', {
+        transactionId,
+        provider,
+        endpoint,
+        timestamp: new Date().toISOString()
+      });
+
+      const response = await apiService.post(endpoint, {
         transaction_id: transactionId
       });
+
+      const duration = Date.now() - startTime;
+
+      console.log('✅ Réponse reçue du backend:', {
+        success: response.data.success,
+        status: response.data.status,
+        cinetpayStatus: response.data.cinetpay_status,
+        paymentMethod: response.data.payment_method,
+        duration: `${duration}ms`,
+        timestamp: new Date().toISOString(),
+        fullData: response.data
+      });
+
       return response.data;
     } catch (error: any) {
-      console.error('Erreur lors de la vérification du statut d\'activation:', error);
+      console.error('❌ Erreur lors de la vérification du statut d\'activation:', {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        timestamp: new Date().toISOString()
+      });
       return {
         success: false,
         status: 'pending',
@@ -87,6 +130,13 @@ class ActivationService {
       '/account/activation/claim-welcome-bonus'
     );
     return response.data;
+  }
+
+  /**
+   * Obtenir le provider de paiement actif
+   */
+  async getPaymentProvider() {
+    return walletService.getPaymentProvider();
   }
 }
 

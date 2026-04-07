@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SimpleModal from './SimpleModal';
-import walletService from '../../services/wallet.service';
+import walletService, { PaymentProviderInfo } from '../../services/wallet.service';
 import toast from 'react-hot-toast';
 
 interface DepositModalProps {
@@ -15,6 +15,23 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
   const [isLoading, setIsLoading] = useState(false);
   const [isWaitingForPayment, setIsWaitingForPayment] = useState(false);
   const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
+  const [providerInfo, setProviderInfo] = useState<PaymentProviderInfo | null>(null);
+
+  // Charger les informations du provider au montage du composant
+  useEffect(() => {
+    const loadProviderInfo = async () => {
+      try {
+        const info = await walletService.getPaymentProvider();
+        setProviderInfo(info);
+      } catch (error) {
+        console.error('Erreur lors du chargement du provider:', error);
+      }
+    };
+
+    if (isOpen) {
+      loadProviderInfo();
+    }
+  }, [isOpen]);
 
   const formatAmount = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
@@ -38,34 +55,57 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validation = validateAmount();
     if (!validation.valid) {
       toast.error(validation.message || 'Montant invalide');
       return;
     }
 
+    // Pour FreeMoPay, le numéro de téléphone est obligatoire
+    if (providerInfo?.ussd_mode && !phoneNumber.trim()) {
+      toast.error('Le numéro de téléphone est obligatoire pour FreeMoPay');
+      return;
+    }
+
     setIsLoading(true);
-    
+
     try {
       const numericAmount = getNumericAmount();
-      const formattedPhone = phoneNumber.trim() 
+      const formattedPhone = phoneNumber.trim()
         ? walletService.formatPhoneNumber(phoneNumber)
         : undefined;
 
       const result = await walletService.initiateDeposit(numericAmount, formattedPhone);
-      
-      if (result.success && result.payment_url) {
+
+      if (result.success) {
         setPendingTransactionId(result.transaction_id || null);
         setIsWaitingForPayment(true);
-        
-        toast.success('Redirection vers CinetPay...');
-        
-        // Ouvrir l'URL de paiement
-        await walletService.openPaymentUrl(result.payment_url);
-        
-        // Commencer la vérification du statut
-        startStatusCheck(result.transaction_id!);
+
+        // Sauvegarder le provider pour la vérification du statut
+        if (result.provider) {
+          localStorage.setItem('deposit_provider', result.provider);
+        }
+
+        if (providerInfo?.ussd_mode) {
+          // Mode USSD (FreeMoPay) - Pas de redirection
+          toast.success(result.message || 'Code USSD envoyé sur votre téléphone');
+          // Commencer la vérification du statut
+          startStatusCheck(result.transaction_id!);
+        } else if (result.payment_url) {
+          // Mode Web Portal (CinetPay) - Redirection
+          toast.success('Redirection vers le portail de paiement...');
+
+          // Ouvrir l'URL de paiement
+          await walletService.openPaymentUrl(result.payment_url);
+
+          // Commencer la vérification du statut
+          startStatusCheck(result.transaction_id!);
+        } else {
+          toast.error('Erreur: URL de paiement manquante');
+          setIsWaitingForPayment(false);
+          setPendingTransactionId(null);
+        }
       } else {
         toast.error(result.message || 'Erreur lors de l\'initiation du dépôt');
       }
@@ -81,12 +121,14 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
     const checkStatus = async () => {
       try {
         const result = await walletService.checkDepositStatus(transactionId);
-        
+
         if (result.success) {
           if (result.status === 'completed') {
             toast.success('Dépôt effectué avec succès !');
             setIsWaitingForPayment(false);
             setPendingTransactionId(null);
+            // Nettoyer le localStorage
+            localStorage.removeItem('deposit_provider');
             onSuccess();
             handleClose();
             return true;
@@ -94,6 +136,8 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
             toast.error('Le paiement a échoué ou été annulé');
             setIsWaitingForPayment(false);
             setPendingTransactionId(null);
+            // Nettoyer le localStorage
+            localStorage.removeItem('deposit_provider');
             return true;
           }
         }
@@ -127,21 +171,25 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
 
   const handleManualCheck = async () => {
     if (!pendingTransactionId) return;
-    
+
     try {
       const result = await walletService.checkDepositStatus(pendingTransactionId);
-      
+
       if (result.success) {
         if (result.status === 'completed') {
           toast.success('Dépôt confirmé !');
           setIsWaitingForPayment(false);
           setPendingTransactionId(null);
+          // Nettoyer le localStorage
+          localStorage.removeItem('deposit_provider');
           onSuccess();
           handleClose();
         } else if (result.status === 'failed' || result.status === 'cancelled') {
           toast.error('Le paiement a échoué ou été annulé');
           setIsWaitingForPayment(false);
           setPendingTransactionId(null);
+          // Nettoyer le localStorage
+          localStorage.removeItem('deposit_provider');
         } else {
           toast('Paiement toujours en attente...', { icon: '⏳' });
         }
@@ -159,6 +207,8 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
       setPhoneNumber('');
       setIsLoading(false);
       setPendingTransactionId(null);
+      // Nettoyer le localStorage
+      localStorage.removeItem('deposit_provider');
       onClose();
     }
   };
@@ -178,7 +228,11 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
               <div>
                 <p className="text-blue-800 font-medium">Paiement en cours...</p>
-                <p className="text-blue-600 text-sm">Avez-vous terminé votre paiement ?</p>
+                <p className="text-blue-600 text-sm">
+                  {providerInfo?.ussd_mode
+                    ? 'Avez-vous composé le code USSD reçu ?'
+                    : 'Avez-vous terminé votre paiement ?'}
+                </p>
               </div>
             </div>
           </div>
@@ -233,7 +287,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
 
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Numéro de téléphone (optionnel)
+                Numéro de téléphone {providerInfo?.ussd_mode && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="tel"
@@ -242,13 +296,20 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess 
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="Ex: 6XXXXXXXX"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                required={providerInfo?.ussd_mode}
               />
-              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">Pour le paiement par Mobile Money</p>
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                {providerInfo?.ussd_mode
+                  ? 'Numéro pour recevoir le code USSD'
+                  : 'Pour le paiement par Mobile Money (optionnel)'}
+              </p>
             </div>
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <p className="text-green-800 text-sm">
-                💳 Vous serez redirigé vers une passerelle pour effectuer le paiement sécurisé
+                {providerInfo?.ussd_mode
+                  ? '📱 Un code USSD sera envoyé sur votre téléphone. Composez le code pour compléter le paiement.'
+                  : '💳 Vous serez redirigé vers une passerelle pour effectuer le paiement sécurisé'}
               </p>
             </div>
           </div>

@@ -149,7 +149,7 @@ const AuthTest: React.FC = () => {
       <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
         <h3 className="text-lg font-semibold text-gray-800 mb-2">Statut de l'API</h3>
         <p className="text-sm text-gray-600">
-          URL API: {process.env.REACT_APP_API_URL || 'http://localhost:8001/api/v1'}
+          URL API: {process.env.REACT_APP_API_URL || 'http://10.72.15.28:8001/api/v1'}
         </p>
         <p className="text-sm text-gray-600">
           Statut: <span className={isLoading ? 'text-yellow-600' : 'text-gray-600'}>
