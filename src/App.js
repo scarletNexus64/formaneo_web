@@ -23,6 +23,8 @@ import QuizPlayPage from './pages/quiz/QuizPlayPage';
 import QuizHistoryPage from './pages/quiz/QuizHistoryPage';
 import QuizLeaderboardPage from './pages/quiz/QuizLeaderboardPage';
 import ChallengesPage from './pages/challenges/ChallengesPage';
+import CasinoPage from './pages/casino/CasinoPage';
+import RoueDeLaFortuneGame from './pages/casino/RoueDeLaFortuneGame';
 import AccountActivationPage from './pages/account/AccountActivationPage';
 import ActivationReturnPage from './pages/account/ActivationReturnPage';
 import AffiliatePageAuth from './pages/affiliate/AffiliatePage';
@@ -508,6 +510,16 @@ const AppContent = () => {
       <Route path="/quizz/leaderboard" element={
         <ProtectedRoute>
           <QuizLeaderboardPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/casino" element={
+        <ProtectedRoute>
+          <CasinoPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/casino/roue-fortune" element={
+        <ProtectedRoute>
+          <RoueDeLaFortuneGame />
         </ProtectedRoute>
       } />
       <Route path="/challenges" element={

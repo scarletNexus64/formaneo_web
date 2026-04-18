@@ -14,7 +14,8 @@ import {
   MoonIcon,
   SparklesIcon,
   BellIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  FireIcon
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../store/authStore';
 import { useTheme } from '../contexts/ThemeContext';
@@ -37,6 +38,7 @@ const Navigation = () => {
     { path: '/dashboard', label: 'Dashboard', icon: HomeIcon },
     { path: '/formations', label: 'Formations', icon: AcademicCapIcon },
     { path: '/quizz', label: 'Quizz', icon: PuzzlePieceIcon },
+    { path: '/casino', label: 'Casino', icon: FireIcon, badge: 'Nouveau', badgeColor: 'bg-gradient-to-r from-yellow-400 to-orange-500' },
     { path: '/challenges', label: 'Défis', icon: TrophyIcon },
     { path: '/ebooks', label: 'Ebooks', icon: BookOpenIcon },
     { path: '/wallet', label: 'Portefeuille', icon: CurrencyDollarIcon },
@@ -73,7 +75,7 @@ const Navigation = () => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors relative ${
                       isActive(item.path)
                         ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
                         : 'text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -81,6 +83,11 @@ const Navigation = () => {
                   >
                     <Icon className="w-4 h-4 mr-2" />
                     {item.label}
+                    {item.badge && (
+                      <span className={`ml-2 px-2 py-0.5 text-[10px] font-bold text-white rounded-full ${item.badgeColor} animate-pulse`}>
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -149,7 +156,7 @@ const Navigation = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                  className={`flex items-center px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors relative ${
                     isActive(item.path)
                       ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
                       : 'text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -157,6 +164,11 @@ const Navigation = () => {
                 >
                   <Icon className="w-4 h-4 mr-1" />
                   {item.label}
+                  {item.badge && (
+                    <span className={`ml-1 px-1.5 py-0.5 text-[8px] font-bold text-white rounded-full ${item.badgeColor} animate-pulse`}>
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
