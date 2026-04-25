@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { /*PlusIcon,*/ MinusIcon } from '@heroicons/react/24/outline';
-// import DepositModal from './DepositModal';
+import { PlusIcon, MinusIcon } from '@heroicons/react/24/outline';
+import DepositModal from './DepositModal';
 import WithdrawalModal from './WithdrawalModal';
 import { WalletInfo } from '../../types/wallet.types';
 
@@ -11,13 +11,13 @@ interface WalletActionsProps {
   onWithdrawalTriggered?: () => void;
 }
 
-const WalletActions: React.FC<WalletActionsProps> = ({ 
-  walletInfo, 
-  onTransactionComplete, 
-  triggerWithdrawal = false, 
-  onWithdrawalTriggered 
+const WalletActions: React.FC<WalletActionsProps> = ({
+  walletInfo,
+  onTransactionComplete,
+  triggerWithdrawal = false,
+  onWithdrawalTriggered
 }) => {
-  // const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isWithdrawalModalOpen, setIsWithdrawalModalOpen] = useState(false);
 
   // En web, on peut retirer tout le solde (gains + bonus)
@@ -35,19 +35,19 @@ const WalletActions: React.FC<WalletActionsProps> = ({
     <>
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Actions rapides</h3>
-        
-        <div className="grid grid-cols-1 gap-4">
-          {/* Bouton Déposer - Commenté car non utilisé en web */}
-          {/* <button
+
+        <div className="grid grid-cols-2 gap-4">
+          {/* Bouton Déposer */}
+          <button
             onClick={() => setIsDepositModalOpen(true)}
-            className="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors group"
+            className="flex flex-col items-center p-4 bg-green-50 dark:bg-green-900 hover:bg-green-100 dark:hover:bg-green-800 rounded-lg border border-green-200 dark:border-green-700 transition-colors group"
           >
             <div className="p-2 bg-green-500 rounded-lg mb-2 group-hover:bg-green-600 transition-colors">
               <PlusIcon className="w-6 h-6 text-white" />
             </div>
-            <span className="text-green-700 font-medium">Déposer</span>
-            <span className="text-green-600 text-sm">Ajouter des fonds</span>
-          </button> */}
+            <span className="text-green-700 dark:text-green-300 font-medium">Déposer</span>
+            <span className="text-green-600 dark:text-green-400 text-sm">Ajouter des fonds</span>
+          </button>
 
           {/* Bouton Retirer */}
           <button
@@ -70,7 +70,7 @@ const WalletActions: React.FC<WalletActionsProps> = ({
               Retirer
             </span>
             <span className={`text-sm ${canWithdraw ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400 dark:text-gray-500'}`}>
-              {canWithdraw ? 'Vers Mobile Money' : 'Solde insuffisant'}
+              {canWithdraw ? 'Retirer mes fonds' : 'Solde insuffisant'}
             </span>
           </button>
 
@@ -86,12 +86,12 @@ const WalletActions: React.FC<WalletActionsProps> = ({
       </div>
 
       {/* Modals */}
-      {/* <DepositModal
+      <DepositModal
         isOpen={isDepositModalOpen}
         onClose={() => setIsDepositModalOpen(false)}
         onSuccess={onTransactionComplete}
-      /> */}
-      
+      />
+
       <WithdrawalModal
         isOpen={isWithdrawalModalOpen}
         onClose={() => setIsWithdrawalModalOpen(false)}

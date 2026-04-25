@@ -328,6 +328,323 @@ class WalletService {
       };
     }
   }
+
+  // ==================== PayPal Methods ====================
+
+  /**
+   * Crée un ordre PayPal pour un dépôt
+   */
+  async createPayPalOrder(amount: number): Promise<{
+    success: boolean;
+    payment_id?: number;
+    order_id?: string;
+    approval_url?: string;
+    amount_usd?: number;
+    message?: string;
+  }> {
+    try {
+      console.log('💳 Création ordre PayPal:', { amount });
+      const response = await apiService.post('/wallet/paypal/create-native-order', {
+        amount
+      });
+
+      if (response.data.success) {
+        return {
+          success: true,
+          payment_id: response.data.data.payment_id,
+          order_id: response.data.data.order_id,
+          approval_url: response.data.data.approval_url,
+          amount_usd: response.data.data.amount_usd,
+        };
+      }
+
+      return {
+        success: false,
+        message: response.data.message || 'Erreur lors de la création de l\'ordre PayPal'
+      };
+    } catch (error: any) {
+      console.error('Erreur création ordre PayPal:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erreur lors de la création de l\'ordre PayPal'
+      };
+    }
+  }
+
+  /**
+   * Capture un ordre PayPal après approbation de l'utilisateur
+   */
+  async capturePayPalOrder(paymentId: number, orderId: string): Promise<{
+    success: boolean;
+    payment_id?: number;
+    amount?: number;
+    new_balance?: number;
+    message?: string;
+  }> {
+    try {
+      console.log('✅ Capture ordre PayPal:', { paymentId, orderId });
+      const response = await apiService.post('/wallet/paypal/capture-native-order', {
+        payment_id: paymentId,
+        order_id: orderId
+      });
+
+      if (response.data.success) {
+        return {
+          success: true,
+          payment_id: response.data.data.payment_id,
+          amount: response.data.data.amount,
+          new_balance: response.data.data.new_balance,
+          message: response.data.message || 'Paiement effectué avec succès'
+        };
+      }
+
+      return {
+        success: false,
+        message: response.data.message || 'Erreur lors de la capture du paiement'
+      };
+    } catch (error: any) {
+      console.error('Erreur capture ordre PayPal:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erreur lors de la capture du paiement'
+      };
+    }
+  }
+
+  /**
+   * Crée un ordre PayPal pour l'activation de compte
+   */
+  async createPayPalAccountActivationOrder(amount: number): Promise<{
+    success: boolean;
+    payment_id?: number;
+    order_id?: string;
+    approval_url?: string;
+    amount_usd?: number;
+    message?: string;
+  }> {
+    try {
+      console.log('💳 Création ordre PayPal pour activation compte:', { amount });
+      const response = await apiService.post('/account-activation/paypal/create-order', {
+        amount
+      });
+
+      if (response.data.success) {
+        return {
+          success: true,
+          payment_id: response.data.data.payment_id,
+          order_id: response.data.data.order_id,
+          approval_url: response.data.data.approval_url,
+          amount_usd: response.data.data.amount_usd,
+        };
+      }
+
+      return {
+        success: false,
+        message: response.data.message || 'Erreur lors de la création de l\'ordre PayPal'
+      };
+    } catch (error: any) {
+      console.error('Erreur création ordre PayPal activation:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erreur lors de la création de l\'ordre PayPal'
+      };
+    }
+  }
+
+  /**
+   * Capture un ordre PayPal pour l'activation de compte
+   */
+  async capturePayPalAccountActivationOrder(paymentId: number, orderId: string): Promise<{
+    success: boolean;
+    message?: string;
+  }> {
+    try {
+      console.log('✅ Capture ordre PayPal activation:', { paymentId, orderId });
+      const response = await apiService.post('/account-activation/paypal/capture-order', {
+        payment_id: paymentId,
+        order_id: orderId
+      });
+
+      return {
+        success: response.data.success,
+        message: response.data.message || (response.data.success ? 'Compte activé avec succès' : 'Erreur lors de l\'activation')
+      };
+    } catch (error: any) {
+      console.error('Erreur capture ordre PayPal activation:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erreur lors de la capture du paiement'
+      };
+    }
+  }
+
+  /**
+   * Vérifie le statut d'un ordre PayPal (pour le polling)
+   */
+  async checkPayPalOrderStatus(orderId: string): Promise<{
+    success: boolean;
+    data?: {
+      payment?: any;
+      paypal_status?: string;
+      new_balance?: number;
+    };
+    message?: string;
+  }> {
+    try {
+      const response = await apiService.get(`/wallet/paypal/check-status/${orderId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Erreur vérification statut PayPal:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erreur lors de la vérification du statut'
+      };
+    }
+  }
+
+  // ==================== Crypto Payment Methods (NOWPayments) ====================
+
+  /**
+   * Crée un paiement crypto (NOWPayments) pour un dépôt
+   */
+  async createCryptoPayment(amount: number): Promise<{
+    success: boolean;
+    payment_id?: number;
+    nowpayments_payment_id?: string;
+    payment_url?: string;
+    amount_usd?: number;
+    crypto_amount?: string;
+    crypto_currency?: string;
+    expires_at?: string;
+    payment_status?: string;
+    message?: string;
+  }> {
+    try {
+      console.log('₿ Création paiement crypto (NOWPayments):', { amount });
+      const response = await apiService.post('/wallet/crypto/create-payment', {
+        amount
+      });
+
+      if (response.data.success) {
+        return {
+          success: true,
+          payment_id: response.data.data.payment_id,
+          nowpayments_payment_id: response.data.data.nowpayments_payment_id,
+          payment_url: response.data.data.payment_url,
+          amount_usd: response.data.data.amount_usd,
+          crypto_amount: response.data.data.crypto_amount,
+          crypto_currency: response.data.data.crypto_currency,
+          expires_at: response.data.data.expires_at,
+          payment_status: response.data.data.payment_status,
+        };
+      }
+
+      return {
+        success: false,
+        message: response.data.message || 'Erreur lors de la création du paiement crypto'
+      };
+    } catch (error: any) {
+      console.error('Erreur création paiement crypto:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erreur lors de la création du paiement crypto'
+      };
+    }
+  }
+
+  /**
+   * Vérifie le statut d'un paiement crypto (pour le polling)
+   */
+  async checkCryptoPaymentStatus(paymentId: string): Promise<{
+    success: boolean;
+    data?: {
+      payment?: any;
+      payment_status?: string;
+      mapped_status?: string;
+      new_balance?: number;
+      crypto_amount?: string;
+      crypto_currency?: string;
+    };
+    message?: string;
+  }> {
+    try {
+      const response = await apiService.get(`/wallet/crypto/check-status/${paymentId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Erreur vérification statut crypto:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erreur lors de la vérification du statut'
+      };
+    }
+  }
+
+  /**
+   * Annule un paiement crypto
+   */
+  async cancelCryptoPayment(paymentId: number): Promise<{
+    success: boolean;
+    message?: string;
+  }> {
+    try {
+      const response = await apiService.post(`/wallet/crypto/cancel/${paymentId}`);
+      return {
+        success: response.data.success,
+        message: response.data.message || (response.data.success ? 'Paiement annulé' : 'Erreur lors de l\'annulation')
+      };
+    } catch (error: any) {
+      console.error('Erreur annulation paiement crypto:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erreur lors de l\'annulation du paiement'
+      };
+    }
+  }
+
+  // ==================== Withdrawal Request Methods ====================
+
+  /**
+   * Crée une demande de retrait (crypto, PayPal, carte bancaire)
+   */
+  async createWithdrawalRequest(
+    paymentMethod: string,
+    amount: number,
+    paymentDetails: any
+  ): Promise<{
+    success: boolean;
+    message?: string;
+    withdrawal_request?: any;
+    whatsapp_url?: string;
+  }> {
+    try {
+      console.log('📤 Création demande de retrait:', { paymentMethod, amount, paymentDetails });
+      const response = await apiService.post('/withdrawal-requests', {
+        payment_method: paymentMethod,
+        amount,
+        payment_details: paymentDetails
+      });
+
+      if (response.data.success) {
+        return {
+          success: true,
+          message: response.data.message,
+          withdrawal_request: response.data.withdrawal_request,
+          whatsapp_url: response.data.whatsapp_url
+        };
+      }
+
+      return {
+        success: false,
+        message: response.data.message || 'Erreur lors de la création de la demande de retrait'
+      };
+    } catch (error: any) {
+      console.error('Erreur création demande de retrait:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Erreur lors de la création de la demande de retrait'
+      };
+    }
+  }
 }
 
 export default new WalletService();

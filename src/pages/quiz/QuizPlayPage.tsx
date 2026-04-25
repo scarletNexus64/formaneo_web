@@ -194,7 +194,7 @@ const QuizPlayPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 dark:border-red-400 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement du quiz...</p>
         </div>
       </div>
@@ -220,7 +220,7 @@ const QuizPlayPage = () => {
           <p className="text-gray-600 dark:text-gray-400">Quiz non trouvé</p>
           <button
             onClick={() => navigate('/quizz')}
-            className="mt-4 px-4 py-2 bg-primary-600 dark:bg-primary-700 text-white rounded-lg"
+            className="mt-4 px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg"
           >
             Retour aux quiz
           </button>
@@ -266,7 +266,7 @@ const QuizPlayPage = () => {
           <div className="pb-2">
             <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
               <div 
-                className="bg-primary-600 dark:bg-primary-700 h-2 rounded-full transition-all duration-300"
+                className="bg-red-600 dark:bg-red-700 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -292,14 +292,14 @@ const QuizPlayPage = () => {
                 onClick={() => handleAnswerSelect(index)}
                 className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${
                   selectedAnswer === index
-                    ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-100'
+                    ? 'border-red-600 dark:border-red-500 bg-red-50 dark:bg-red-900 text-red-900 dark:text-red-100'
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
                 }`}
               >
                 <div className="flex items-center">
                   <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
                     selectedAnswer === index
-                      ? 'border-indigo-600 bg-primary-600 dark:bg-primary-700'
+                      ? 'border-red-600 bg-red-600 dark:bg-red-700'
                       : 'border-gray-300 dark:border-gray-600'
                   }`}>
                     {selectedAnswer === index && (
@@ -319,7 +319,7 @@ const QuizPlayPage = () => {
               disabled={selectedAnswer === null}
               className={`px-8 py-3 rounded-lg font-medium transition-colors ${
                 selectedAnswer !== null
-                  ? 'bg-primary-600 dark:bg-primary-700 text-white hover:bg-primary-700 dark:hover:bg-primary-600'
+                  ? 'bg-red-600 dark:bg-red-700 text-white hover:bg-red-700 dark:hover:bg-red-600'
                   : 'bg-gray-300 text-gray-500 dark:text-gray-400 cursor-not-allowed'
               }`}
             >
@@ -391,7 +391,7 @@ const QuizResultScreen: React.FC<{
         <div className="space-y-3">
           <button
             onClick={onRestart}
-            className="w-full bg-primary-600 dark:bg-primary-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
+            className="w-full bg-red-600 dark:bg-red-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
           >
             Nouveau Quiz
           </button>

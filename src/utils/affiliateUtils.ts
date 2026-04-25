@@ -15,7 +15,7 @@ export const getBaseUrl = (): string => {
       return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
     }
     // Fallback for SSR or non-browser environments
-    return 'http://10.193.76.109:3000';
+    return 'http://10.102.22.129:3000';
   }
 
   // In production, use the actual domain

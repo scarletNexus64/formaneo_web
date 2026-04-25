@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  MegaphoneIcon,
+  FunnelIcon,
+  BellIcon,
+  SparklesIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  CheckCircleIcon,
+  XCircleIcon
+} from '@heroicons/react/24/outline';
 import announcementService, { AnnouncementFilters } from '../../services/announcement.service';
 import { Announcement } from '../../types';
 import AnnouncementCard from '../../components/announcements/AnnouncementCard';
+import Navigation from '../../components/Navigation';
 import toast from 'react-hot-toast';
 
 const AnnouncementsPage: React.FC = () => {
@@ -49,103 +61,200 @@ const AnnouncementsPage: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const [showFilters, setShowFilters] = useState(false);
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Annonces</h1>
-          <p className="mt-2 text-gray-600">
-            Restez informé des dernières actualités et annonces importantes.
-          </p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <Navigation />
+
+      {/* Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-gray-900 to-cyan-600 dark:from-black dark:to-cyan-700 border-b border-gray-200 dark:border-gray-700">
+        {/* Subtle animated background */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-300 rounded-full mix-blend-overlay filter blur-3xl animate-pulse delay-1000" />
         </div>
 
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            <div className="flex justify-center mb-4">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl"
+              >
+                <MegaphoneIcon className="h-10 w-10 text-white" />
+              </motion.div>
+            </div>
+            <h1 className="text-4xl font-bold text-white mb-2">Annonces</h1>
+            <p className="text-lg text-blue-100 dark:text-blue-200 flex items-center justify-center">
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="mr-2"
+              >
+                <BellIcon className="w-5 h-5 text-yellow-300" />
+              </motion.div>
+              Restez informÃ© des derniÃ¨res actualitÃ©s et annonces importantes
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Type Filter */}
-            <div>
-              <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 mb-2">
-                Type d'annonce
-              </label>
-              <select
-                id="type-filter"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={filters.type || 'all'}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="mb-6"
+        >
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center px-6 py-3 border rounded-xl font-medium transition-all mb-4 ${
+              showFilters
+                ? 'border-blue-200 bg-blue-50 dark:bg-blue-900/30 text-black dark:text-blue-300 shadow-md'
+                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
+            }`}
+          >
+            <FunnelIcon className="w-5 h-5 mr-2" />
+            Filtres
+            {(filters.type || filters.priority) && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full"
               >
-                <option value="all">Tous les types</option>
-                <option value="info">Information</option>
-                <option value="warning">Avertissement</option>
-                <option value="success">Succès</option>
-                <option value="danger">Danger</option>
-              </select>
-            </div>
+                {(filters.type ? 1 : 0) + (filters.priority ? 1 : 0)}
+              </motion.span>
+            )}
+          </motion.button>
 
-            {/* Priority Filter */}
-            <div>
-              <label htmlFor="priority-filter" className="block text-sm font-medium text-gray-700 mb-2">
-                Priorité
-              </label>
-              <select
-                id="priority-filter"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={filters.priority || 'all'}
-                onChange={(e) => handleFilterChange('priority', e.target.value)}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 overflow-hidden"
               >
-                <option value="all">Toutes les priorités</option>
-                <option value="urgent">Urgent</option>
-                <option value="high">Importante</option>
-                <option value="medium">Moyenne</option>
-                <option value="low">Basse</option>
-              </select>
-            </div>
-          </div>
-        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Type Filter */}
+                  <div>
+                    <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Type d'annonce
+                    </label>
+                    <select
+                      id="type-filter"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                      value={filters.type || 'all'}
+                      onChange={(e) => handleFilterChange('type', e.target.value)}
+                    >
+                      <option value="all">Tous les types</option>
+                      <option value="info">Information</option>
+                      <option value="warning">Avertissement</option>
+                      <option value="success">SuccÃ¨s</option>
+                      <option value="danger">Danger</option>
+                    </select>
+                  </div>
+
+                  {/* Priority Filter */}
+                  <div>
+                    <label htmlFor="priority-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      PrioritÃ©
+                    </label>
+                    <select
+                      id="priority-filter"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"
+                      value={filters.priority || 'all'}
+                      onChange={(e) => handleFilterChange('priority', e.target.value)}
+                    >
+                      <option value="all">Toutes les prioritÃ©s</option>
+                      <option value="urgent">Urgent</option>
+                      <option value="high">Importante</option>
+                      <option value="medium">Moyenne</option>
+                      <option value="low">Basse</option>
+                    </select>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Announcements List */}
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
           </div>
         ) : announcements.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <p className="text-gray-500 text-lg">Aucune annonce disponible pour le moment.</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center"
+          >
+            <MegaphoneIcon className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
+            <p className="text-gray-500 dark:text-gray-400 text-lg">Aucune annonce disponible pour le moment.</p>
+          </motion.div>
         ) : (
           <div className="space-y-4">
-            {announcements.map((announcement) => (
-              <AnnouncementCard
+            {announcements.map((announcement, index) => (
+              <motion.div
                 key={announcement.id}
-                announcement={announcement}
-                onClick={() => handleAnnouncementClick(announcement)}
-              />
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.05, duration: 0.4 }}
+              >
+                <AnnouncementCard
+                  announcement={announcement}
+                  onClick={() => handleAnnouncementClick(announcement)}
+                />
+              </motion.div>
             ))}
           </div>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="mt-8 flex justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="mt-8 flex justify-center"
+          >
             <nav className="flex items-center space-x-2">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
               >
-                Précédent
-              </button>
-              <span className="px-4 py-2 text-sm text-gray-700">
+                PrÃ©cÃ©dent
+              </motion.button>
+              <span className="px-5 py-2.5 text-sm text-gray-700 dark:text-gray-300 font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
                 Page {currentPage} sur {totalPages}
               </span>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md"
               >
                 Suivant
-              </button>
+              </motion.button>
             </nav>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

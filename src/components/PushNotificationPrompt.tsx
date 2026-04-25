@@ -87,7 +87,7 @@ export const PushNotificationPrompt: React.FC<PushNotificationPromptProps> = ({ 
   const isDenied = Notification.permission === 'denied';
 
   return (
-    <div className={`${isDenied ? 'bg-red-600' : 'bg-indigo-600'} text-white px-4 py-3 shadow-lg`}>
+    <div className={`${isDenied ? 'bg-red-600' : 'bg-red-600'} text-white px-4 py-3 shadow-lg`}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3 flex-1">
           <BellIcon className="h-6 w-6 flex-shrink-0" />
@@ -95,7 +95,7 @@ export const PushNotificationPrompt: React.FC<PushNotificationPromptProps> = ({ 
             <p className="font-medium text-sm">
               {isDenied ? '🔒 Notifications bloquées' : 'Activez les notifications push'}
             </p>
-            <p className="text-xs text-indigo-100 mt-1">
+            <p className="text-xs text-red-100 mt-1">
               {isDenied
                 ? 'Cliquez pour voir comment débloquer les notifications'
                 : 'Recevez des notifications en temps réel pour ne rien manquer!'}
@@ -107,14 +107,14 @@ export const PushNotificationPrompt: React.FC<PushNotificationPromptProps> = ({ 
           <button
             onClick={handleEnable}
             disabled={isLoading}
-            className="bg-white text-indigo-600 px-4 py-2 rounded-lg font-medium text-sm hover:bg-indigo-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-white text-red-600 px-4 py-2 rounded-lg font-medium text-sm hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Activation...' : isDenied ? 'Comment débloquer?' : 'Activer'}
           </button>
 
           <button
             onClick={handleDismiss}
-            className="text-indigo-100 hover:text-white transition-colors"
+            className="text-red-100 hover:text-white transition-colors"
             aria-label="Fermer"
           >
             <XMarkIcon className="h-5 w-5" />

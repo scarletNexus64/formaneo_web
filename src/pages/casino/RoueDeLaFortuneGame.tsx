@@ -11,29 +11,8 @@ import {
 import Navigation from '../../components/Navigation';
 import ActivationGuard from '../../components/ActivationGuard';
 import toast from 'react-hot-toast';
-
-interface WheelSegment {
-  id: number;
-  label: string;
-  multiplier: number; // 0 pour perte
-  color: string;
-  probability: number;
-}
-
-const WHEEL_SEGMENTS: WheelSegment[] = [
-  { id: 1, label: '', multiplier: 1, color: '#1E40AF', probability: 30 },
-  { id: 2, label: '', multiplier: 0, color: '#1F2937', probability: 30 },
-  { id: 3, label: '2', multiplier: 2, color: '#059669', probability: 25 },
-  { id: 4, label: '', multiplier: 0, color: '#1F2937', probability: 30 },
-  { id: 5, label: '', multiplier: 1, color: '#1E40AF', probability: 30 },
-  { id: 6, label: '', multiplier: 0, color: '#1F2937', probability: 30 },
-  { id: 7, label: '', multiplier: 3, color: '#7C3AED', probability: 12 },
-  { id: 8, label: '', multiplier: 0, color: '#1F2937', probability: 30 },
-  { id: 9, label: '', multiplier: 1, color: '#1E40AF', probability: 30 },
-  { id: 10, label: '', multiplier: 0, color: '#1F2937', probability: 30 },
-  { id: 11, label: '4', multiplier: 4, color: '#DC2626', probability: 5 },
-  { id: 12, label: '', multiplier: 0, color: '#1F2937', probability: 30 },
-];
+import casinoService, { WheelSegment } from '../../services/casino.service';
+import walletService from '../../services/wallet.service';
 
 const DEFAULT_BET = 500;
 
@@ -45,35 +24,46 @@ const RoueDeLaFortuneGame = () => {
   const [showResult, setShowResult] = useState(false);
   const [lastResult, setLastResult] = useState<WheelSegment | null>(null);
   const [betAmount, setBetAmount] = useState(DEFAULT_BET);
-  const [userBalance, setUserBalance] = useState(5000); // TODO: Récupérer depuis le wallet
+  const [userBalance, setUserBalance] = useState(0);
+  const [wheelSegments, setWheelSegments] = useState<WheelSegment[]>([]);
   const [spinHistory, setSpinHistory] = useState<{ multiplier: number; bet: number; timestamp: Date }[]>([]);
 
-  // Loading initial
+  // Charger la config et le solde au montage
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+    const loadData = async () => {
+      try {
+        // Charger la configuration de la roue
+        const segments = await casinoService.getWheelConfig();
 
-    return () => clearTimeout(timer);
+        // Log pour vérifier l'ordre des segments
+        console.log('📊 Segments chargés:', segments.map((s, i) => ({
+          index: i,
+          id: s.id,
+          multiplier: s.multiplier,
+          color: s.color,
+          probability: s.probability
+        })));
+
+        setWheelSegments(segments);
+
+        // Charger le solde du wallet
+        const walletInfo = await walletService.getWalletInfo();
+        setUserBalance(walletInfo.balance);
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Erreur lors du chargement:', error);
+        toast.error('Erreur lors du chargement du jeu');
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
-  const canSpin = userBalance >= betAmount && !isSpinning;
+  const canSpin = userBalance >= betAmount && !isSpinning && wheelSegments.length > 0;
 
-  const selectWinningSegment = (): WheelSegment => {
-    const random = Math.random() * 100;
-    let cumulative = 0;
-
-    for (const segment of WHEEL_SEGMENTS) {
-      cumulative += segment.probability;
-      if (random <= cumulative) {
-        return segment;
-      }
-    }
-
-    return WHEEL_SEGMENTS[0];
-  };
-
-  const spinWheel = () => {
+  const spinWheel = async () => {
     if (!canSpin) {
       if (userBalance < betAmount) {
         toast.error(`Solde insuffisant ! Vous avez besoin de ${formatPrice(betAmount)} FCFA.`);
@@ -84,59 +74,159 @@ const RoueDeLaFortuneGame = () => {
     setIsSpinning(true);
     setShowResult(false);
 
-    // Déduire la mise
-    setUserBalance(prev => prev - betAmount);
+    try {
+      // Appel API pour jouer
+      const result = await casinoService.spin(betAmount);
 
-    // Sélectionner le segment gagnant
-    const winningSegment = selectWinningSegment();
-    const segmentAngle = 360 / WHEEL_SEGMENTS.length;
-    const winningIndex = WHEEL_SEGMENTS.findIndex(s => s.id === winningSegment.id);
+      // Trouver le segment gagnant dans la liste
+      const winningSegment = wheelSegments.find(s => s.id === result.segment.id);
 
-    // Normaliser la rotation actuelle (garder seulement le reste de 360)
-    const currentRotationNormalized = rotation % 360;
-
-    // Calculer la rotation finale
-    const minSpins = 5;
-    const randomExtra = Math.random() * 3;
-    const totalSpins = minSpins + randomExtra;
-    const baseRotation = 360 * totalSpins;
-
-    // Angle cible pour que l'aiguille pointe sur le segment gagnant
-    // L'aiguille est en haut (0°), on veut que le centre du segment soit aligné avec l'aiguille
-    const targetAngle = (segmentAngle * winningIndex) + (segmentAngle / 2);
-
-    // Rotation finale = rotation actuelle + tours complets + angle pour atteindre la cible
-    const finalRotation = rotation + baseRotation + (360 - currentRotationNormalized) + targetAngle;
-
-    setRotation(finalRotation);
-
-    // Animation de 6 secondes
-    setTimeout(() => {
-      setIsSpinning(false);
-      setLastResult(winningSegment);
-      setShowResult(true);
-
-      // Ajouter les gains
-      const winAmount = betAmount * winningSegment.multiplier;
-      if (winningSegment.multiplier > 0) {
-        setUserBalance(prev => prev + winAmount);
-        toast.success(
-          `Vous avez gagné x${winningSegment.multiplier} ! +${formatPrice(winAmount)} FCFA`,
-          { duration: 5000 }
-        );
-      } else {
-        toast.error('Perdu ! Retentez votre chance !', { duration: 3000 });
+      if (!winningSegment) {
+        throw new Error('Segment gagnant introuvable');
       }
 
-      setSpinHistory(prev => [
-        { multiplier: winningSegment.multiplier, bet: betAmount, timestamp: new Date() },
-        ...prev.slice(0, 9)
-      ]);
-    }, 6000);
+      // ========================================
+      // CALCUL DE ROTATION CORRIGÉ
+      // ========================================
+
+      const segmentAngle = 360 / wheelSegments.length;
+      const winningIndex = wheelSegments.findIndex(s => s.id === winningSegment.id);
+
+      console.log('🎯 Segment gagnant:', {
+        id: winningSegment.id,
+        order: winningSegment.order,
+        indexInArray: winningIndex,
+        multiplier: winningSegment.multiplier,
+        color: winningSegment.color,
+        label: winningSegment.label
+      });
+
+      // GÉOMÉTRIE DE LA ROUE :
+      // - L'aiguille est positionnée en haut (top-0) et pointe vers le bas (vers la roue)
+      // - Les segments sont dessinés avec : startAngle = (index * segmentAngle) - 90°
+      // - En coordonnées SVG : 0°=droite (3h), 90°=bas (6h), 180°=gauche (9h), 270°=haut (12h)
+      // - Donc segment 0 commence à -90° (position 12h en haut)
+
+      // CONSTANTE CALIBRÉE : Position angulaire exacte de l'aiguille
+      // L'aiguille est en haut (top-0) et pointe vers le bas = -90° en coordonnées cercle
+      // -90° = 270° normalisé = position 12h (en haut du cercle)
+      const NEEDLE_ANGLE = -90; // Position de l'aiguille : -90° = 12h (haut)
+
+      // Calculer le centre du segment gagnant (position quand rotation = 0)
+      const segmentStartAngle = (segmentAngle * winningIndex) - 90;
+      const segmentCenterAngle = segmentStartAngle + (segmentAngle / 2);
+
+      // Pour aligner le centre du segment avec l'aiguille :
+      // segmentCenterAngle + rotation = NEEDLE_ANGLE
+      // => rotation = NEEDLE_ANGLE - segmentCenterAngle
+      let targetRotation = NEEDLE_ANGLE - segmentCenterAngle;
+
+      // Normaliser entre 0 et 360
+      while (targetRotation < 0) targetRotation += 360;
+      while (targetRotation >= 360) targetRotation -= 360;
+
+      console.log('📐 Calculs:', {
+        segmentAngle,
+        winningIndex,
+        order: winningSegment.order,
+        segmentStartAngle,
+        segmentCenterAngle,
+        needleAngle: NEEDLE_ANGLE,
+        targetRotation,
+        verification: `Segment sera à ${((segmentCenterAngle + targetRotation) % 360).toFixed(1)}° (aiguille à ${NEEDLE_ANGLE}°)`
+      });
+
+      // Ajouter des tours complets pour l'animation (5-8 tours)
+      // IMPORTANT : fullRotations DOIT être un multiple exact de 360 pour que
+      // la roue s'arrête exactement à targetRotation
+      const minSpins = 5;
+      const maxSpins = 8;
+      const randomSpins = Math.floor(minSpins + Math.random() * (maxSpins - minSpins + 1));
+      const fullRotations = 360 * randomSpins; // Maintenant c'est un multiple exact de 360
+
+      // Normaliser la rotation actuelle
+      const currentRotationNormalized = rotation % 360;
+
+      // Calculer la rotation finale
+      const finalRotation = rotation - currentRotationNormalized + fullRotations + targetRotation;
+
+      console.log('🔄 Rotation:', {
+        current: rotation,
+        currentNormalized: currentRotationNormalized,
+        fullRotations,
+        targetRotation,
+        final: finalRotation,
+        finalNormalized: finalRotation % 360
+      });
+
+      setRotation(finalRotation);
+
+      // Animation de 6 secondes
+      setTimeout(() => {
+        setIsSpinning(false);
+        setLastResult(winningSegment);
+        setShowResult(true);
+
+        // Mettre à jour le solde avec la valeur du backend
+        setUserBalance(result.new_balance);
+
+        // Afficher le résultat
+        // Convertir le multiplier en nombre pour la comparaison
+        const multiplierValue = typeof winningSegment.multiplier === 'string'
+          ? parseFloat(winningSegment.multiplier)
+          : winningSegment.multiplier;
+
+        console.log('💰 Résultat:', {
+          multiplier: winningSegment.multiplier,
+          multiplierValue,
+          isWin: multiplierValue > 0,
+          winAmount: result.win_amount
+        });
+
+        if (multiplierValue > 0) {
+          toast.success(
+            `Vous avez gagné x${formatMultiplier(winningSegment.multiplier)} ! +${formatPrice(result.win_amount)} FCFA`,
+            { duration: 5000 }
+          );
+        } else {
+          toast.error('Perdu ! Retentez votre chance !', { duration: 3000 });
+        }
+
+        // Ajouter à l'historique local
+        setSpinHistory(prev => [
+          {
+            multiplier: multiplierValue, // Utiliser la valeur numérique
+            bet: betAmount,
+            timestamp: new Date()
+          },
+          ...prev.slice(0, 9)
+        ]);
+      }, 6000);
+
+    } catch (error: any) {
+      setIsSpinning(false);
+
+      // Recharger le solde en cas d'erreur
+      try {
+        const walletInfo = await walletService.getWalletInfo();
+        setUserBalance(walletInfo.balance);
+      } catch (e) {
+        console.error('Erreur rechargement solde:', e);
+      }
+
+      toast.error(error.message || 'Erreur lors du jeu');
+    }
   };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price);
+  };
+
+  const formatMultiplier = (multiplier: number | string) => {
+    // Convertir en nombre si c'est une chaîne
+    const num = typeof multiplier === 'string' ? parseFloat(multiplier) : multiplier;
+    // Formater le multiplicateur pour enlever les zéros inutiles
+    return num % 1 === 0 ? num.toString() : num.toFixed(1);
   };
 
   if (isLoading) {
@@ -144,7 +234,7 @@ const RoueDeLaFortuneGame = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <motion.div
-            className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full mx-auto mb-6"
+            className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full mx-auto mb-6"
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           />
@@ -154,7 +244,7 @@ const RoueDeLaFortuneGame = () => {
           <p className="text-gray-600 dark:text-gray-400 mb-6">Chargement du jeu...</p>
           <div className="w-64 mx-auto bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-primary-600 to-blue-600"
+              className="h-full bg-gradient-to-r from-red-600 to-gray-900"
               initial={{ width: '0%' }}
               animate={{ width: '100%' }}
               transition={{ duration: 1.5 }}
@@ -174,7 +264,7 @@ const RoueDeLaFortuneGame = () => {
           <div className="mb-4 sm:mb-6">
             <button
               onClick={() => navigate('/casino')}
-              className="flex items-center text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 mb-3 sm:mb-4 transition-colors text-sm sm:text-base"
+              className="flex items-center text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 mb-3 sm:mb-4 transition-colors text-sm sm:text-base"
             >
               <ArrowLeftIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Retour aux jeux
@@ -237,8 +327,8 @@ const RoueDeLaFortuneGame = () => {
                     {/* Segments Container */}
                     <div className="absolute inset-6 rounded-full overflow-hidden">
                       <svg className="w-full h-full" viewBox="0 0 200 200">
-                        {WHEEL_SEGMENTS.map((segment, index) => {
-                          const angle = 360 / WHEEL_SEGMENTS.length;
+                        {wheelSegments.map((segment, index) => {
+                          const angle = 360 / wheelSegments.length;
                           const startAngle = angle * index - 90;
                           const endAngle = startAngle + angle;
 
@@ -267,10 +357,10 @@ const RoueDeLaFortuneGame = () => {
                       </svg>
 
                       {/* Text Labels */}
-                      {WHEEL_SEGMENTS.map((segment, index) => {
+                      {wheelSegments.map((segment, index) => {
                         if (!segment.label) return null;
 
-                        const angle = 360 / WHEEL_SEGMENTS.length;
+                        const angle = 360 / wheelSegments.length;
                         const rotation = angle * index;
                         const radius = 55;
 
@@ -320,7 +410,7 @@ const RoueDeLaFortuneGame = () => {
                       value={betAmount}
                       onChange={(e) => setBetAmount(Math.max(100, parseInt(e.target.value) || 100))}
                       disabled={isSpinning}
-                      className="flex-1 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-semibold text-center text-base sm:text-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 transition-all"
+                      className="flex-1 px-3 py-2 sm:px-4 sm:py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-semibold text-center text-base sm:text-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:opacity-50 transition-all"
                     />
                     <span className="hidden sm:inline text-gray-600 dark:text-gray-400 font-medium text-sm">FCFA</span>
                     <button
@@ -337,7 +427,7 @@ const RoueDeLaFortuneGame = () => {
                         key={amount}
                         onClick={() => setBetAmount(amount)}
                         disabled={isSpinning}
-                        className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-primary-900/20 dark:hover:text-primary-400 disabled:opacity-50 transition-all"
+                        className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20 dark:hover:text-red-400 disabled:opacity-50 transition-all"
                       >
                         {formatPrice(amount)}
                       </button>
@@ -353,7 +443,7 @@ const RoueDeLaFortuneGame = () => {
                   disabled={!canSpin}
                   className={`w-full py-3 sm:py-4 rounded-xl text-base sm:text-lg font-bold shadow-lg transition-all ${
                     canSpin
-                      ? 'bg-gradient-to-r from-primary-600 to-blue-600 hover:from-primary-700 hover:to-blue-700 text-white shadow-primary-500/50'
+                      ? 'bg-gradient-to-r from-red-600 to-gray-900 hover:from-red-700 hover:to-black text-white shadow-red-500/50'
                       : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                   }`}
                 >
@@ -386,25 +476,31 @@ const RoueDeLaFortuneGame = () => {
             <div className="space-y-4 sm:space-y-6">
               {/* Result */}
               <AnimatePresence>
-                {showResult && lastResult && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                    className={`rounded-2xl p-4 sm:p-6 shadow-xl border-2 ${
-                      lastResult.multiplier > 0
-                        ? 'bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-800'
-                        : 'bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 border-gray-200 dark:border-gray-700'
-                    }`}
-                  >
-                    <div className="text-center">
-                      {lastResult.multiplier > 0 ? (
+                {showResult && lastResult && (() => {
+                  const multiplierValue = typeof lastResult.multiplier === 'string'
+                    ? parseFloat(lastResult.multiplier)
+                    : lastResult.multiplier;
+                  const isWin = multiplierValue > 0;
+
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                      className={`rounded-2xl p-4 sm:p-6 shadow-xl border-2 ${
+                        isWin
+                          ? 'bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-800'
+                          : 'bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 border-gray-200 dark:border-gray-700'
+                      }`}
+                    >
+                      <div className="text-center">
+                        {isWin ? (
                         <>
                           <CheckCircleIcon className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-2 sm:mb-3 text-emerald-600 dark:text-emerald-400" />
                           <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2 text-emerald-900 dark:text-emerald-100">Gagné !</h3>
-                          <p className="text-3xl sm:text-4xl font-black mb-1 sm:mb-2 text-emerald-700 dark:text-emerald-300">x{lastResult.multiplier}</p>
+                          <p className="text-3xl sm:text-4xl font-black mb-1 sm:mb-2 text-emerald-700 dark:text-emerald-300">x{formatMultiplier(lastResult.multiplier)}</p>
                           <p className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-                            +{formatPrice(betAmount * lastResult.multiplier)} FCFA
+                            +{formatPrice(betAmount * multiplierValue)} FCFA
                           </p>
                         </>
                       ) : (
@@ -416,13 +512,14 @@ const RoueDeLaFortuneGame = () => {
                       )}
                     </div>
                   </motion.div>
-                )}
+                  );
+                })()}
               </AnimatePresence>
 
               {/* History */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center mb-3 sm:mb-4">
-                  <ChartBarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary-600 dark:text-primary-400 mr-2" />
+                  <ChartBarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400 mr-2" />
                   <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Historique</h3>
                 </div>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -449,7 +546,7 @@ const RoueDeLaFortuneGame = () => {
                               ? 'text-emerald-700 dark:text-emerald-400'
                               : 'text-red-600 dark:text-red-400'
                           }`}>
-                            {spin.multiplier > 0 ? `x${spin.multiplier}` : 'Perdu'}
+                            {spin.multiplier > 0 ? `x${formatMultiplier(spin.multiplier)}` : 'Perdu'}
                           </span>
                         </div>
                         <div className="text-right">
@@ -479,12 +576,21 @@ const RoueDeLaFortuneGame = () => {
                   Multiplicateurs
                 </h3>
                 <div className="space-y-2 sm:space-y-3">
-                  {WHEEL_SEGMENTS
-                    .filter((segment) => segment.multiplier > 0)
+                  {wheelSegments
+                    .filter((segment) => {
+                      const mult = typeof segment.multiplier === 'string'
+                        ? parseFloat(segment.multiplier)
+                        : segment.multiplier;
+                      return mult > 0;
+                    })
                     .filter((segment, index, self) =>
                       index === self.findIndex((s) => s.multiplier === segment.multiplier)
                     )
-                    .sort((a, b) => b.multiplier - a.multiplier)
+                    .sort((a, b) => {
+                      const multA = typeof a.multiplier === 'string' ? parseFloat(a.multiplier) : a.multiplier;
+                      const multB = typeof b.multiplier === 'string' ? parseFloat(b.multiplier) : b.multiplier;
+                      return multB - multA;
+                    })
                     .map((segment) => (
                       <div
                         key={segment.id}
@@ -496,12 +602,9 @@ const RoueDeLaFortuneGame = () => {
                             style={{ backgroundColor: segment.color }}
                           />
                           <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
-                            x{segment.multiplier}
+                            x{formatMultiplier(segment.multiplier)}
                           </span>
                         </div>
-                        <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400 font-medium">
-                          {segment.probability}%
-                        </span>
                       </div>
                     ))}
                 </div>

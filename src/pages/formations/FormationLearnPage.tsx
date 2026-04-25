@@ -310,7 +310,7 @@ const FormationLearnPage = () => {
           <p className="text-gray-400 mb-6">Cette formation n'existe pas ou vous n'y avez pas accès.</p>
           <button
             onClick={() => navigate('/formations')}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg"
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg"
           >
             Retour aux formations
           </button>
@@ -432,7 +432,7 @@ const FormationLearnPage = () => {
               <div className="w-full bg-gray-700 rounded-full h-2">
                 <div 
                   className={`h-2 rounded-full transition-all duration-300 ${
-                    currentVideo.type === 'module' ? 'bg-blue-500' : 'bg-indigo-500'
+                    currentVideo.type === 'module' ? 'bg-blue-500' : 'bg-red-500'
                   }`}
                   style={{ width: `${currentVideo.user_progress}%` }}
                 />
@@ -466,7 +466,7 @@ const FormationLearnPage = () => {
                   onClick={() => playVideo(item, index)}
                   className={`w-full p-2 sm:p-3 rounded-lg mb-2 text-left transition-all duration-200 ${
                     currentVideo?.id === item.id && currentVideo?.type === item.type
-                      ? 'bg-indigo-600 text-white shadow-lg scale-[1.02]'
+                      ? 'bg-red-600 text-white shadow-lg scale-[1.02]'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:scale-[1.01]'
                   }`}
                 >
@@ -507,7 +507,7 @@ const FormationLearnPage = () => {
                       <div className="w-full bg-gray-600 rounded-full h-1 sm:h-1.5">
                         <div
                           className={`h-1 sm:h-1.5 rounded-full transition-all duration-300 ${
-                            item.type === 'module' ? 'bg-blue-400' : 'bg-indigo-400'
+                            item.type === 'module' ? 'bg-blue-400' : 'bg-red-400'
                           }`}
                           style={{ width: `${item.user_progress}%` }}
                         />
@@ -519,7 +519,7 @@ const FormationLearnPage = () => {
             ) : (
               // Afficher la vidéo principale s'il n'y a pas de vidéos séparées
               currentVideo && (
-                <button className="w-full p-2 sm:p-3 rounded-lg mb-2 text-left bg-indigo-600 text-white">
+                <button className="w-full p-2 sm:p-3 rounded-lg mb-2 text-left bg-red-600 text-white">
                   <div className="flex items-start space-x-2 sm:space-x-3">
                     <div className="flex-shrink-0 mt-0.5 sm:mt-1">
                       <PlayIcon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -533,9 +533,9 @@ const FormationLearnPage = () => {
                       </div>
 
                       {currentVideo.user_progress > 0 && (
-                        <div className="mt-1.5 sm:mt-2 w-full bg-indigo-400/30 rounded-full h-1 sm:h-1.5">
+                        <div className="mt-1.5 sm:mt-2 w-full bg-red-400/30 rounded-full h-1 sm:h-1.5">
                           <div
-                            className="bg-indigo-400 h-1 sm:h-1.5 rounded-full"
+                            className="bg-red-400 h-1 sm:h-1.5 rounded-full"
                             style={{ width: `${currentVideo.user_progress}%` }}
                           />
                         </div>

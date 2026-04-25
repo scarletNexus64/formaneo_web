@@ -190,7 +190,7 @@
                 statusDiv.innerHTML = `
                     <div class="status-box error">
                         <strong>❌ Non authentifié</strong><br>
-                        Veuillez vous connecter sur <a href="http://10.193.76.109:3001/login">l'application</a>
+                        Veuillez vous connecter sur <a href="http://10.102.22.129:3001/login">l'application</a>
                     </div>
                 `;
                 return false;
@@ -280,7 +280,7 @@
             }
 
             try {
-                const apiUrl = 'http://10.193.76.109:8001/api/v1/notifications/fcm-token';
+                const apiUrl = 'http://10.102.22.129:8001/api/v1/notifications/fcm-token';
                 log(`📍 URL: ${apiUrl}`, 'info');
                 log(`🔑 Token auth: ${authToken.substring(0, 30)}...`, 'info');
                 log(`📱 Token FCM: ${currentToken.substring(0, 50)}...`, 'info');

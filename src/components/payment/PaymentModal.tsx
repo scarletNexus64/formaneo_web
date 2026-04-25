@@ -195,7 +195,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     navigate('/wallet');
                     onClose();
                   }}
-                  className="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold flex items-center justify-center gap-2"
+                  className="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-semibold flex items-center justify-center gap-2"
                 >
                   <WalletIcon className="h-5 w-5" />
                   Recharger mon wallet
@@ -204,7 +204,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <button
                   onClick={handlePayment}
                   disabled={isProcessing}
-                  className="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold flex items-center justify-center gap-2"
+                  className="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold flex items-center justify-center gap-2"
                 >
                   {isProcessing ? (
                     <>

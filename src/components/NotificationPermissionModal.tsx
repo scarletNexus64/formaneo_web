@@ -136,8 +136,8 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
 
           {/* Icon */}
           <div className="flex justify-center mb-4">
-            <div className="bg-indigo-100 rounded-full p-4">
-              <BellIcon className="h-12 w-12 text-indigo-600" />
+            <div className="bg-red-100 rounded-full p-4">
+              <BellIcon className="h-12 w-12 text-red-600" />
             </div>
           </div>
 
@@ -176,7 +176,7 @@ export const NotificationPermissionModal: React.FC<NotificationPermissionModalPr
             <button
               onClick={handleEnable}
               disabled={isLoading}
-              className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Activation...' : '🔔 Activer les notifications'}
             </button>

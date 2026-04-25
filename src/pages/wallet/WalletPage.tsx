@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
+import { ArrowPathIcon, WalletIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import WalletBalance from '../../components/wallet/WalletBalance';
 import WalletActions from '../../components/wallet/WalletActions';
 import TransactionHistory from '../../components/wallet/TransactionHistory';
@@ -74,6 +75,23 @@ const WalletPage: React.FC = () => {
     }
   }, [currentPage]);
 
+  // Auto-rafraîchir les données s'il y a des transactions en attente
+  useEffect(() => {
+    const hasPendingTransactions = transactions.some(t => t.status === 'pending');
+
+    if (!hasPendingTransactions) {
+      return;
+    }
+
+    // Rafraîchir toutes les 15 secondes s'il y a des transactions pending
+    const intervalId = setInterval(() => {
+      console.log('🔄 Auto-rafraîchissement: transactions pending détectées');
+      loadWalletData(false, false);
+    }, 15000);
+
+    return () => clearInterval(intervalId);
+  }, [transactions]);
+
   const loadTransactions = async (page: number) => {
     try {
       setIsLoadingTransactions(true);
@@ -107,22 +125,54 @@ const WalletPage: React.FC = () => {
       <Navigation />
 
       {/* Page Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mon Portefeuille</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">Gérez vos fonds et transactions</p>
+      <div className="relative overflow-hidden bg-gradient-to-r from-red-600 to-gray-900 dark:from-red-700 dark:to-black border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        {/* Subtle animated background */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-300 rounded-full mix-blend-overlay filter blur-3xl animate-pulse delay-1000" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          >
+            <div className="flex items-center">
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                className="p-3 bg-white/20 backdrop-blur-sm rounded-xl mr-3"
+              >
+                <WalletIcon className="w-8 h-8 text-white" />
+              </motion.div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white">Mon Portefeuille</h1>
+                <p className="text-red-100 dark:text-red-200 mt-1 flex items-center">
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="mr-2"
+                  >
+                    <SparklesIcon className="w-4 h-4 text-yellow-300" />
+                  </motion.div>
+                  Gérez vos fonds et transactions
+                </p>
+              </div>
             </div>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="flex items-center space-x-2 px-4 py-2 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"            >
-              <ArrowPathIcon className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>{isRefreshing ? 'Actualisation...' : 'Actualiser'}</span>
-            </button>
-          </div>
+              className="flex items-center space-x-2 px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-lg hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+            >
+              <ArrowPathIcon className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="font-medium">{isRefreshing ? 'Actualisation...' : 'Actualiser'}</span>
+            </motion.button>
+          </motion.div>
         </div>
       </div>
 
@@ -130,20 +180,32 @@ const WalletPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
           {/* Balance Card */}
-          <WalletBalance 
-            walletInfo={walletInfo}
-            isLoading={isLoadingWallet}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <WalletBalance
+              walletInfo={walletInfo}
+              isLoading={isLoadingWallet}
+            />
+          </motion.div>
 
           {/* Actions */}
-          <ActivationGuard action="effectuer des opérations wallet">
-            <WalletActions 
-              walletInfo={walletInfo}
-              onTransactionComplete={handleTransactionComplete}
-              triggerWithdrawal={triggerWithdrawal}
-              onWithdrawalTriggered={() => setTriggerWithdrawal(false)}
-            />
-          </ActivationGuard>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <ActivationGuard action="effectuer des opérations wallet">
+              <WalletActions
+                walletInfo={walletInfo}
+                onTransactionComplete={handleTransactionComplete}
+                triggerWithdrawal={triggerWithdrawal}
+                onWithdrawalTriggered={() => setTriggerWithdrawal(false)}
+              />
+            </ActivationGuard>
+          </motion.div>
 
           {/* Retraits en attente - Commenté car on retire le bloc "Disponible pour retrait" */}
           {/* <ActivationGuard action="effectuer des retraits">
@@ -155,13 +217,19 @@ const WalletPage: React.FC = () => {
           </ActivationGuard> */}
 
           {/* Transaction History */}
-          <TransactionHistory 
-            transactions={transactions}
-            isLoading={isLoadingTransactions}
-            pagination={transactionsPagination}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <TransactionHistory
+              transactions={transactions}
+              isLoading={isLoadingTransactions}
+              pagination={transactionsPagination}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+          </motion.div>
         </div>
       </div>
     </div>

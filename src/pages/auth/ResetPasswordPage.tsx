@@ -106,7 +106,7 @@ const ResetPasswordPage = () => {
                         message: 'Le mot de passe doit contenir au moins 6 caractères'
                       }
                     })}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                     placeholder="Entrez le mot de passe"
                   />
                   <button
@@ -138,7 +138,7 @@ const ResetPasswordPage = () => {
                       required: 'Confirmation requise',
                       validate: value => value === password || 'Les mots de passe ne correspondent pas'
                     })}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                     placeholder="Entrez le mot de passe"
                   />
                   <button
@@ -174,7 +174,7 @@ const ResetPasswordPage = () => {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-blue-600 text-white font-semibold rounded-xl hover:shadow-lg transition duration-200 ${
+                className={`w-full py-3 px-4 bg-gradient-to-r from-red-600 to-gray-900 text-white font-semibold rounded-xl hover:shadow-lg transition duration-200 ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >

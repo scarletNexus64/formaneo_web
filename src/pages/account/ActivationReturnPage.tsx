@@ -158,7 +158,7 @@ const ActivationReturnPage: React.FC = () => {
 
             {/* Redirection automatique message */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center justify-center space-x-2 text-blue-700">
+              <div className="flex items-center justify-center space-x-2 text-black">
                 <ClockIcon className="w-5 h-5" />
                 <span className="font-medium">
                   Redirection automatique vers le dashboard dans quelques secondes...

@@ -61,7 +61,7 @@ const ForgotPasswordPage = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-100 to-blue-100 dark:from-primary-900/30 dark:to-blue-900/30 text-primary-700 dark:text-primary-300 px-3 sm:px-4 py-2 rounded-full mb-4 border border-primary-200 dark:border-primary-800"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-red-100 to-blue-100 dark:from-red-900/30 dark:to-blue-900/30 text-red-700 dark:text-red-300 px-3 sm:px-4 py-2 rounded-full mb-4 border border-red-200 dark:border-gray-800"
               >
                 <EnvelopeIcon className="w-4 h-4" />
                 <span className="text-xs sm:text-sm font-semibold">Récupération de compte</span>
@@ -91,7 +91,7 @@ const ForgotPasswordPage = () => {
                         message: 'Email invalide'
                       }
                     })}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                     placeholder="vous@exemple.com"
                   />
                 </div>
@@ -115,7 +115,7 @@ const ForgotPasswordPage = () => {
                         message: 'Le numéro doit contenir au moins 8 chiffres'
                       }
                     })}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                     placeholder="+237 6XX XXX XXX"
                   />
                 </div>
@@ -129,7 +129,7 @@ const ForgotPasswordPage = () => {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-blue-600 text-white font-semibold rounded-xl hover:shadow-lg transition duration-200 ${
+                className={`w-full py-3 px-4 bg-gradient-to-r from-red-600 to-gray-900 text-white font-semibold rounded-xl hover:shadow-lg transition duration-200 ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
@@ -158,7 +158,7 @@ const ForgotPasswordPage = () => {
 
               <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                 Pas encore de compte ?{' '}
-                <Link to="/register" className="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+                <Link to="/register" className="font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
                   Inscrivez-vous gratuitement
                 </Link>
               </p>

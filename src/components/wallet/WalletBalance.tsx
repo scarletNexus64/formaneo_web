@@ -19,7 +19,7 @@ const WalletBalance: React.FC<WalletBalanceProps> = ({ walletInfo, isLoading }) 
 
   if (isLoading) {
     return (
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white animate-pulse">
+      <div className="bg-gradient-to-r from-red-600 to-gray-900 rounded-xl p-6 text-white animate-pulse">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-white/20 rounded-lg"></div>
@@ -33,7 +33,7 @@ const WalletBalance: React.FC<WalletBalanceProps> = ({ walletInfo, isLoading }) 
   }
 
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+    <div className="bg-gradient-to-r from-red-600 to-gray-900 rounded-xl p-6 text-white shadow-lg">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-white/20 rounded-lg">
@@ -46,11 +46,6 @@ const WalletBalance: React.FC<WalletBalanceProps> = ({ walletInfo, isLoading }) 
       <div className="mb-4">
         <p className="text-white/80 text-sm mb-1">Solde actuel</p>
         <p className="text-3xl font-bold">{formatAmount(walletInfo.balance)}</p>
-      </div>
-      
-      <div className="bg-white/10 rounded-lg p-3 mt-6">
-        <p className="text-white/70 text-xs mb-1">Gains totaux</p>
-        <p className="text-lg font-semibold text-green-300">{formatAmount(walletInfo.total_earned)}</p>
       </div>
       
       {walletInfo.pending_withdrawals > 0 && (

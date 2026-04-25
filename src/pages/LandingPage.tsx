@@ -4,6 +4,8 @@ import { motion, useScroll, useTransform, AnimatePresence, useInView } from 'fra
 import { useTheme } from '../contexts/ThemeContext';
 import apiService from '../services/api.service';
 import { ENDPOINTS } from '../config/api.config';
+import LoginModal from '../components/auth/LoginModal';
+import RegisterModal from '../components/auth/RegisterModal';
 import {
   AcademicCapIcon,
   BookOpenIcon,
@@ -200,8 +202,8 @@ const AffiliationChart = () => {
           {/* Zone sous la courbe avec dégradé */}
           <defs>
             <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgb(37, 99, 235)" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="rgb(37, 99, 235)" stopOpacity="0.05" />
+              <stop offset="0%" stopColor="rgb(220, 38, 38)" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="rgb(220, 38, 38)" stopOpacity="0.05" />
             </linearGradient>
           </defs>
           <motion.path
@@ -227,8 +229,8 @@ const AffiliationChart = () => {
 
           <defs>
             <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="rgb(59, 130, 246)" />
-              <stop offset="100%" stopColor="rgb(147, 51, 234)" />
+              <stop offset="0%" stopColor="rgb(220, 38, 38)" />
+              <stop offset="100%" stopColor="rgb(17, 24, 39)" />
             </linearGradient>
           </defs>
 
@@ -240,7 +242,7 @@ const AffiliationChart = () => {
                 cy={point.y}
                 r={index === activePoint ? 8 : 5}
                 fill="white"
-                stroke={index === activePoint ? "rgb(59, 130, 246)" : "rgb(147, 197, 253)"}
+                stroke={index === activePoint ? "rgb(220, 38, 38)" : "rgb(252, 165, 165)"}
                 strokeWidth={index === activePoint ? 3 : 2}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -284,7 +286,7 @@ const AffiliationChart = () => {
               key={index}
               className={`text-xs font-medium transition-colors cursor-pointer ${
                 index === activePoint
-                  ? 'text-primary-600 dark:text-primary-400 font-bold'
+                  ? 'text-red-600 dark:text-red-400 font-bold'
                   : 'text-gray-600 dark:text-gray-400'
               }`}
               onMouseEnter={() => setActivePoint(index)}
@@ -297,7 +299,7 @@ const AffiliationChart = () => {
 
       <div className="mt-4 md:mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <div>
-          <p className="text-xl md:text-2xl font-bold text-primary-600 dark:text-primary-400">850+</p>
+          <p className="text-xl md:text-2xl font-bold text-red-600 dark:text-red-400">850+</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">Affiliés actifs</p>
         </div>
         <div className="text-right">
@@ -315,10 +317,10 @@ const CircularProgress = ({ percentage, label, color = "primary" }: { percentage
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   const colors = {
-    primary: "stroke-primary-600 dark:stroke-primary-400",
+    primary: "stroke-red-600 dark:stroke-red-400",
     green: "stroke-green-600 dark:stroke-green-400",
     yellow: "stroke-yellow-600 dark:stroke-yellow-400",
-    blue: "stroke-blue-600 dark:stroke-blue-400"
+    blue: "stroke-gray-900 dark:stroke-gray-400"
   };
 
   return (
@@ -358,227 +360,6 @@ const CircularProgress = ({ percentage, label, color = "primary" }: { percentage
   );
 };
 
-// Composant de slider de bannières
-const BannerSlider = () => {
-  const [banners, setBanners] = useState<any[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
-
-  // Récupérer les bannières depuis l'API
-  useEffect(() => {
-    const fetchBanners = async () => {
-      try {
-        const response = await apiService.get(ENDPOINTS.BANNERS);
-        if (response.data.success && response.data.data && response.data.data.length > 0) {
-          setBanners(response.data.data);
-        }
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Erreur lors du chargement des bannières:', error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchBanners();
-  }, []);
-
-  // Auto-rotation des bannières
-  useEffect(() => {
-    if (isLoading || banners.length === 0) return;
-
-    const interval = setInterval(() => {
-      setDirection(1);
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [banners.length, isLoading]);
-
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? '100%' : '-100%',
-      opacity: 0
-    }),
-    center: {
-      x: 0,
-      opacity: 1
-    },
-    exit: (direction: number) => ({
-      x: direction > 0 ? '-100%' : '100%',
-      opacity: 0
-    })
-  };
-
-  const goToSlide = (index: number) => {
-    setDirection(index > currentIndex ? 1 : -1);
-    setCurrentIndex(index);
-  };
-
-  // Gestion du swipe tactile
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      // Swipe vers la gauche - bannière suivante
-      setDirection(1);
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }
-
-    if (isRightSwipe) {
-      // Swipe vers la droite - bannière précédente
-      setDirection(-1);
-      setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
-    }
-
-    // Réinitialiser
-    setTouchStart(0);
-    setTouchEnd(0);
-  };
-
-  // Ne rien afficher s'il n'y a pas de bannières
-  if (!isLoading && banners.length === 0) {
-    return null;
-  }
-
-  return (
-    <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800/50">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] rounded-2xl overflow-hidden shadow-2xl bg-gray-200 dark:bg-gray-700"
-        >
-          {isLoading ? (
-            // Loader
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 180, 360]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="w-16 h-16 border-4 border-primary-600 dark:border-primary-400 border-t-transparent rounded-full"
-              />
-              <motion.p
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="mt-4 text-gray-600 dark:text-gray-300 font-medium"
-              >
-                Chargement des bannières...
-              </motion.p>
-            </div>
-          ) : (
-            <>
-              <AnimatePresence initial={false} custom={direction} mode="wait">
-                <motion.div
-                  key={currentIndex}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.5 }
-                  }}
-                  className="absolute inset-0"
-                >
-                  <img
-                    src={banners[currentIndex].image_url}
-                    alt={banners[currentIndex].title || `Banner ${currentIndex + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                </motion.div>
-              </AnimatePresence>
-
-          {/* Navigation dots */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
-            {banners.map((_, index) => (
-              <motion.button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`transition-all ${
-                  index === currentIndex
-                    ? 'w-8 sm:w-10 h-2 sm:h-2.5 bg-white'
-                    : 'w-2 sm:w-2.5 h-2 sm:h-2.5 bg-white/50 hover:bg-white/75'
-                } rounded-full`}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-              />
-            ))}
-          </div>
-
-          {/* Navigation arrows for desktop */}
-          <div className="hidden md:block">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => {
-                setDirection(-1);
-                setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
-              }}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition z-10"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => {
-                setDirection(1);
-                setCurrentIndex((prev) => (prev + 1) % banners.length);
-              }}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition z-10"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </motion.button>
-          </div>
-
-              {/* Counter badge */}
-              <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
-                {currentIndex + 1} / {banners.length}
-              </div>
-            </>
-          )}
-        </motion.div>
-      </div>
-    </section>
-  );
-};
-
 const LandingPage = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -587,8 +368,18 @@ const LandingPage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLegalMenuOpen, setIsLegalMenuOpen] = useState(false);
   const [isLegalMenuOpenMobile, setIsLegalMenuOpenMobile] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const { scrollY } = useScroll();
   const navOpacity = useTransform(scrollY, [0, 100], [0.95, 1]);
+
+  // Banner slider state
+  const [banners, setBanners] = useState<any[]>([]);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [bannerDirection, setBannerDirection] = useState(0);
+  const [isBannerLoading, setIsBannerLoading] = useState(true);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   // State pour les informations de contact
   const [contactInfo, setContactInfo] = useState({
@@ -616,6 +407,36 @@ const LandingPage = () => {
 
     checkMaintenanceStatus();
   }, []);
+
+  // Récupérer les bannières depuis l'API
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const response = await apiService.get(ENDPOINTS.BANNERS);
+        if (response.data.success && response.data.data && response.data.data.length > 0) {
+          setBanners(response.data.data);
+        }
+        setIsBannerLoading(false);
+      } catch (error) {
+        console.error('Erreur lors du chargement des bannières:', error);
+        setIsBannerLoading(false);
+      }
+    };
+
+    fetchBanners();
+  }, []);
+
+  // Auto-rotation des bannières
+  useEffect(() => {
+    if (isBannerLoading || banners.length === 0) return;
+
+    const interval = setInterval(() => {
+      setBannerDirection(1);
+      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [banners.length, isBannerLoading]);
 
   // Récupérer les informations de contact depuis l'API
   useEffect(() => {
@@ -648,12 +469,62 @@ const LandingPage = () => {
     setMobileMenuOpen(false);
   };
 
+  // Banner slider functions
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? '100%' : '-100%',
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      x: direction > 0 ? '-100%' : '100%',
+      opacity: 0
+    })
+  };
+
+  const goToBannerSlide = (index: number) => {
+    setBannerDirection(index > currentBannerIndex ? 1 : -1);
+    setCurrentBannerIndex(index);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      setBannerDirection(1);
+      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+    }
+
+    if (isRightSwipe) {
+      setBannerDirection(-1);
+      setCurrentBannerIndex((prev) => (prev - 1 + banners.length) % banners.length);
+    }
+
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
   const features = [
     {
       icon: <AcademicCapIcon className="w-7 h-7" />,
       title: "Formations Complètes",
       description: "500+ cours vidéo de qualité professionnelle",
-      color: "from-blue-500 to-cyan-500"
+      color: "from-gray-900 to-gray-700"
     },
     {
       icon: <CurrencyDollarIcon className="w-7 h-7" />,
@@ -665,13 +536,13 @@ const LandingPage = () => {
       icon: <UserGroupIcon className="w-7 h-7" />,
       title: "Programme d'Affiliation",
       description: "Gagnez 30% de commission sur vos parrainages",
-      color: "from-purple-500 to-pink-500"
+      color: "from-red-600 to-red-500"
     },
     {
       icon: <BookOpenIcon className="w-7 h-7" />,
       title: "E-books Premium",
       description: "Bibliothèque complète incluse gratuitement",
-      color: "from-orange-500 to-red-500"
+      color: "from-gray-800 to-black"
     },
     {
       icon: <GlobeAltIcon className="w-7 h-7" />,
@@ -683,7 +554,7 @@ const LandingPage = () => {
       icon: <ShieldCheckIcon className="w-7 h-7" />,
       title: "Certificat professionnel",
       description: "",
-      color: "from-indigo-500 to-blue-500"
+      color: "from-red-700 to-red-600"
     }
   ];
 
@@ -742,7 +613,7 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-500">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-500">
       {/* Navigation */}
       <motion.nav
         style={{ opacity: navOpacity }}
@@ -754,28 +625,27 @@ const LandingPage = () => {
               className="flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
             >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-600 to-primary-400 rounded-xl flex items-center justify-center">
-                <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-400 dark:to-blue-400 bg-clip-text text-transparent">
-                Formaneo
-              </h1>
+              <img
+                src="/images/formaneo-logo.png?v=3"
+                alt="Formaneo Logo"
+                className="w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 lg:w-20 lg:h-20 object-contain"
+              />
             </motion.div>
 
             {/* Desktop Menu */}
             <div className="hidden lg:flex items-center space-x-6">
-              <a href="#features" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm">Fonctionnalités</a>
-              <a href="#affiliations" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm">Affiliation</a>
-              <a href="#testimonials" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm">Témoignages</a>
-              <a href="#faq" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm">FAQ</a>
-              <a href="#about" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm">À propos</a>
-              <a href="#contact" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm">Contact</a>
+              <a href="#features" className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium text-sm">Fonctionnalités</a>
+              <a href="#affiliations" className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium text-sm">Affiliation</a>
+              <a href="#testimonials" className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium text-sm">Témoignages</a>
+              <a href="#faq" className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium text-sm">FAQ</a>
+              <a href="#about" className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium text-sm">À propos</a>
+              <a href="#contact" className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium text-sm">Contact</a>
 
               {/* Dropdown Légal - Desktop */}
               <div className="relative">
                 <button
                   onClick={() => setIsLegalMenuOpen(!isLegalMenuOpen)}
-                  className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm"
+                  className="flex items-center gap-1 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium text-sm"
                 >
                   <DocumentTextIcon className="w-4 h-4" />
                   Légal
@@ -823,13 +693,19 @@ const LandingPage = () => {
                 {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
               </motion.button>
 
-              <Link to="/login" className="hidden sm:block text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium text-sm">
+              <button
+                onClick={() => setLoginModalOpen(true)}
+                className="hidden sm:block text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium text-sm"
+              >
                 Connexion
-              </Link>
+              </button>
 
-              <Link to="/register" className="hidden sm:block bg-gradient-to-r from-primary-600 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all text-sm">
+              <button
+                onClick={() => setRegisterModalOpen(true)}
+                className="hidden sm:block bg-gradient-to-r from-red-600 to-gray-900 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all text-sm"
+              >
                 Commencer
-              </Link>
+              </button>
 
               {/* Mobile Menu Button */}
               <motion.button
@@ -853,18 +729,18 @@ const LandingPage = () => {
               className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
             >
               <div className="px-4 py-4 space-y-3">
-                <a href="#features" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">Fonctionnalités</a>
-                <a href="#affiliations" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">Affiliation</a>
-                <a href="#testimonials" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">Témoignages</a>
-                <a href="#faq" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">FAQ</a>
-                <a href="#about" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">À propos</a>
-                <a href="#contact" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">Contact</a>
+                <a href="#features" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium">Fonctionnalités</a>
+                <a href="#affiliations" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium">Affiliation</a>
+                <a href="#testimonials" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium">Témoignages</a>
+                <a href="#faq" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium">FAQ</a>
+                <a href="#about" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium">À propos</a>
+                <a href="#contact" onClick={handleNavClick} className="block py-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium">Contact</a>
 
                 {/* Dropdown Légal - Mobile */}
                 <div>
                   <button
                     onClick={() => setIsLegalMenuOpenMobile(!isLegalMenuOpenMobile)}
-                    className="flex items-center justify-between w-full py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium"
+                    className="flex items-center justify-between w-full py-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium"
                   >
                     <div className="flex items-center gap-2">
                       <DocumentTextIcon className="w-4 h-4" />
@@ -884,21 +760,21 @@ const LandingPage = () => {
                           <Link
                             to="/legal/terms-of-service"
                             onClick={handleNavClick}
-                            className="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition"
+                            className="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition"
                           >
                             Conditions d'utilisation
                           </Link>
                           <Link
                             to="/legal/privacy-policy"
                             onClick={handleNavClick}
-                            className="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition"
+                            className="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition"
                           >
                             Politique de confidentialité
                           </Link>
                           <Link
                             to="/legal/legal-notice"
                             onClick={handleNavClick}
-                            className="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition"
+                            className="block py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition"
                           >
                             Mentions légales
                           </Link>
@@ -909,12 +785,24 @@ const LandingPage = () => {
                 </div>
 
                 <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                  <Link to="/login" onClick={handleNavClick} className="block w-full text-center py-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition font-medium">
+                  <button
+                    onClick={() => {
+                      handleNavClick();
+                      setLoginModalOpen(true);
+                    }}
+                    className="block w-full text-center py-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition font-medium"
+                  >
                     Connexion
-                  </Link>
-                  <Link to="/register" onClick={handleNavClick} className="block w-full text-center bg-gradient-to-r from-primary-600 to-blue-600 text-white px-4 py-3 rounded-xl font-semibold">
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleNavClick();
+                      setRegisterModalOpen(true);
+                    }}
+                    className="block w-full text-center bg-gradient-to-r from-red-600 to-gray-900 text-white px-4 py-3 rounded-xl font-semibold"
+                  >
                     Commencer
-                  </Link>
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -924,8 +812,8 @@ const LandingPage = () => {
 
       {/* Hero Section - Responsive */}
       <section className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-transparent to-transparent dark:from-blue-900/20 opacity-40" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-100 via-transparent to-transparent dark:from-purple-900/20 opacity-40" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-red-50 via-transparent to-transparent dark:from-red-900/10 opacity-40" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-gray-100 via-transparent to-transparent dark:from-gray-900/20 opacity-40" />
 
         <div className="max-w-7xl mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
@@ -937,7 +825,7 @@ const LandingPage = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-100 to-blue-100 dark:from-primary-900/30 dark:to-blue-900/30 text-primary-700 dark:text-primary-300 px-3 sm:px-4 py-2 rounded-full mb-4 border border-primary-200 dark:border-primary-800"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-gray-100 dark:from-red-900/20 dark:to-gray-900/30 text-red-700 dark:text-red-300 px-3 sm:px-4 py-2 rounded-full mb-4 border border-red-200 dark:border-red-800"
               >
                 <FireIcon className="w-4 h-4" />
                 <span className="text-xs sm:text-sm font-semibold">La plateforme e-learning N°1 pour apprendre et booster votre carrière</span>
@@ -945,7 +833,7 @@ const LandingPage = () => {
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
                 Apprenez et{' '}
-                <span className="bg-gradient-to-r from-primary-600 via-blue-600 to-purple-600 dark:from-primary-400 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-red-600 via-gray-900 to-black dark:from-red-500 dark:via-gray-300 dark:to-white bg-clip-text text-transparent">
                   Développez Votre Carrière
                 </span>
               </h1>
@@ -958,8 +846,8 @@ const LandingPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/register')}
-                  className="bg-gradient-to-r from-primary-600 to-blue-600 text-white px-5 sm:px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
+                  onClick={() => setRegisterModalOpen(true)}
+                  className="bg-gradient-to-r from-red-600 to-gray-900 text-white px-5 sm:px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
                 >
                   <BoltIcon className="w-5 h-5" />
                   Commencer gratuitement
@@ -967,7 +855,7 @@ const LandingPage = () => {
                 {/* <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-white dark:bg-gray-800 border-2 border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400 px-5 sm:px-6 py-3 rounded-xl font-semibold hover:bg-primary-50 dark:hover:bg-gray-700 transition flex items-center justify-center gap-2 text-sm sm:text-base"
+                  className="bg-white dark:bg-gray-800 border-2 border-red-600 dark:border-red-400 text-red-600 dark:text-red-400 px-5 sm:px-6 py-3 rounded-xl font-semibold hover:bg-red-50 dark:hover:bg-gray-700 transition flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   <PlayIcon className="w-5 h-5" />
                   Voir la démo
@@ -1009,14 +897,123 @@ const LandingPage = () => {
               transition={{ duration: 0.6 }}
               className="relative mt-8 lg:mt-0"
             >
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                <img
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&w=800"
-                  alt="Students learning"
-                  className="rounded-2xl w-full"
-                />
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary-600/20 to-blue-600/20" />
-              </div>
+              <motion.div
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                className="relative w-full h-[300px] sm:h-[350px] md:h-[400px] lg:h-[450px] rounded-2xl overflow-hidden shadow-2xl bg-gray-200 dark:bg-gray-700"
+              >
+                {isBannerLoading ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 180, 360]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      className="w-16 h-16 border-4 border-red-600 dark:border-red-400 border-t-transparent rounded-full"
+                    />
+                    <motion.p
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      className="mt-4 text-gray-600 dark:text-gray-300 font-medium text-sm"
+                    >
+                      Chargement...
+                    </motion.p>
+                  </div>
+                ) : banners.length > 0 ? (
+                  <>
+                    <AnimatePresence initial={false} custom={bannerDirection} mode="wait">
+                      <motion.div
+                        key={currentBannerIndex}
+                        custom={bannerDirection}
+                        variants={slideVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{
+                          x: { type: "spring", stiffness: 300, damping: 30 },
+                          opacity: { duration: 0.5 }
+                        }}
+                        className="absolute inset-0"
+                      >
+                        <img
+                          src={banners[currentBannerIndex].image_url}
+                          alt={banners[currentBannerIndex].title || `Banner ${currentBannerIndex + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-red-600/20 to-gray-900/20" />
+                      </motion.div>
+                    </AnimatePresence>
+
+                    {/* Navigation dots */}
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+                      {banners.map((_, index) => (
+                        <motion.button
+                          key={index}
+                          onClick={() => goToBannerSlide(index)}
+                          className={`transition-all ${
+                            index === currentBannerIndex
+                              ? 'w-8 sm:w-10 h-2 sm:h-2.5 bg-white'
+                              : 'w-2 sm:w-2.5 h-2 sm:h-2.5 bg-white/50 hover:bg-white/75'
+                          } rounded-full`}
+                          whileHover={{ scale: 1.2 }}
+                          whileTap={{ scale: 0.9 }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Navigation arrows for desktop */}
+                    <div className="hidden md:block">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => {
+                          setBannerDirection(-1);
+                          setCurrentBannerIndex((prev) => (prev - 1 + banners.length) % banners.length);
+                        }}
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition z-10"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </motion.button>
+
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => {
+                          setBannerDirection(1);
+                          setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+                        }}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition z-10"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </motion.button>
+                    </div>
+
+                  </>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                    <img
+                      src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&w=800"
+                      alt="Students learning"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-red-600/20 to-gray-900/20" />
+                  </div>
+                )}
+              </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -1029,7 +1026,7 @@ const LandingPage = () => {
                     <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">Certificat professionnel</p>
+                    <p className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">Formations professionnelles</p>
                     {/* <p className="text-xs text-gray-600 dark:text-gray-400">Reconnu internationalement</p> */}
                   </div>
                 </div>
@@ -1046,7 +1043,7 @@ const LandingPage = () => {
                     <CurrencyDollarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">30% Commission</p>
+                    <p className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">Des commissions</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">Sur affiliation</p>
                   </div>
                 </div>
@@ -1057,7 +1054,7 @@ const LandingPage = () => {
       </section>
 
       {/* Stats Section - Responsive */}
-      <section className="py-6 bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-700 dark:to-blue-700">
+      <section className="py-6 bg-gradient-to-r from-gray-900 to-red-600 dark:from-black dark:to-red-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {stats.map((stat, index) => (
@@ -1075,15 +1072,12 @@ const LandingPage = () => {
                 <p className="text-2xl sm:text-3xl font-bold text-white">
                   <AnimatedCounter value={stat.value} duration={2500} />
                 </p>
-                <p className="text-primary-100 text-xs sm:text-sm">{stat.label}</p>
+                <p className="text-red-100 text-xs sm:text-sm">{stat.label}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
-
-      {/* Banner Slider Section - Responsive */}
-      <BannerSlider />
 
       {/* Features Section - Responsive */}
       <section id="features" className="py-12 px-4 sm:px-6 lg:px-8">
@@ -1188,9 +1182,9 @@ const LandingPage = () => {
 
           <div className="mt-8 grid sm:grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              { icon: <UserGroupIcon className="w-5 h-5 sm:w-6 sm:h-6" />, value: "30%", label: "Commission par vente", color: "from-purple-500 to-pink-500" },
+              { icon: <UserGroupIcon className="w-5 h-5 sm:w-6 sm:h-6" />, value: "30%", label: "Commission par vente", color: "from-red-600 to-red-500" },
               { icon: <CurrencyDollarIcon className="w-5 h-5 sm:w-6 sm:h-6" />, value: "Illimité", label: "Potentiel de gains", color: "from-green-500 to-emerald-500" },
-              { icon: <BoltIcon className="w-5 h-5 sm:w-6 sm:h-6" />, value: "∞", label: "Nombre de filleuls", color: "from-yellow-500 to-orange-500" }
+              { icon: <BoltIcon className="w-5 h-5 sm:w-6 sm:h-6" />, value: "∞", label: "Nombre de filleuls", color: "from-gray-900 to-black" }
             ].map((item, index) => (
               <motion.div
                 key={index}
@@ -1285,7 +1279,7 @@ const LandingPage = () => {
                 >
                   <span className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white pr-4">{faq.question}</span>
                   <ChevronDownIcon
-                    className={`w-5 h-5 text-primary-600 dark:text-primary-400 transition-transform flex-shrink-0 ${
+                    className={`w-5 h-5 text-red-600 dark:text-red-400 transition-transform flex-shrink-0 ${
                       openFaq === index ? 'rotate-180' : ''
                     }`}
                   />
@@ -1325,8 +1319,8 @@ const LandingPage = () => {
                 Avec plus de 500 formations dans des domaines variés, nous accompagnons déjà plus de 12,000 étudiants dans leur développement professionnel. Notre programme d'affiliation unique permet également à nos membres de générer des revenus en partageant leurs connaissances.
               </p>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-primary-50 dark:bg-primary-900/20 p-4 rounded-xl">
-                  <p className="text-2xl sm:text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">2025</p>
+                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl">
+                  <p className="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-400 mb-1">2025</p>
                   <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Année de création</p>
                 </div>
                 <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl">
@@ -1371,7 +1365,7 @@ const LandingPage = () => {
               viewport={{ once: true }}
               className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg text-center"
             >
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white mx-auto mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-gray-900 to-black rounded-xl flex items-center justify-center text-white mx-auto mb-4">
                 <EnvelopeIcon className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
               <h3 className="font-bold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">Email</h3>
@@ -1399,7 +1393,7 @@ const LandingPage = () => {
               transition={{ delay: 0.2 }}
               className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg text-center sm:col-span-2 md:col-span-1"
             >
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white mx-auto mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center text-white mx-auto mb-4">
                 <MapPinIcon className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
               <h3 className="font-bold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">Localisation</h3>
@@ -1410,7 +1404,7 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section - Responsive */}
-      <section className="py-12 sm:py-16 bg-gradient-to-r from-primary-600 via-blue-600 to-purple-600 dark:from-primary-700 dark:via-blue-700 dark:to-purple-700 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-gray-900 via-red-600 to-black dark:from-black dark:via-red-700 dark:to-gray-900 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
@@ -1439,8 +1433,8 @@ const LandingPage = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/register')}
-              className="bg-white text-primary-600 px-6 sm:px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition shadow-xl text-sm sm:text-base"
+              onClick={() => setRegisterModalOpen(true)}
+              className="bg-white text-red-600 px-6 sm:px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition shadow-xl text-sm sm:text-base"
             >
               Inscription gratuite
             </motion.button>
@@ -1477,10 +1471,11 @@ const LandingPage = () => {
             {/* Logo et description */}
             <div className="w-full">
               <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-600 to-primary-400 rounded-lg flex items-center justify-center">
-                  <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold">Formaneo</h3>
+                <img
+                  src="/images/formaneo-logo.png?v=3"
+                  alt="Formaneo Logo"
+                  className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+                />
               </div>
               <p className="text-gray-400 text-sm sm:text-base max-w-md mx-auto px-2">
                 Plateforme e-learning accessible mondialement. Développez vos compétences, où que vous soyez.
@@ -1509,6 +1504,26 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        onSwitchToRegister={() => {
+          setLoginModalOpen(false);
+          setRegisterModalOpen(true);
+        }}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={registerModalOpen}
+        onClose={() => setRegisterModalOpen(false)}
+        onSwitchToLogin={() => {
+          setRegisterModalOpen(false);
+          setLoginModalOpen(true);
+        }}
+      />
     </div>
   );
 };

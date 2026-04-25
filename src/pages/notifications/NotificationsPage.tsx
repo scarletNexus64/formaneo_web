@@ -93,7 +93,7 @@ const NotificationsPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des notifications...</p>
         </div>
       </div>
@@ -110,13 +110,13 @@ const NotificationsPage = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2 sm:gap-3">
-                <BellIcon className="w-6 h-6 sm:w-8 sm:h-8 text-primary-600 dark:text-primary-400" />
+                <BellIcon className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 dark:text-red-400" />
                 Notifications
               </h1>
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
                 {unreadCount > 0 ? (
                   <span>
-                    Vous avez <span className="font-semibold text-primary-600 dark:text-primary-400">{unreadCount}</span> notification{unreadCount > 1 ? 's' : ''} non lue{unreadCount > 1 ? 's' : ''}
+                    Vous avez <span className="font-semibold text-red-600 dark:text-red-400">{unreadCount}</span> notification{unreadCount > 1 ? 's' : ''} non lue{unreadCount > 1 ? 's' : ''}
                   </span>
                 ) : (
                   'Aucune notification non lue'
@@ -129,7 +129,7 @@ const NotificationsPage = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleMarkAllAsRead}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 text-sm sm:text-base whitespace-nowrap"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 text-sm sm:text-base whitespace-nowrap"
               >
                 <CheckIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span className="hidden sm:inline">Tout marquer comme lu</span>
@@ -171,7 +171,7 @@ const NotificationsPage = () => {
                 className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-5 border ${
                   notification.is_read
                     ? 'border-gray-200 dark:border-gray-700'
-                    : 'border-primary-200 dark:border-primary-800 bg-primary-50/50 dark:bg-primary-900/10'
+                    : 'border-red-200 dark:border-gray-800 bg-red-50/50 dark:bg-red-900/10'
                 }`}
               >
                 <div className="flex items-start gap-3 sm:gap-4">
@@ -199,7 +199,7 @@ const NotificationsPage = () => {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleMarkAsRead(notification.id)}
-                            className="p-2 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                            className="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                             title="Marquer comme lu"
                           >
                             <CheckIcon className="w-5 h-5" />

@@ -89,16 +89,16 @@ export const VideoRewardModal: React.FC<VideoRewardModalProps> = ({
                 <p className="text-gray-600 dark:text-gray-300 mb-2">
                   Vous avez terminé la vidéo
                 </p>
-                <p className="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-6">
+                <p className="text-sm font-semibold text-red-600 dark:text-red-400 mb-6">
                   "{videoTitle}"
                 </p>
 
                 {/* Montant de la récompense */}
-                <div className="bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-lg p-6 mb-6">
+                <div className="bg-gradient-to-r from-red-50 to-secondary-50 dark:from-red-900/20 dark:to-secondary-900/20 rounded-lg p-6 mb-6">
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                     Votre récompense
                   </p>
-                  <div className="text-5xl font-bold text-primary-600 dark:text-primary-400">
+                  <div className="text-5xl font-bold text-red-600 dark:text-red-400">
                     {rewardAmount.toLocaleString()} <span className="text-2xl">FCFA</span>
                   </div>
                 </div>
@@ -118,7 +118,7 @@ export const VideoRewardModal: React.FC<VideoRewardModalProps> = ({
                     className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
                       loading
                         ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed text-gray-500'
-                        : 'bg-primary-600 hover:bg-primary-700 text-white shadow-lg hover:shadow-xl'
+                        : 'bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl'
                     }`}
                   >
                     {loading ? (

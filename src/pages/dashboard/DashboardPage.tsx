@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   AcademicCapIcon,
   BookOpenIcon,
@@ -42,11 +43,45 @@ const DashboardPage = () => {
   const [isCheckingCode, setIsCheckingCode] = useState(false);
   const [codeAvailability, setCodeAvailability] = useState<{ available: boolean; message: string; is_current?: boolean } | null>(null);
   const [isUpdatingCode, setIsUpdatingCode] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Slides pour le carousel
+  const slides = [
+    {
+      icon: <SparklesIcon className="w-6 h-6" />,
+      text: "Découvrez nos Quiz interactifs et gagnez des récompenses",
+      color: "from-purple-500 to-pink-500"
+    },
+    {
+      icon: <AcademicCapIcon className="w-6 h-6" />,
+      text: "Plus de 500 formations dans tous les domaines",
+      color: "from-blue-500 to-cyan-500"
+    },
+    {
+      icon: <FireIcon className="w-6 h-6" />,
+      text: "Nouveau : Jouez au Casino et multipliez vos gains !",
+      color: "from-orange-500 to-red-500"
+    },
+    {
+      icon: <BookOpenIcon className="w-6 h-6" />,
+      text: "E-books gratuits et payants à télécharger",
+      color: "from-green-500 to-emerald-500"
+    }
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Auto-slide carousel
+  useEffect(() => {
+    const slideTimer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 4000); // Change toutes les 4 secondes
+
+    return () => clearInterval(slideTimer);
+  }, [slides.length]);
 
 
   // Charger les données du dashboard
@@ -372,35 +407,79 @@ const DashboardPage = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Simple Welcome Section */}
-        <div className="mb-8">
-          <div className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-700 dark:to-blue-700 rounded-xl p-8 text-white shadow-lg border border-primary-500 dark:border-primary-600">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">
-                  {getGreeting()}, {user?.name?.split(' ')[0] || 'Apprenant'} ! 👋
-                </h1>
-                <p className="text-primary-100 dark:text-primary-200 mb-4">
-                  Continuez votre parcours d'apprentissage
-                </p>
-                <div className="flex items-center space-x-4">
+        {/* Welcome Section - Modern & Clean */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <div className="relative overflow-hidden bg-gradient-to-r from-red-600 to-gray-900 dark:from-red-700 dark:to-black rounded-2xl p-8 text-white shadow-xl">
+            {/* Subtle animated background */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-pulse" />
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-red-300 rounded-full mix-blend-overlay filter blur-3xl animate-pulse delay-1000" />
+            </div>
+
+            <div className="relative flex items-center justify-between">
+              <div className="flex-1">
+                <motion.h1
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="text-3xl font-bold mb-2"
+                >
+                  {getGreeting()}, {user?.name?.split(' ')[0] || 'Apprenant'}
+                </motion.h1>
+                {/* Carousel de slides */}
+                <div className="mb-6 h-16 overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentSlide}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.5 }}
+                      className="flex items-center gap-3"
+                    >
+                      <div className={`p-2 rounded-lg bg-gradient-to-r ${slides[currentSlide].color}`}>
+                        {slides[currentSlide].icon}
+                      </div>
+                      <p className="text-red-100 dark:text-red-200 text-lg font-medium">
+                        {slides[currentSlide].text}
+                      </p>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                  className="flex items-center space-x-4"
+                >
                   <Link
                     to="/formations"
-                    className="bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="group relative bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 px-6 py-3 rounded-lg font-medium overflow-hidden transition-all duration-300 hover:shadow-lg"
                   >
-                    Continuer l'apprentissage
+                    <span className="relative z-10">Continuer l'apprentissage</span>
+                    <div className="absolute inset-0 bg-gray-50 dark:bg-gray-700 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
                   </Link>
                   <Link
                     to="/quizz"
-                    className="border border-white dark:border-gray-300 text-white dark:text-gray-100 px-4 py-2 rounded-lg font-medium hover:bg-white/10 dark:hover:bg-white/20 transition-colors"
+                    className="group border-2 border-white dark:border-gray-300 text-white dark:text-gray-100 px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-white/20 dark:hover:bg-white/20"
                   >
                     Faire un quiz
                   </Link>
-                </div>
+                </motion.div>
               </div>
 
-              <div className="hidden lg:block text-right">
-                <p className="text-sm text-primary-200 dark:text-primary-300 mb-1">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                className="hidden lg:block text-right"
+              >
+                <p className="text-sm text-red-200 dark:text-red-300 mb-1">
                   {currentTime.toLocaleDateString('fr-FR', {
                     weekday: 'long',
                     year: 'numeric',
@@ -408,93 +487,158 @@ const DashboardPage = () => {
                     day: 'numeric'
                   })}
                 </p>
-                <p className="text-xl font-semibold">
+                <p className="text-2xl font-semibold mb-4">
                   {currentTime.toLocaleTimeString('fr-FR', {
                     hour: '2-digit',
                     minute: '2-digit'
                   })}
                 </p>
-                <div className="mt-4 flex items-center space-x-2">
-                  <FireIcon className="w-4 h-4 text-orange-300 dark:text-orange-400" />
-                  <span className="text-sm text-primary-200 dark:text-primary-300">{dashboardStats?.formations?.in_progress || 0} formations en cours</span>
+                <div className="mt-4 inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
+                  <FireIcon className="w-5 h-5 text-orange-300 dark:text-orange-400" />
+                  <span className="text-sm font-medium text-red-100 dark:text-red-200">
+                    {dashboardStats?.formations?.in_progress || 0} formations en cours
+                  </span>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Modern with Animations */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <div
+            <motion.div
               key={stat.title}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md dark:hover:shadow-lg transition-all"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.4 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg dark:hover:shadow-xl transition-shadow duration-300"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                <motion.div
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className={`p-3 rounded-xl ${stat.bgColor} shadow-md`}
+                >
                   <div className={stat.iconColor}>
                     {stat.icon}
                   </div>
-                </div>
+                </motion.div>
                 {stat.title === 'Solde disponible' && (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setShowBalance(!showBalance)}
                     className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg transition-colors"
                   >
-                    {showBalance ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-                  </button>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={showBalance ? 'slash' : 'eye'}
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: 180 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {showBalance ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                      </motion.div>
+                    </AnimatePresence>
+                  </motion.button>
                 )}
               </div>
 
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.title}</h3>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                <motion.p
+                  key={stat.value}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-2xl font-bold text-gray-900 dark:text-white"
+                >
+                  {stat.value}
+                </motion.p>
                 <div className="flex items-center space-x-1">
                   {stat.changeType === 'increase' && (
-                    <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded-full">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 + 0.2 }}
+                      className="flex items-center space-x-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded-full"
+                    >
                       <ArrowUpIcon className="w-3 h-3 text-green-600 dark:text-green-400" />
                       <span className="text-xs font-medium text-green-600 dark:text-green-400">{stat.change}</span>
-                    </div>
+                    </motion.div>
                   )}
                   {stat.changeType === 'decrease' && (
-                    <div className="flex items-center space-x-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-full">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 + 0.2 }}
+                      className="flex items-center space-x-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-full"
+                    >
                       <ArrowDownIcon className="w-3 h-3 text-red-600 dark:text-red-400" />
                       <span className="text-xs font-medium text-red-600 dark:text-red-400">{stat.change}</span>
-                    </div>
+                    </motion.div>
                   )}
                   {stat.changeType === 'neutral' && (
-                    <div className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 + 0.2 }}
+                      className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full"
+                    >
                       <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{stat.change}</span>
-                    </div>
+                    </motion.div>
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Actions Section */}
           <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+            >
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">Actions Rapides</h2>
                   <p className="text-gray-600 dark:text-gray-400 mt-1">Accès direct aux fonctions principales</p>
                 </div>
-                <SparklesIcon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                >
+                  <SparklesIcon className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </motion.div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 {quickActions.map((action, index) => (
-                  <div key={action.title} className="group cursor-pointer">
+                  <motion.div
+                    key={action.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 + index * 0.1, duration: 0.4 }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    className="group cursor-pointer"
+                  >
                     <Link to={action.route}>
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors hover:shadow-sm text-center">
-                        <div className={`inline-flex p-4 rounded-lg ${action.color} ${action.hoverColor} transition-colors mb-4`}>
+                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-700/50 rounded-xl p-6 hover:shadow-md transition-all duration-300 text-center border border-gray-200 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-600">
+                        <motion.div
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                          className={`inline-flex p-4 rounded-xl ${action.color} shadow-lg mb-4`}
+                        >
                           <div className="text-white">
                             {action.icon}
                           </div>
-                        </div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                        </motion.div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
                           {action.title}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -502,7 +646,7 @@ const DashboardPage = () => {
                         </p>
                       </div>
                     </Link>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 
@@ -511,15 +655,26 @@ const DashboardPage = () => {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Autres Services</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {services.map((service, index) => (
-                    <div key={service.title} className="group cursor-pointer">
+                    <motion.div
+                      key={service.title}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 1 + index * 0.1, duration: 0.4 }}
+                      whileHover={{ x: 4, transition: { duration: 0.2 } }}
+                      className="group cursor-pointer"
+                    >
                       <Link to={service.route}>
-                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors hover:shadow-sm">
-                          <div className={`inline-flex p-3 rounded-lg ${service.color} ${service.hoverColor} transition-colors mb-3`}>
+                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-700/50 rounded-xl p-4 hover:shadow-md transition-all duration-300 border border-gray-200 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-600">
+                          <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                            className={`inline-flex p-3 rounded-xl ${service.color} shadow-md mb-3`}
+                          >
                             <div className="text-white">
                               {service.icon}
                             </div>
-                          </div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                          </motion.div>
+                          <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
                             {service.title}
                           </h3>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -527,20 +682,25 @@ const DashboardPage = () => {
                           </p>
                         </div>
                       </Link>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Continue Learning Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2, duration: 0.5 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6"
+            >
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">Continuer l'Apprentissage</h2>
                   <p className="text-gray-600 dark:text-gray-400 mt-1">Reprenez là où vous vous êtes arrêté</p>
                 </div>
-                <Link to="/formations" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium">
+                <Link to="/formations" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm font-medium hover:underline">
                   Voir toutes
                 </Link>
               </div>
@@ -559,46 +719,55 @@ const DashboardPage = () => {
                   ))
                 ) : inProgressFormations.length > 0 ? (
                   inProgressFormations.map((formation, index) => (
-                    <Link
+                    <motion.div
                       key={formation.id || index}
-                      to={`/formations/${formation.id}`}
-                      className="block"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 1.3 + index * 0.1, duration: 0.4 }}
+                      whileHover={{ x: 4, transition: { duration: 0.2 } }}
                     >
-                      <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer">
-                        <div className="flex-shrink-0 relative">
-                          <div className="w-16 h-12 bg-gray-300 dark:bg-gray-600 rounded-lg flex items-center justify-center">
-                            <PlayIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-                          </div>
-                          <div className="absolute inset-0 bg-primary-600 dark:bg-primary-700 bg-opacity-80 rounded-lg flex items-center justify-center">
-                            <PlayIcon className="w-6 h-6 text-white" />
-                          </div>
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-gray-900 dark:text-white truncate">{formation.title}</h3>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                              <div
-                                className="bg-primary-500 dark:bg-primary-400 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${Math.round(formation.progress)}%` }}
-                              ></div>
+                      <Link
+                        to={`/formations/${formation.id}`}
+                        className="block"
+                      >
+                        <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-700/50 rounded-xl hover:shadow-md transition-all duration-300 cursor-pointer border border-gray-200 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-600">
+                          <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            className="flex-shrink-0 relative"
+                          >
+                            <div className="w-16 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md">
+                              <PlayIcon className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">{Math.round(formation.progress)}%</span>
-                          </div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{formatRemainingDuration(formation.duration_minutes, formation.progress)}</p>
-                        </div>
+                          </motion.div>
 
-                        <div className="text-right">
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Vu {formatLastWatched(formation.completed_at)}</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-gray-900 dark:text-white truncate">{formation.title}</h3>
+                            <div className="flex items-center space-x-2 mt-2">
+                              <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2 overflow-hidden">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${Math.round(formation.progress)}%` }}
+                                  transition={{ delay: 1.4 + index * 0.1, duration: 0.8, ease: "easeOut" }}
+                                  className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full"
+                                ></motion.div>
+                              </div>
+                              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[3rem] text-right">{Math.round(formation.progress)}%</span>
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{formatRemainingDuration(formation.duration_minutes, formation.progress)}</p>
+                          </div>
+
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Vu {formatLastWatched(formation.completed_at)}</p>
+                          </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                    </motion.div>
                   ))
                 ) : (
                   // État vide : l'utilisateur n'a pas de formations en cours
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <AcademicCapIcon className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                    <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <AcademicCapIcon className="w-8 h-8 text-red-600 dark:text-red-400" />
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                       Aucune formation en cours
@@ -608,7 +777,7 @@ const DashboardPage = () => {
                     </p>
                     <Link
                       to="/formations"
-                      className="inline-flex items-center px-4 py-2 bg-primary-600 dark:bg-primary-700 text-white font-medium rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors"
+                      className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600 to-gray-900 text-white font-medium rounded-lg hover:shadow-lg transition-all"
                     >
                       <AcademicCapIcon className="w-5 h-5 mr-2" />
                       Découvrir les formations
@@ -616,17 +785,22 @@ const DashboardPage = () => {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Right Sidebar */}
           <div className="space-y-6">
 
             {/* Recent Activity */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+            >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">Activité Récente</h3>
-                <Link to="/wallet" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-sm">
+                <Link to="/wallet" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm hover:underline">
                   Voir tout
                 </Link>
               </div>
@@ -645,21 +819,34 @@ const DashboardPage = () => {
                   ))
                 ) : recentActivities.length > 0 && user?.account_status === 'active' ? (
                   recentActivities.map((activity, index) => (
-                    <div
+                    <motion.div
                       key={`${activity.type}-${index}`}
-                      className="flex items-start space-x-3"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.9 + index * 0.1, duration: 0.3 }}
+                      className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                     >
-                      <div className="flex-shrink-0 mt-1">
+                      <motion.div
+                        whileHover={{ scale: 1.2, rotate: 5 }}
+                        className="flex-shrink-0 mt-1"
+                      >
                         {getActivityIcon(activity.icon)}
-                      </div>
+                      </motion.div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.title}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{activity.time}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-green-600 dark:text-green-400">{activity.amount}</p>
+                        <motion.p
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 1 + index * 0.1, type: "spring", stiffness: 200 }}
+                          className="text-sm font-semibold text-green-600 dark:text-green-400"
+                        >
+                          {activity.amount}
+                        </motion.p>
                       </div>
-                    </div>
+                    </motion.div>
                   ))
                 ) : (
                   <div className="text-center py-8">
@@ -672,26 +859,43 @@ const DashboardPage = () => {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Promo Code */}
-            <div className="bg-gradient-to-r from-primary-600 to-blue-600 dark:from-primary-700 dark:to-blue-700 rounded-xl p-6 text-white shadow-lg border border-primary-500 dark:border-primary-600">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold">Votre Code Promo</h3>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.2, duration: 0.5 }}
+              className="relative overflow-hidden bg-gradient-to-r from-red-600 to-gray-900 dark:from-red-700 dark:to-black rounded-2xl p-6 text-white shadow-xl"
+            >
+              {/* Subtle animated background */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full mix-blend-overlay filter blur-2xl animate-pulse" />
+              </div>
+
+              <div className="relative flex items-center justify-between mb-3">
+                <h3 className="font-bold text-lg">Votre Code Promo</h3>
                 <div className="flex items-center space-x-2">
                   {user?.account_status === 'active' && !isEditingPromoCode && (
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         setIsEditingPromoCode(true);
                         setNewPromoCode(user?.promo_code || '');
                       }}
-                      className="text-white hover:text-primary-200 flex items-center text-sm bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors"
+                      className="text-white hover:text-red-200 flex items-center text-sm bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-all shadow-sm"
                     >
                       <PencilIcon className="w-4 h-4 mr-1" />
                       Modifier
-                    </button>
+                    </motion.button>
                   )}
-                  <StarIcon className="w-5 h-5" />
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
+                  >
+                    <StarIcon className="w-5 h-5" />
+                  </motion.div>
                 </div>
               </div>
 
@@ -706,15 +910,18 @@ const DashboardPage = () => {
                     </p>
                   </div>
                   {user?.account_status === 'active' && (
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => copyToClipboard(user?.promo_code || '', 'Code promo')}
-                      className="w-full bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-colors flex items-center justify-center mb-3"
+                      className="relative w-full bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition-all flex items-center justify-center mb-3 backdrop-blur-sm shadow-md overflow-hidden group"
                     >
-                      <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
-                      Copier le code
-                    </button>
+                      <div className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+                      <DocumentDuplicateIcon className="w-4 h-4 mr-2 relative z-10" />
+                      <span className="relative z-10">Copier le code</span>
+                    </motion.button>
                   )}
-                  <p className="text-primary-100 dark:text-primary-200 text-sm text-center">
+                  <p className="text-red-100 dark:text-red-200 text-sm text-center">
                     {user?.account_status === 'active'
                       ? 'Partagez et gagnez des commissions !'
                       : 'Activez votre compte pour voir votre code'
@@ -783,14 +990,19 @@ const DashboardPage = () => {
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Affiliate Link */}
             {user?.account_status === 'active' && user?.promo_code && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.4, duration: 0.5 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+              >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-                    <LinkIcon className="w-5 h-5 mr-2 text-primary-600 dark:text-primary-400" />
+                    <LinkIcon className="w-5 h-5 mr-2 text-red-600 dark:text-red-400" />
                     Lien d'Affiliation
                   </h3>
                 </div>
@@ -802,21 +1014,28 @@ const DashboardPage = () => {
                     type="text"
                     value={generateAffiliateLink(user.promo_code)}
                     readOnly
-                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm font-mono"
+                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm font-mono focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => copyToClipboard(generateAffiliateLink(user.promo_code), 'Lien d\'affiliation')}
-                    className="px-4 py-2 sm:py-3 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors flex items-center justify-center whitespace-nowrap"
+                    className="px-4 py-2 sm:py-3 bg-gradient-to-r from-red-600 to-gray-900 dark:from-red-700 dark:to-black text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center whitespace-nowrap"
                   >
                     <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
-                  </button>
+                  </motion.button>
                 </div>
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.5, duration: 0.4 }}
+                  className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg"
+                >
                   <p className="text-xs text-blue-800 dark:text-blue-300">
                     <strong>Astuce :</strong> Partagez ce lien sur les réseaux sociaux, par email ou par message pour maximiser vos chances de parrainages !
                   </p>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             )}
           </div>
         </div>

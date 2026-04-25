@@ -71,7 +71,7 @@ const QuizHistoryPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 dark:border-red-400 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement de l'historique...</p>
         </div>
       </div>
@@ -86,7 +86,7 @@ const QuizHistoryPage = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate('/quizz')}
-            className="flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 mb-4"
+            className="flex items-center text-red-600 dark:text-red-400 hover:text-indigo-800 dark:hover:text-red-300 mb-4"
           >
             <ChevronLeftIcon className="h-5 w-5 mr-1" />
             Retour aux quiz
@@ -108,7 +108,7 @@ const QuizHistoryPage = () => {
             <div className="text-sm text-gray-600 dark:text-gray-400">Quiz réussis</div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-2xl font-bold text-gray-900 dark:text-blue-400">
               {results.length > 0 ? Math.round(results.reduce((acc, r) => acc + r.score, 0) / results.length) : 0}%
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Score moyen</div>
@@ -130,7 +130,7 @@ const QuizHistoryPage = () => {
               <p className="text-gray-600 dark:text-gray-400 mb-6">Commencez votre premier quiz pour voir vos résultats ici</p>
               <button
                 onClick={() => navigate('/quizz')}
-                className="bg-indigo-600 dark:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+                className="bg-red-600 dark:bg-red-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
               >
                 Commencer un quiz
               </button>
@@ -248,7 +248,7 @@ const QuizHistoryPage = () => {
                               onClick={() => setCurrentPage(pageNumber)}
                               className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                                 currentPage === pageNumber
-                                  ? 'z-10 bg-indigo-50 dark:bg-indigo-900 border-indigo-500 dark:border-indigo-600 text-indigo-600 dark:text-indigo-300'
+                                  ? 'z-10 bg-red-50 dark:bg-red-900 border-red-500 dark:border-red-600 text-red-600 dark:text-red-300'
                                   : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600'
                               }`}
                             >

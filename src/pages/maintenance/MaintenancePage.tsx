@@ -66,7 +66,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = () => {
 
   const { title, message } = maintenanceInfo;
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-blue-800 p-4">
       <div className="max-w-2xl w-full">
         {/* Animated maintenance icon */}
         <div className="text-center mb-8">
@@ -84,19 +84,19 @@ const MaintenancePage: React.FC<MaintenancePageProps> = () => {
             {title}
           </h1>
 
-          <div className="w-24 h-1 bg-gradient-to-r from-blue-600 to-yellow-400 mx-auto mb-8 rounded-full"></div>
+          <div className="w-24 h-1 bg-gradient-to-r from-gray-900 to-yellow-400 mx-auto mb-8 rounded-full"></div>
 
           <p className="text-xl md:text-2xl text-gray-600 leading-relaxed mb-8">
             {message}
           </p>
 
           <div className="bg-blue-50 rounded-2xl p-6 mb-8">
-            <div className="flex items-center justify-center space-x-2 text-blue-700">
-              <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse"></div>
-              <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            <div className="flex items-center justify-center space-x-2 text-black">
+              <div className="w-3 h-3 bg-gray-900 rounded-full animate-pulse"></div>
+              <div className="w-3 h-3 bg-gray-900 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-3 h-3 bg-gray-900 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
             </div>
-            <p className="mt-4 text-blue-700 font-medium">
+            <p className="mt-4 text-black font-medium">
               Nous travaillons dur pour améliorer votre expérience
             </p>
           </div>
@@ -134,7 +134,7 @@ const MaintenancePage: React.FC<MaintenancePageProps> = () => {
                 sessionStorage.removeItem('maintenanceInfo');
                 window.location.href = '/';
               }}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="px-8 py-4 bg-gradient-to-r from-gray-900 to-black text-white font-semibold rounded-xl hover:from-black hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               Réessayer
             </button>

@@ -17,6 +17,8 @@ import FormationDetailPageAuth from './pages/formations/FormationDetailPage';
 import FormationLearnPageAuth from './pages/formations/FormationLearnPage';
 import EbooksPageAuth from './pages/ebooks/EbooksPage';
 import WalletPageAuth from './pages/wallet/WalletPage';
+import WithdrawalPreviewPage from './pages/wallet/WithdrawalPreviewPage';
+import MessagesPage from './pages/messages/MessagesPage';
 import QuizPage from './pages/quiz/QuizPage';
 import QuizCategoryPage from './pages/quiz/QuizCategoryPage';
 import QuizPlayPage from './pages/quiz/QuizPlayPage';
@@ -441,16 +443,144 @@ const AppContent = () => {
   // Show loading screen while checking maintenance status
   if (isChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800">
-        <div className="text-center">
-          <div className="inline-block relative">
-            <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-2xl animate-pulse"></div>
-            <div className="relative text-6xl animate-spin">
-              ⚙️
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
+        {/* Animated background particles */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl animate-blob"></div>
+          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-red-400/10 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
+        </div>
+
+        <div className="text-center relative z-10">
+          {/* Modern spinner */}
+          <div className="inline-block relative mb-8">
+            {/* Outer glow */}
+            <div className="absolute inset-0 bg-red-600/20 rounded-full blur-3xl animate-pulse-slow"></div>
+
+            {/* Triple ring spinner */}
+            <div className="relative w-24 h-24">
+              {/* Outer ring */}
+              <div className="absolute inset-0 rounded-full border-4 border-red-600/20"></div>
+
+              {/* Middle rotating ring */}
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-red-600 border-r-red-600 animate-spin"></div>
+
+              {/* Inner rotating ring */}
+              <div className="absolute inset-3 rounded-full border-4 border-transparent border-b-red-500 border-l-red-500 animate-spin-reverse"></div>
+
+              {/* Center dot */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-4 h-4 bg-red-600 rounded-full animate-pulse"></div>
+              </div>
             </div>
           </div>
-          <p className="mt-4 text-white text-lg">Chargement...</p>
+
+          {/* Text */}
+          <div className="space-y-3">
+            <h2 className="text-2xl font-bold text-white animate-fade-in">
+              Formaneo
+            </h2>
+            <p className="text-red-400 text-sm font-medium animate-fade-in-delayed">
+              Initialisation en cours...
+            </p>
+
+            {/* Loading dots */}
+            <div className="flex justify-center space-x-2 mt-6">
+              <div className="w-2 h-2 bg-red-600 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+          </div>
         </div>
+
+        <style>{`
+          @keyframes blob {
+            0%, 100% {
+              transform: translate(0, 0) scale(1);
+            }
+            33% {
+              transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+              transform: translate(-20px, 20px) scale(0.9);
+            }
+          }
+
+          @keyframes spin-slow {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+
+          @keyframes spin-reverse {
+            to {
+              transform: rotate(-360deg);
+            }
+          }
+
+          @keyframes pulse-slow {
+            0%, 100% {
+              opacity: 0.3;
+            }
+            50% {
+              opacity: 0.6;
+            }
+          }
+
+          @keyframes fade-in {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes fade-in-delayed {
+            0%, 30% {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .animate-blob {
+            animation: blob 7s infinite;
+          }
+
+          .animation-delay-2000 {
+            animation-delay: 2s;
+          }
+
+          .animation-delay-4000 {
+            animation-delay: 4s;
+          }
+
+          .animate-spin-slow {
+            animation: spin-slow 3s linear infinite;
+          }
+
+          .animate-spin-reverse {
+            animation: spin-reverse 4s linear infinite;
+          }
+
+          .animate-pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
+          }
+
+          .animate-fade-in {
+            animation: fade-in 0.8s ease-out forwards;
+          }
+
+          .animate-fade-in-delayed {
+            animation: fade-in-delayed 1.5s ease-out forwards;
+          }
+        `}</style>
       </div>
     );
   }
@@ -530,6 +660,16 @@ const AppContent = () => {
       <Route path="/wallet" element={
         <ProtectedRoute>
           <WalletPageAuth />
+        </ProtectedRoute>
+      } />
+      <Route path="/withdrawal-preview" element={
+        <ProtectedRoute>
+          <WithdrawalPreviewPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/messages" element={
+        <ProtectedRoute>
+          <MessagesPage />
         </ProtectedRoute>
       } />
       <Route path="/affiliate" element={

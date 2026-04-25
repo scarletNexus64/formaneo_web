@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SimpleModal from './SimpleModal';
 import walletService from '../../services/wallet.service';
 import toast from 'react-hot-toast';
 import { WithdrawalSettings } from '../../types/wallet.types';
+import WithdrawalMethodGrid, { WithdrawalMethod } from './WithdrawalMethodGrid';
 
 interface WithdrawalModalProps {
   isOpen: boolean;
@@ -11,14 +13,32 @@ interface WithdrawalModalProps {
   availableBalance: number;
 }
 
+type PaymentMethod = WithdrawalMethod;
+
 const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
   availableBalance
 }) => {
+  const navigate = useNavigate();
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('orange');
   const [amount, setAmount] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+
+  // Nouveaux champs pour PayPal
+  const [paypalEmail, setPaypalEmail] = useState('');
+
+  // Nouveaux champs pour carte bancaire
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+
+  // Nouveaux champs pour crypto
+  const [cryptoWalletAddress, setCryptoWalletAddress] = useState('');
+  const [cryptoType, setCryptoType] = useState<'BTC' | 'ETH' | 'USDC' | 'USDT'>('BTC');
+
   const [isLoading, setIsLoading] = useState(false);
   const [withdrawalSettings, setWithdrawalSettings] = useState<WithdrawalSettings>({
     min_amount: 1000,
@@ -111,8 +131,39 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
       return { valid: false, message: 'Montant supérieur au solde disponible' };
     }
 
-    if (!phoneNumber.trim()) {
-      return { valid: false, message: 'Veuillez entrer un numéro de téléphone' };
+    // Validation selon le moyen de paiement
+    if (paymentMethod === 'orange' || paymentMethod === 'mtn') {
+      if (!phoneNumber.trim()) {
+        return { valid: false, message: 'Veuillez entrer un numéro de téléphone' };
+      }
+    } else if (paymentMethod === 'paypal') {
+      if (!paypalEmail.trim()) {
+        return { valid: false, message: 'Veuillez entrer votre adresse email PayPal' };
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(paypalEmail)) {
+        return { valid: false, message: 'Adresse email invalide' };
+      }
+    } else if (paymentMethod === 'visa' || paymentMethod === 'mastercard') {
+      if (!cardNumber.trim()) {
+        return { valid: false, message: 'Veuillez entrer le numéro de carte' };
+      }
+      if (!cardName.trim()) {
+        return { valid: false, message: 'Veuillez entrer le nom du titulaire' };
+      }
+      if (!cardCvv.trim() || cardCvv.length !== 3) {
+        return { valid: false, message: 'CVV invalide (3 chiffres requis)' };
+      }
+      if (!cardExpiry.trim()) {
+        return { valid: false, message: 'Veuillez entrer la date d\'expiration' };
+      }
+    } else if (paymentMethod === 'crypto') {
+      if (!cryptoWalletAddress.trim()) {
+        return { valid: false, message: 'Veuillez entrer votre adresse wallet crypto' };
+      }
+      if (cryptoWalletAddress.length < 26) {
+        return { valid: false, message: 'Adresse wallet invalide' };
+      }
     }
 
     return { valid: true };
@@ -120,17 +171,77 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validation = validateForm();
     if (!validation.valid) {
       toast.error(validation.message || 'Erreur de validation');
       return;
     }
 
+    const numericAmount = getNumericAmount();
+
+    // Pour crypto, créer la demande et rediriger vers WhatsApp
+    if (paymentMethod === 'crypto') {
+      setIsLoading(true);
+      try {
+        const result = await walletService.createWithdrawalRequest(
+          'crypto',
+          numericAmount,
+          {
+            cryptoWalletAddress,
+            cryptoType
+          }
+        );
+
+        if (result.success && result.whatsapp_url) {
+          toast.success('Demande de retrait crypto créée ! Redirection vers WhatsApp...');
+
+          // Ouvrir WhatsApp dans un nouvel onglet
+          window.open(result.whatsapp_url, '_blank');
+
+          // Fermer le modal et rafraîchir
+          onSuccess();
+          handleClose();
+        } else {
+          toast.error(result.message || 'Erreur lors de la création de la demande de retrait');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la création de la demande de retrait crypto:', error);
+        toast.error('Erreur lors de la création de la demande de retrait');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // Pour PayPal et cartes bancaires, rediriger vers la page de prévisualisation
+    if (paymentMethod === 'paypal' || paymentMethod === 'visa' || paymentMethod === 'mastercard') {
+      const withdrawalData = {
+        paymentMethod,
+        amount: numericAmount,
+        ...(paymentMethod === 'paypal' && { email: paypalEmail }),
+        ...(paymentMethod === 'visa' || paymentMethod === 'mastercard' ? {
+          cardNumber,
+          cardName,
+          cardCvv,
+          cardExpiry,
+          cardType: paymentMethod
+        } : {})
+      };
+
+      // Sauvegarder dans localStorage pour la page de prévisualisation
+      localStorage.setItem('pendingWithdrawalRequest', JSON.stringify(withdrawalData));
+
+      // Rediriger vers la page de prévisualisation
+      navigate('/withdrawal-preview');
+      handleClose();
+      return;
+    }
+
+    // Pour Orange et MTN, continuer avec le processus existant
     setIsLoading(true);
-    
+
     try {
-      const numericAmount = getNumericAmount();
       const formattedPhone = walletService.formatPhoneNumber(phoneNumber);
 
       const result = await walletService.initiateWithdrawal(
@@ -172,8 +283,35 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
   const handleClose = () => {
     setAmount('');
     setPhoneNumber('');
+    setPaypalEmail('');
+    setCardNumber('');
+    setCardName('');
+    setCardCvv('');
+    setCardExpiry('');
+    setCryptoWalletAddress('');
+    setCryptoType('BTC');
+    setPaymentMethod('orange');
     setIsLoading(false);
     onClose();
+  };
+
+  const formatCardNumber = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    const groups = cleaned.match(/.{1,4}/g);
+    return groups ? groups.join(' ') : cleaned;
+  };
+
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCardNumber(e.target.value);
+    setCardNumber(formatted);
+  };
+
+  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 4) {
+      const formatted = value.length > 2 ? `${value.slice(0, 2)}/${value.slice(2)}` : value;
+      setCardExpiry(formatted);
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -189,10 +327,11 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
   const numericAmount = getNumericAmount();
 
   return (
-    <SimpleModal 
-      isOpen={isOpen} 
+    <SimpleModal
+      isOpen={isOpen}
       onClose={handleClose}
       title="Retirer des fonds"
+      maxWidth="2xl"
     >
       <form onSubmit={handleSubmit} className="mt-4">
         <div className="space-y-4">
@@ -212,6 +351,12 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
               💰 Solde disponible pour retrait: <strong>{formatCurrency(availableBalance)}</strong>
             </p>
           </div>
+
+          {/* Sélection du moyen de paiement */}
+          <WithdrawalMethodGrid
+            selectedMethod={paymentMethod}
+            onSelectMethod={setPaymentMethod}
+          />
 
           {/* Montant */}
           <div>
@@ -242,41 +387,183 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({
             <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
               {settingsLoading
                 ? 'Chargement des limites...'
-                : `Min: ${withdrawalSettings.min_amount.toLocaleString('fr-FR')} FCFA - Max: ${withdrawalSettings.max_amount.toLocaleString('fr-FR')} FCFA (multiple de 5) - Cameroun uniquement`
+                : `Min: ${withdrawalSettings.min_amount.toLocaleString('fr-FR')} FCFA - Max: ${withdrawalSettings.max_amount.toLocaleString('fr-FR')} FCFA (multiple de 5)`
               }
             </p>
           </div>
 
-          {/* Numéro de téléphone */}
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Numéro de téléphone
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="Ex: 6XXXXXXXX (Cameroun)"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              required
-            />
-            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-              Numéro camerounais MTN, Orange ou Moov pour recevoir l'argent (détection automatique de l'opérateur)
-            </p>
-          </div>
+          {/* Formulaire conditionnel selon le moyen de paiement */}
+          {(paymentMethod === 'orange' || paymentMethod === 'mtn') && (
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Numéro de téléphone
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="Ex: 6XXXXXXXX (Cameroun)"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                required
+              />
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                Numéro camerounais MTN, Orange ou Moov pour recevoir l'argent
+              </p>
+            </div>
+          )}
 
-          {/* Information sur le traitement selon le provider */}
+          {paymentMethod === 'paypal' && (
+            <div>
+              <label htmlFor="paypalEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Adresse email PayPal
+              </label>
+              <input
+                type="email"
+                id="paypalEmail"
+                value={paypalEmail}
+                onChange={(e) => setPaypalEmail(e.target.value)}
+                placeholder="votre@email.com"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                required
+              />
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                Adresse email associée à votre compte PayPal
+              </p>
+            </div>
+          )}
+
+          {(paymentMethod === 'visa' || paymentMethod === 'mastercard') && (
+            <>
+              <div>
+                <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Numéro de carte
+                </label>
+                <input
+                  type="text"
+                  id="cardNumber"
+                  value={cardNumber}
+                  onChange={handleCardNumberChange}
+                  placeholder="1234 5678 9012 3456"
+                  maxLength={19}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="cardName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Nom du titulaire
+                </label>
+                <input
+                  type="text"
+                  id="cardName"
+                  value={cardName}
+                  onChange={(e) => setCardName(e.target.value.toUpperCase())}
+                  placeholder="NOM PRENOM"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white uppercase"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="cardExpiry" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Date d'expiration
+                  </label>
+                  <input
+                    type="text"
+                    id="cardExpiry"
+                    value={cardExpiry}
+                    onChange={handleExpiryChange}
+                    placeholder="MM/AA"
+                    maxLength={5}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="cardCvv" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    CVV
+                  </label>
+                  <input
+                    type="text"
+                    id="cardCvv"
+                    value={cardCvv}
+                    onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ''))}
+                    placeholder="123"
+                    maxLength={3}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    required
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {paymentMethod === 'crypto' && (
+            <>
+              <div>
+                <label htmlFor="cryptoType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Type de cryptomonnaie
+                </label>
+                <select
+                  id="cryptoType"
+                  value={cryptoType}
+                  onChange={(e) => setCryptoType(e.target.value as 'BTC' | 'ETH' | 'USDC' | 'USDT')}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="BTC">Bitcoin (BTC)</option>
+                  <option value="ETH">Ethereum (ETH)</option>
+                  <option value="USDC">USD Coin (USDC)</option>
+                  <option value="USDT">Tether (USDT)</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="cryptoWallet" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Adresse du wallet {cryptoType}
+                </label>
+                <input
+                  type="text"
+                  id="cryptoWallet"
+                  value={cryptoWalletAddress}
+                  onChange={(e) => setCryptoWalletAddress(e.target.value)}
+                  placeholder={`Votre adresse ${cryptoType}`}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+                  required
+                />
+                <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                  L'adresse de votre wallet crypto pour recevoir les fonds
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Information sur le traitement selon le moyen de paiement */}
           <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
             <p className="text-blue-800 dark:text-blue-200 text-sm">
-              {paymentProvider === 'freemopay' ? (
+              {(paymentMethod === 'orange' || paymentMethod === 'mtn') ? (
+                paymentProvider === 'freemopay' ? (
+                  <>
+                    📱 <strong>Retrait via USSD (FreeMoPay)</strong><br />
+                    Vous recevrez un code USSD sur votre téléphone à composer pour finaliser le retrait.
+                  </>
+                ) : (
+                  <>
+                    ⏰ <strong>Votre demande de retrait sera traitée sous 24 heures maximum.</strong>
+                  </>
+                )
+              ) : paymentMethod === 'crypto' ? (
                 <>
-                  📱 <strong>Retrait via USSD (FreeMoPay)</strong><br />
-                  Vous recevrez un code USSD sur votre téléphone à composer pour finaliser le retrait.
+                  ₿ <strong>Retrait en {cryptoType}</strong><br />
+                  Votre demande sera envoyée à nos administrateurs. Le transfert sera effectué vers votre wallet dans les meilleurs délais.
                 </>
               ) : (
                 <>
-                  ⏰ <strong>Votre demande de retrait sera traitée sous 24 heures maximum.</strong>
+                  📧 <strong>Demande de retrait par {paymentMethod === 'paypal' ? 'PayPal' : paymentMethod.toUpperCase()}</strong><br />
+                  Votre demande sera envoyée à nos administrateurs qui la traiteront dans les meilleurs délais.
                 </>
               )}
             </p>

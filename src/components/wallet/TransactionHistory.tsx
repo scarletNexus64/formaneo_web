@@ -76,9 +76,9 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
         case 'bonus':
           return 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900';
         case 'commission':
-          return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900';
+          return 'text-gray-900 dark:text-blue-400 bg-blue-50 dark:bg-blue-900';
         case 'quiz_reward':
-          return 'text-primary-600 dark:text-primary-400 bg-indigo-50 dark:bg-indigo-900';
+          return 'text-red-600 dark:text-red-400 bg-indigo-50 dark:bg-indigo-900';
         case 'transfer_in':
           return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900';
         default:
@@ -160,7 +160,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Historique des transactions</h3>
           {transactions.length > 0 && (
-            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium">
+            <button className="text-gray-900 dark:text-blue-400 hover:text-black dark:hover:text-blue-300 text-sm font-medium">
               Voir tout
             </button>
           )}
@@ -236,25 +236,70 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transactions, i
                 Précédent
               </button>
 
-              <div className="flex items-center gap-1 overflow-x-auto max-w-[200px] sm:max-w-none">
-                {/* Afficher toutes les pages avec un style plus compact */}
-                {[...Array(pagination.last_page)].map((_, index) => {
-                  const pageNumber = index + 1;
+              <div className="flex items-center gap-1">
+                {/* Pagination intelligente avec ellipses */}
+                {(() => {
+                  const currentPage = pagination.current_page;
+                  const lastPage = pagination.last_page;
+                  const pages: (number | string)[] = [];
 
-                  return (
-                    <button
-                      key={pageNumber}
-                      onClick={() => onPageChange?.(pageNumber)}
-                      className={`min-w-[28px] sm:min-w-[32px] px-2 py-1 text-xs font-medium rounded-md transition-colors flex-shrink-0 ${
-                        pageNumber === pagination.current_page
-                          ? 'bg-primary-600 dark:bg-primary-700 text-white shadow-sm'
-                          : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                      }`}
-                    >
-                      {pageNumber}
-                    </button>
-                  );
-                })}
+                  // Logique pour afficher les numéros de page
+                  if (lastPage <= 7) {
+                    // Si 7 pages ou moins, afficher toutes les pages
+                    for (let i = 1; i <= lastPage; i++) {
+                      pages.push(i);
+                    }
+                  } else {
+                    // Toujours afficher la première page
+                    pages.push(1);
+
+                    if (currentPage > 3) {
+                      pages.push('...');
+                    }
+
+                    // Pages autour de la page actuelle
+                    const start = Math.max(2, currentPage - 1);
+                    const end = Math.min(lastPage - 1, currentPage + 1);
+
+                    for (let i = start; i <= end; i++) {
+                      pages.push(i);
+                    }
+
+                    if (currentPage < lastPage - 2) {
+                      pages.push('...');
+                    }
+
+                    // Toujours afficher la dernière page
+                    pages.push(lastPage);
+                  }
+
+                  return pages.map((page, index) => {
+                    if (page === '...') {
+                      return (
+                        <span
+                          key={`ellipsis-${index}`}
+                          className="px-2 py-1 text-gray-500 dark:text-gray-400"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => onPageChange?.(page as number)}
+                        className={`min-w-[32px] sm:min-w-[36px] px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
+                          page === currentPage
+                            ? 'bg-red-600 dark:bg-red-700 text-white shadow-sm'
+                            : 'bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
 
               <button

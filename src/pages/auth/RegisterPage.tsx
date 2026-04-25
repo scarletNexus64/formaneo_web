@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { EyeIcon, EyeSlashIcon, CheckCircleIcon, GiftIcon, SparklesIcon, FireIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, CheckCircleIcon, GiftIcon, SparklesIcon, FireIcon, ShieldCheckIcon, ArrowRightIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../../store/authStore';
 import { RegisterData } from '../../types';
 import { API_CONFIG } from '../../config/api.config';
@@ -66,61 +66,73 @@ const RegisterPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-500">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-500">
       <PublicNavigation showFullMenu={true} />
 
-      <div className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-transparent to-transparent dark:from-blue-900/20 opacity-40" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-100 via-transparent to-transparent dark:from-purple-900/20 opacity-40" />
+      <div className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden min-h-screen flex items-center">
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-red-50 via-transparent to-transparent dark:from-red-900/10 opacity-40" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-gray-100 via-transparent to-transparent dark:from-gray-900/20 opacity-40" />
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-2xl w-full mx-auto relative"
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="max-w-2xl w-full mx-auto relative z-10"
         >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100 dark:border-gray-700">
-            <div className="text-center mb-6">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 relative overflow-hidden">
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-gray-500/5 to-red-500/5 pointer-events-none" />
+            <div className="text-center mb-6 relative z-10">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-100 to-blue-100 dark:from-primary-900/30 dark:to-blue-900/30 text-primary-700 dark:text-primary-300 px-3 sm:px-4 py-2 rounded-full mb-4 border border-primary-200 dark:border-primary-800"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-gray-100 dark:from-red-900/20 dark:to-gray-900/30 text-red-700 dark:text-red-300 px-3 sm:px-4 py-2 rounded-full mb-4 border border-red-200 dark:border-red-800 shadow-sm"
               >
                 <FireIcon className="w-4 h-4" />
                 <span className="text-xs sm:text-sm font-semibold">Rejoignez 12,547 étudiants</span>
               </motion.div>
 
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-red-900 to-black dark:from-white dark:via-red-100 dark:to-gray-100 bg-clip-text text-transparent mb-2"
+              >
                 Créez votre compte
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300">
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-gray-600 dark:text-gray-300"
+              >
                 Commencez votre aventure d'apprentissage aujourd'hui
-              </p>
+              </motion.p>
             </div>
 
             {/* Benefits */}
-            <div className="bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 rounded-xl p-4 mb-6 border border-primary-100 dark:border-primary-800">
-              <p className="font-semibold text-primary-900 dark:text-primary-300 mb-3 flex items-center gap-2">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-r from-red-50 to-gray-50 dark:from-red-900/20 dark:to-gray-900/20 rounded-xl p-4 mb-6 border border-red-100 dark:border-red-800 shadow-sm relative z-10"
+            >
+              <p className="font-semibold text-red-900 dark:text-red-300 mb-3 flex items-center gap-2">
                 <SparklesIcon className="w-5 h-5" />
                 En vous inscrivant, vous obtenez :
               </p>
               <div className="space-y-2">
                 {benefits.map((benefit, index) => (
-                  <motion.div
+                  <div
                     key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center text-primary-700 dark:text-primary-400"
+                    className="flex items-center text-red-700 dark:text-red-400"
                   >
                     {benefit.icon}
                     <span className="ml-2 text-sm">{benefit.text}</span>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 relative z-10">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -135,7 +147,7 @@ const RegisterPage = () => {
                         message: 'Le nom doit contenir au moins 3 caractères'
                       }
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                     placeholder="John Doe"
                   />
                   {errors.name && (
@@ -162,7 +174,7 @@ const RegisterPage = () => {
                           message: 'Numéro de téléphone invalide'
                         }
                       })}
-                      className="w-full pl-28 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                      className="w-full pl-28 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                       placeholder="678 613 653"
                     />
                   </div>
@@ -185,7 +197,7 @@ const RegisterPage = () => {
                       message: 'Email invalide'
                     }
                   })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                   placeholder="vous@exemple.com"
                 />
                 {errors.email && (
@@ -212,7 +224,7 @@ const RegisterPage = () => {
                           message: 'Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre'
                         }
                       })}
-                      className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                      className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                       placeholder="••••••••"
                     />
                     <button
@@ -243,7 +255,7 @@ const RegisterPage = () => {
                         required: 'Confirmation requise',
                         validate: value => value === password || 'Les mots de passe ne correspondent pas'
                       })}
-                      className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                      className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                       placeholder="••••••••"
                     />
                     <button
@@ -271,7 +283,7 @@ const RegisterPage = () => {
                 <input
                   type="text"
                   {...register('promo_code')}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                   placeholder="Code promo de votre parrain"
                 />
                 {referralCode && (
@@ -285,15 +297,15 @@ const RegisterPage = () => {
                 <input
                   type="checkbox"
                   required
-                  className="w-4 h-4 mt-1 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 bg-white dark:bg-gray-700"
+                  className="w-4 h-4 mt-1 text-red-600 border-gray-300 dark:border-gray-600 rounded focus:ring-red-500 bg-white dark:bg-gray-700"
                 />
                 <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                   J'accepte les{' '}
-                  <Link to="/legal/terms-of-service" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+                  <Link to="/legal/terms-of-service" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
                     conditions d'utilisation
                   </Link>{' '}
                   et la{' '}
-                  <Link to="/legal/privacy-policy" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+                  <Link to="/legal/privacy-policy" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
                     politique de confidentialité
                   </Link>
                 </label>
@@ -304,7 +316,7 @@ const RegisterPage = () => {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-blue-600 text-white font-semibold rounded-xl hover:shadow-lg transition duration-200 ${
+                className={`w-full py-3 px-4 bg-gradient-to-r from-red-600 to-gray-900 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
@@ -317,31 +329,50 @@ const RegisterPage = () => {
                     Inscription...
                   </span>
                 ) : (
-                  'Créer mon compte'
+                  <span className="flex items-center justify-center gap-2">
+                    <UserPlusIcon className="w-5 h-5" />
+                    <span>Créer mon compte</span>
+                    <ArrowRightIcon className="w-5 h-5" />
+                  </span>
                 )}
               </motion.button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400 relative z-10">
               Déjà un compte ?{' '}
-              <Link to="/login" className="font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+              <Link to="/login" className="font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors">
                 Connectez-vous
               </Link>
             </p>
+
+            {/* Security badge */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400 relative z-10"
+            >
+              <ShieldCheckIcon className="w-4 h-4 text-green-500" />
+              <span>Inscription sécurisée et cryptée</span>
+            </motion.div>
           </div>
 
-          <div className="mt-6 text-center">
-            <Link to="/" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="mt-6 text-center"
+          >
+            <Link to="/" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
               ← Retour à l'accueil
             </Link>
-          </div>
+          </motion.div>
 
           {/* <div className="mt-4 text-center text-xs text-gray-500 dark:text-gray-500 space-x-3">
-            <Link to="/legal/terms-of-service" className="hover:text-blue-600 dark:hover:text-blue-400 underline">
+            <Link to="/legal/terms-of-service" className="hover:text-gray-900 dark:hover:text-blue-400 underline">
               CGU
             </Link>
             <span>•</span>
-            <Link to="/legal/privacy-policy" className="hover:text-blue-600 dark:hover:text-blue-400 underline">
+            <Link to="/legal/privacy-policy" className="hover:text-gray-900 dark:hover:text-blue-400 underline">
               Politique de confidentialité
             </Link>
           </div> */}

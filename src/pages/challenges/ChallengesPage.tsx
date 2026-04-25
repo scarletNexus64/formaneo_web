@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   TrophyIcon,
   ClockIcon,
   CurrencyDollarIcon,
   SparklesIcon,
-  ChatBubbleLeftRightIcon
+  ChatBubbleLeftRightIcon,
+  FireIcon
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { challengesService } from '../../services/challenges.service';
@@ -96,7 +98,7 @@ const ChallengesPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 dark:border-red-400 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des défis...</p>
         </div>
       </div>
@@ -110,66 +112,136 @@ const ChallengesPage = () => {
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
-          <div className="text-center mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-8"
+          >
             <div className="flex justify-center mb-4">
-              <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-full">
+              <motion.div
+                animate={{
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, -5, 0]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-full shadow-lg"
+              >
                 <TrophyIcon className="h-8 w-8 text-white" />
-              </div>
+              </motion.div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Défis & Bonus</h1>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
+            <p className="text-lg text-gray-600 dark:text-gray-400 flex items-center justify-center">
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="mr-2"
+              >
+                <FireIcon className="w-5 h-5 text-orange-500" />
+              </motion.div>
               Participez aux défis et gagnez des récompenses !
             </p>
-          </div>
+          </motion.div>
 
           {/* Stats rapides */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg mb-4">
-                <CheckCircleIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center hover:shadow-lg transition-shadow"
+            >
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl mb-4 shadow-md"
+              >
+                <CheckCircleIcon className="h-6 w-6 text-white" />
+              </motion.div>
+              <motion.h3
+                key={challenges.filter(c => c.is_completed).length}
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                className="text-2xl font-bold text-gray-900 dark:text-white"
+              >
                 {challenges.filter(c => c.is_completed).length}
-              </h3>
+              </motion.h3>
               <p className="text-gray-600 dark:text-gray-400">Défis Complétés</p>
-            </div>
+            </motion.div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-lg mb-4">
-                <CurrencyDollarIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center hover:shadow-lg transition-shadow"
+            >
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl mb-4 shadow-md"
+              >
+                <CurrencyDollarIcon className="h-6 w-6 text-white" />
+              </motion.div>
+              <motion.h3
+                key={challenges.reduce((sum, c) => c.reward_claimed ? sum + c.reward : sum, 0)}
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                className="text-2xl font-bold text-gray-900 dark:text-white"
+              >
                 {formatPrice(challenges.reduce((sum, c) => c.reward_claimed ? sum + c.reward : sum, 0))} FCFA
-              </h3>
+              </motion.h3>
               <p className="text-gray-600 dark:text-gray-400">Récompenses Gagnées</p>
-            </div>
+            </motion.div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg mb-4">
-                <SparklesIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center hover:shadow-lg transition-shadow"
+            >
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-400 to-gray-900 rounded-xl mb-4 shadow-md"
+              >
+                <SparklesIcon className="h-6 w-6 text-white" />
+              </motion.div>
+              <motion.h3
+                key={challenges.filter(c => c.is_completed && !c.reward_claimed).length}
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                className="text-2xl font-bold text-gray-900 dark:text-white"
+              >
                 {challenges.filter(c => c.is_completed && !c.reward_claimed).length}
-              </h3>
+              </motion.h3>
               <p className="text-gray-600 dark:text-gray-400">À Réclamer</p>
-            </div>
+            </motion.div>
           </div>
 
           {/* Liste des défis */}
           <div className="space-y-6">
             {challenges.length === 0 ? (
-              <div className="text-center py-12">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+                className="text-center py-12"
+              >
                 <TrophyIcon className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">Aucun défi disponible</h3>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   Les défis seront bientôt disponibles !
                 </p>
-              </div>
+              </motion.div>
             ) : (
-              challenges.map((challenge) => (
-                <div
+              challenges.map((challenge, index) => (
+                <motion.div
                   key={challenge.id}
-                  className={`bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden border-l-4 ${
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transition-all overflow-hidden border-l-4 ${
                     challenge.is_completed
                       ? 'border-green-500 dark:border-green-400'
                       : challenge.expires_at && new Date(challenge.expires_at) < new Date()
@@ -204,11 +276,13 @@ const ChallengesPage = () => {
                               <span>Progression</span>
                               <span>{challenge.progress || 0} / {challenge.target}</span>
                             </div>
-                            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                              <div
-                                className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${getProgressPercentage(challenge)}%` }}
-                              ></div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${getProgressPercentage(challenge)}%` }}
+                                transition={{ delay: 0.6 + index * 0.1, duration: 0.8, ease: "easeOut" }}
+                                className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full"
+                              ></motion.div>
                             </div>
                           </div>
                         )}
@@ -237,20 +311,22 @@ const ChallengesPage = () => {
                             )}
 
                             {/* Bouton WhatsApp - Toujours visible */}
-                            <button
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
                               onClick={() => handleContactWhatsApp(challenge)}
-                              className="bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center"
+                              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center shadow-md hover:shadow-lg"
                               title="Contacter via WhatsApp pour vérification"
                             >
                               <ChatBubbleLeftRightIcon className="h-4 w-4 mr-2" />
                               Contacter WhatsApp
-                            </button>
+                            </motion.button>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))
             )}
           </div>

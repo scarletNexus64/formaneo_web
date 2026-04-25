@@ -428,7 +428,7 @@ const HybridVideoPlayer: React.FC<HybridVideoPlayerProps> = ({
             href={src}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-colors"
+            className="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors"
           >
             Ouvrir dans un nouvel onglet
           </a>

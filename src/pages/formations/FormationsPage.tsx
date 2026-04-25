@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpenIcon,
   AcademicCapIcon,
@@ -13,7 +14,9 @@ import {
   CheckCircleIcon,
   CurrencyDollarIcon,
   Squares2X2Icon,
-  ListBulletIcon
+  ListBulletIcon,
+  SparklesIcon,
+  FireIcon
 } from '@heroicons/react/24/outline';
 import { FormationPack, formationsService } from '../../services/formations.service';
 import { useAuthStore } from '../../store/authStore';
@@ -129,56 +132,100 @@ const FormationsPage = () => {
       <Navigation />
       
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div>
-              <div className="p-3 bg-primary-100 dark:bg-primary-900/30 rounded-xl">
-                <BookOpenIcon className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+      <div className="relative overflow-hidden bg-gradient-to-r from-red-600 to-gray-900 dark:from-red-700 dark:to-black border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        {/* Subtle animated background */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-300 rounded-full mix-blend-overlay filter blur-3xl animate-pulse delay-1000" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+          >
+            <div className="flex-1">
+              <div className="flex items-center mb-3">
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  className="p-3 bg-white/20 backdrop-blur-sm rounded-xl mr-3"
+                >
+                  <BookOpenIcon className="w-8 h-8 text-white" />
+                </motion.div>
+                <h1 className="text-4xl font-bold text-white">Formations</h1>
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white dark:text-white mb-2">Formations</h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400 dark:text-gray-400">
-                🗂️ Développez vos compétences avec nos formations professionnelles
+              <p className="text-lg text-red-100 dark:text-red-200 flex items-center">
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="mr-2"
+                >
+                  <SparklesIcon className="w-5 h-5 text-yellow-300" />
+                </motion.div>
+                Développez vos compétences avec nos formations professionnelles
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 px-4 py-2 rounded-xl">
-                <p className="text-sm text-primary-700 dark:text-primary-300 font-semibold">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-xl"
+              >
+                <p className="text-sm text-white font-semibold flex items-center">
+                  <FireIcon className="w-4 h-4 mr-1 text-orange-300" />
                   {filteredFormations.length} formation{filteredFormations.length > 1 ? 's' : ''}
                 </p>
-              </div>
-              
+              </motion.div>
+
               {/* View Mode Toggle */}
-              <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                <button
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="flex bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-1"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md ${
+                  className={`p-2 rounded-md transition-all ${
                     viewMode === 'grid'
-                      ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      ? 'bg-white text-red-600 shadow-sm'
+                      : 'text-white/70 hover:text-white'
                   }`}
                 >
                   <Squares2X2Icon className="w-5 h-5" />
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md ${
+                  className={`p-2 rounded-md transition-all ${
                     viewMode === 'list'
-                      ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      ? 'bg-white text-red-600 shadow-sm'
+                      : 'text-white/70 hover:text-white'
                   }`}
                 >
                   <ListBulletIcon className="w-5 h-5" />
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search and Filters */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="mb-8"
+        >
           <div className="flex flex-col lg:flex-row gap-4 mb-6">
             {/* Search */}
             <div className="flex-1 relative">
@@ -188,32 +235,45 @@ const FormationsPage = () => {
                 placeholder="Rechercher par titre, description ou auteur..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                className="w-full pl-12 pr-6 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all"
               />
             </div>
 
             {/* Filter Toggle */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center px-6 py-4 border rounded-xl font-medium ${
+              className={`flex items-center px-6 py-4 border rounded-xl font-medium transition-all ${
                 showFilters
-                  ? 'border-indigo-200 bg-indigo-50 dark:bg-indigo-900/30 text-primary-700 dark:text-primary-300'
-                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  ? 'border-red-200 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 shadow-md'
+                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
               }`}
             >
               <FunnelIcon className="w-5 h-5 mr-2" />
               Filtres
               {(selectedCategory || selectedLevel) && (
-                <span className="ml-2 bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full">
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full"
+                >
                   {(selectedCategory ? 1 : 0) + (selectedLevel ? 1 : 0)}
-                </span>
+                </motion.span>
               )}
-            </button>
+            </motion.button>
           </div>
 
           {/* Filters */}
-          {showFilters && (
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+              >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Category Filter */}
                 <div>
@@ -273,9 +333,10 @@ const FormationsPage = () => {
                   {filteredFormations.length} résultat{filteredFormations.length > 1 ? 's' : ''} trouvé{filteredFormations.length > 1 ? 's' : ''}
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Loading State */}
         {isLoading ? (
@@ -304,26 +365,32 @@ const FormationsPage = () => {
           </div>
         ) : (
           /* Formations Display */
-          <div className={viewMode === 'grid' 
+          <div className={viewMode === 'grid'
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             : "space-y-4"
           }>
-            {filteredFormations.map((formation) => {
+            {filteredFormations.map((formation, index) => {
               const levelBadge = getLevelBadge(formation.level || 'intermediate');
               const hasPromotion = (formation.is_on_promotion || formation.is_promoted) && (formation.promotion_price || formation.promotional_price);
               const displayPrice = hasPromotion ? (formation.promotion_price || formation.promotional_price!) : formation.price;
-              
+
               if (viewMode === 'list') {
                 return (
-                  <ActivationGuard 
-                    key={formation.id} 
+                  <ActivationGuard
+                    key={formation.id}
                     action="consulter cette formation"
                     className="w-full"
                   >
-                    <Link
-                      to={`/formations/${formation.id}`}
-                      className="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-md transition-all p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6"
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05, duration: 0.3 }}
+                      whileHover={{ x: 4, transition: { duration: 0.2 } }}
                     >
+                      <Link
+                        to={`/formations/${formation.id}`}
+                        className="group block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-red-200 dark:hover:border-red-700 hover:shadow-lg transition-all p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6"
+                      >
                     {/* Thumbnail */}
                     <div className="relative w-full sm:w-48 h-48 sm:h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                       <img
@@ -353,7 +420,7 @@ const FormationsPage = () => {
                       {/* Header */}
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg whitespace-nowrap">
+                          <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg whitespace-nowrap">
                             {typeof formation.category === 'object' ? formation.category.name : formation.category}
                           </span>
                           <span className={`text-xs font-medium px-2 py-1 rounded-lg whitespace-nowrap ${levelBadge.class}`}>
@@ -369,7 +436,7 @@ const FormationsPage = () => {
                           <div className="flex items-center gap-2 flex-wrap">
                             {hasPromotion ? (
                               <>
-                                <span className="text-lg sm:text-xl font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
+                                <span className="text-lg sm:text-xl font-bold text-red-600 dark:text-red-400 whitespace-nowrap">
                                   {formatPrice(displayPrice)} FCFA
                                 </span>
                                 <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-through whitespace-nowrap">
@@ -377,7 +444,7 @@ const FormationsPage = () => {
                                 </span>
                               </>
                             ) : (
-                              <span className="text-lg sm:text-xl font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
+                              <span className="text-lg sm:text-xl font-bold text-red-600 dark:text-red-400 whitespace-nowrap">
                                 {formatPrice(formation.price)} FCFA
                               </span>
                             )}
@@ -386,7 +453,7 @@ const FormationsPage = () => {
                       </div>
 
                       {/* Title and Description */}
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 line-clamp-2">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 line-clamp-2">
                         {formation.title}
                       </h3>
                       <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
@@ -413,22 +480,29 @@ const FormationsPage = () => {
                         </div>
                       </div>
                     </div>
-                    </Link>
+                      </Link>
+                    </motion.div>
                   </ActivationGuard>
                 );
               }
 
               // Grid View
               return (
-                <ActivationGuard 
-                  key={formation.id} 
+                <ActivationGuard
+                  key={formation.id}
                   action="consulter cette formation"
                   className="w-full"
                 >
-                  <Link
-                    to={`/formations/${formation.id}`}
-                    className="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:border-indigo-200 dark:hover:border-indigo-700 hover:shadow-lg transition-all"
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
+                    whileHover={{ y: -8, transition: { duration: 0.2 } }}
                   >
+                    <Link
+                      to={`/formations/${formation.id}`}
+                      className="group block bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:border-red-200 dark:hover:border-red-700 hover:shadow-xl transition-all"
+                    >
                   {/* Thumbnail */}
                   <div className="relative h-48 bg-gray-100 overflow-hidden">
                     <img
@@ -457,7 +531,7 @@ const FormationsPage = () => {
                   <div className="p-6">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg">
+                      <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg">
                         {typeof formation.category === 'object' ? formation.category.name : formation.category}
                       </span>
                       <span className={`text-xs font-medium px-2 py-1 rounded-lg ${levelBadge.class}`}>
@@ -466,7 +540,7 @@ const FormationsPage = () => {
                     </div>
 
                     {/* Title and Description */}
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 line-clamp-2">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 line-clamp-2">
                       {formation.title}
                     </h3>
                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
@@ -498,7 +572,7 @@ const FormationsPage = () => {
                       <div className="flex items-center gap-2 flex-wrap min-w-0">
                         {hasPromotion ? (
                           <>
-                            <span className="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
+                            <span className="text-base sm:text-lg font-bold text-red-600 dark:text-red-400 whitespace-nowrap">
                               {formatPrice(displayPrice)} FCFA
                             </span>
                             <span className="text-xs text-gray-500 dark:text-gray-400 line-through whitespace-nowrap">
@@ -506,7 +580,7 @@ const FormationsPage = () => {
                             </span>
                           </>
                         ) : (
-                          <span className="text-base sm:text-lg font-bold text-primary-600 dark:text-primary-400 whitespace-nowrap">
+                          <span className="text-base sm:text-lg font-bold text-red-600 dark:text-red-400 whitespace-nowrap">
                             {formatPrice(formation.price)} FCFA
                           </span>
                         )}
@@ -517,13 +591,14 @@ const FormationsPage = () => {
                           Acheté
                         </span>
                       ) : (
-                        <span className="text-xs font-medium text-primary-600 dark:text-primary-400 whitespace-nowrap flex-shrink-0">
+                        <span className="text-xs font-medium text-red-600 dark:text-red-400 whitespace-nowrap flex-shrink-0">
                           Voir détails →
                         </span>
                       )}
                     </div>
                   </div>
-                  </Link>
+                    </Link>
+                  </motion.div>
                 </ActivationGuard>
               );
             })}
@@ -548,7 +623,7 @@ const FormationsPage = () => {
                 setSelectedCategory('');
                 setSelectedLevel('');
               }}
-              className="inline-flex items-center px-6 py-3 bg-primary-600 dark:bg-primary-700 text-white font-semibold rounded-xl hover:bg-primary-700 dark:hover:bg-primary-600"
+              className="inline-flex items-center px-6 py-3 bg-red-600 dark:bg-red-700 text-white font-semibold rounded-xl hover:bg-red-700 dark:hover:bg-red-600"
             >
               Effacer les filtres
             </button>

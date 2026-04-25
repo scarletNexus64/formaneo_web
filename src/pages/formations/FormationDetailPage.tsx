@@ -177,7 +177,7 @@ const FormationDetailPage = () => {
           <p className="text-gray-600 dark:text-gray-400 mb-6">La formation que vous recherchez n'existe pas.</p>
           <button
             onClick={() => navigate('/formations')}
-            className="inline-flex items-center px-4 py-2 bg-brand-primary hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-brand-primary hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white font-medium rounded-lg transition-colors"
           >
             <ArrowLeftIcon className="w-4 h-4 mr-2" />
             Retour aux formations
@@ -201,13 +201,13 @@ const FormationDetailPage = () => {
           <nav className="flex items-center space-x-2 text-sm mb-4">
             <button
               onClick={() => navigate('/formations')}
-              className="text-gray-500 dark:text-gray-400 hover:text-brand-primary dark:hover:text-primary-400 flex items-center font-medium"
+              className="text-gray-500 dark:text-gray-400 hover:text-brand-primary dark:hover:text-red-400 flex items-center font-medium"
             >
               <ArrowLeftIcon className="w-4 h-4 mr-1" />
               Formations
             </button>
             <span className="text-gray-400 dark:text-gray-600">/</span>
-            <span className="text-brand-primary dark:text-primary-400 font-semibold truncate">{formation.title}</span>
+            <span className="text-brand-primary dark:text-red-400 font-semibold truncate">{formation.title}</span>
           </nav>
           
           {/* Quick Stats */}
@@ -260,7 +260,7 @@ const FormationDetailPage = () => {
                   <button
                     onClick={handlePurchase}
                     disabled={isPurchasing}
-                    className="w-full bg-brand-primary hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-colors text-sm sm:text-base"
+                    className="w-full bg-brand-primary hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-colors text-sm sm:text-base"
                   >
                     {isPurchasing ? (
                       <div className="flex items-center justify-center">
@@ -291,7 +291,7 @@ const FormationDetailPage = () => {
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 sm:p-4 mb-3 sm:mb-4">
                       <span className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">Offre spéciale</span>
                     </div>
-                    <span className="text-2xl sm:text-4xl font-bold text-brand-primary dark:text-primary-400">
+                    <span className="text-2xl sm:text-4xl font-bold text-brand-primary dark:text-red-400">
                       {formatPrice(displayPrice)} FCFA
                     </span>
                     <span className="block text-lg sm:text-xl text-gray-500 dark:text-gray-400 line-through mt-1">
@@ -302,7 +302,7 @@ const FormationDetailPage = () => {
                     </div>
                   </div>
                 ) : (
-                  <span className="text-2xl sm:text-4xl font-bold text-brand-primary dark:text-primary-400">
+                  <span className="text-2xl sm:text-4xl font-bold text-brand-primary dark:text-red-400">
                     {formatPrice(formation.price)} FCFA
                   </span>
                 )}
@@ -377,7 +377,7 @@ const FormationDetailPage = () => {
                     {levelBadge.label}
                   </span>
                   {formation.category && (
-                    <span className="text-[10px] sm:text-xs font-semibold text-brand-primary dark:text-primary-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+                    <span className="text-[10px] sm:text-xs font-semibold text-brand-primary dark:text-red-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
                       {typeof formation.category === 'object' ? formation.category.name : formation.category}
                     </span>
                   )}

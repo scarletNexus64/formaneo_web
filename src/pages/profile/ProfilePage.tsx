@@ -270,7 +270,7 @@ const ProfilePage = () => {
             className="mb-8"
           >
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-lg">
+              <div className="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg">
                 <UserCircleIcon className="w-8 h-8 text-white" />
               </div>
               <div>
@@ -296,7 +296,7 @@ const ProfilePage = () => {
               >
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <DocumentTextIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                    <DocumentTextIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                     Informations personnelles
                   </h2>
                   {!isEditing && (
@@ -304,7 +304,7 @@ const ProfilePage = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setIsEditing(true)}
-                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all shadow-md hover:shadow-lg text-sm font-medium"
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg text-sm font-medium"
                     >
                       Modifier
                     </motion.button>
@@ -324,7 +324,7 @@ const ProfilePage = () => {
                           name="name"
                           value={formData.name}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white transition-all"
+                          className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all"
                           required
                         />
                       </div>
@@ -341,7 +341,7 @@ const ProfilePage = () => {
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white transition-all"
+                          className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all"
                           required
                         />
                       </div>
@@ -358,7 +358,7 @@ const ProfilePage = () => {
                           name="phone"
                           value={formData.phone}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white transition-all"
+                          className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 dark:text-white transition-all"
                         />
                       </div>
                     </div>
@@ -369,7 +369,7 @@ const ProfilePage = () => {
                         whileTap={{ scale: 0.98 }}
                         type="submit"
                         disabled={loading}
-                        className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                        className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                       >
                         {loading ? 'Enregistrement...' : 'Enregistrer'}
                       </motion.button>
@@ -389,7 +389,7 @@ const ProfilePage = () => {
                   <div className="space-y-3">
                     <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
                       <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
-                        <UserCircleIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        <UserCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                       </div>
                       <div className="flex-1">
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Nom complet</p>
@@ -399,7 +399,7 @@ const ProfilePage = () => {
 
                     <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
                       <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
-                        <EnvelopeIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        <EnvelopeIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                       </div>
                       <div className="flex-1">
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Email</p>
@@ -410,7 +410,7 @@ const ProfilePage = () => {
                     {user?.phone && (
                       <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
                         <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
-                          <PhoneIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                          <PhoneIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                         </div>
                         <div className="flex-1">
                           <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Téléphone</p>
@@ -430,21 +430,21 @@ const ProfilePage = () => {
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-gray-700"
               >
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                  <ShieldCheckIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                  <ShieldCheckIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                   Informations du compte
                 </h2>
 
                 <div className="space-y-3">
-                  <div className="p-4 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-900/30 rounded-xl border border-primary-200 dark:border-primary-800">
+                  <div className="p-4 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/30 rounded-xl border border-red-200 dark:border-gray-800">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs text-primary-700 dark:text-primary-300 font-medium">Code promo</p>
+                      <p className="text-xs text-red-700 dark:text-red-300 font-medium">Code promo</p>
                       {!isEditingPromoCode && (
                         <button
                           onClick={() => {
                             setIsEditingPromoCode(true);
                             setNewPromoCode(user?.promo_code || '');
                           }}
-                          className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center text-xs"
+                          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 flex items-center text-xs"
                         >
                           <PencilIcon className="w-3 h-3 mr-1" />
                           Modifier
@@ -453,7 +453,7 @@ const ProfilePage = () => {
                     </div>
 
                     {!isEditingPromoCode ? (
-                      <p className="text-xl font-mono font-bold text-primary-600 dark:text-primary-400">
+                      <p className="text-xl font-mono font-bold text-red-600 dark:text-red-400">
                         {user?.promo_code}
                       </p>
                     ) : (
@@ -469,7 +469,7 @@ const ProfilePage = () => {
                               }
                             }}
                             placeholder="Nouveau code"
-                            className="w-full px-3 py-2 border border-primary-300 dark:border-primary-700 rounded-lg bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-mono text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                            className="w-full px-3 py-2 border border-red-300 dark:border-red-700 rounded-lg bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-mono text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
                           />
                           {isCheckingCode && (
                             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -539,7 +539,7 @@ const ProfilePage = () => {
                   {user?.account_activated_at && (
                     <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
                       <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
-                        <CalendarIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        <CalendarIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                       </div>
                       <div className="flex-1">
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Compte activé le</p>
@@ -553,7 +553,7 @@ const ProfilePage = () => {
                   {user?.account_expires_at && (
                     <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
                       <div className="p-2 bg-white dark:bg-gray-600 rounded-lg">
-                        <CalendarIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        <CalendarIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
                       </div>
                       <div className="flex-1">
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Expire le</p>
@@ -573,7 +573,7 @@ const ProfilePage = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-2xl shadow-xl p-6 text-white sticky top-8"
+                className="bg-gradient-to-br from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 rounded-2xl shadow-xl p-6 text-white sticky top-8"
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
@@ -581,7 +581,7 @@ const ProfilePage = () => {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold">Support Client</h2>
-                    <p className="text-sm text-primary-100">Nous sommes là pour vous aider</p>
+                    <p className="text-sm text-red-100">Nous sommes là pour vous aider</p>
                   </div>
                 </div>
 
@@ -598,7 +598,7 @@ const ProfilePage = () => {
                         <ChatBubbleLeftRightIcon className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="text-xs text-primary-100 mb-1">WhatsApp</p>
+                        <p className="text-xs text-red-100 mb-1">WhatsApp</p>
                         <p className="font-semibold text-sm">{whatsappNumber || 'Chargement...'}</p>
                       </div>
                     </div>
@@ -612,11 +612,11 @@ const ProfilePage = () => {
                     className="w-full bg-white/10 backdrop-blur-sm hover:bg-white/20 p-4 rounded-xl transition-all border border-white/20 hover:border-white/40 group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-500 rounded-lg group-hover:bg-blue-600 transition-colors">
+                      <div className="p-2 bg-blue-500 rounded-lg group-hover:bg-gray-900 transition-colors">
                         <EnvelopeIcon className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="text-xs text-primary-100 mb-1">Email</p>
+                        <p className="text-xs text-red-100 mb-1">Email</p>
                         <p className="font-semibold text-sm break-all">{supportEmail || 'Chargement...'}</p>
                       </div>
                     </div>
@@ -630,7 +630,7 @@ const ProfilePage = () => {
                           <PhoneIcon className="w-5 h-5 text-white" />
                         </div>
                         <div className="flex-1 text-left">
-                          <p className="text-xs text-primary-100 mb-1">Téléphone</p>
+                          <p className="text-xs text-red-100 mb-1">Téléphone</p>
                           <a href={`tel:${supportPhone}`} className="font-semibold text-sm hover:underline">
                             {supportPhone}
                           </a>
@@ -641,7 +641,7 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="mt-6 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                  <p className="text-xs text-primary-100 leading-relaxed">
+                  <p className="text-xs text-red-100 leading-relaxed">
                     Notre équipe est disponible pour répondre à toutes vos questions et vous accompagner dans votre parcours de formation.
                   </p>
                 </div>

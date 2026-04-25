@@ -100,7 +100,7 @@ const PendingWithdrawals: React.FC<PendingWithdrawalsProps> = ({ walletInfo, isL
         onClick={onWithdraw}
         className={`w-full px-4 py-3 rounded-lg font-medium transition-colors ${
           canWithdraw
-            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+            ? 'bg-red-600 text-white hover:bg-red-700'
             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
         }`}
       >

@@ -89,7 +89,7 @@ export const ViewingRewardModal: React.FC<ViewingRewardModalProps> = ({
                 <p className="text-gray-700 dark:text-gray-300 mb-2 font-medium">
                   Vous avez regardé <span className="text-orange-600 dark:text-orange-400 font-bold">{Math.round(progressPercentage)}%</span> de la vidéo
                 </p>
-                <p className="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-6">
+                <p className="text-sm font-semibold text-red-600 dark:text-red-400 mb-6">
                   "{videoTitle}"
                 </p>
 
